@@ -2784,7 +2784,7 @@
             <height>16777215</height>
            </size>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_8">
+          <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
             <widget class="QTableWidget" name="in36_configuration_view">
              <column>
@@ -2807,20 +2807,6 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_10">
              <item>
-              <widget class="QPushButton" name="configuration_move_up">
-               <property name="text">
-                <string>上移</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="configuration_move_down">
-               <property name="text">
-                <string>下移</string>
-               </property>
-              </widget>
-             </item>
-             <item>
               <spacer name="horizontalSpacer_5">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
@@ -2834,9 +2820,16 @@
               </spacer>
              </item>
              <item>
-              <widget class="QPushButton" name="del_configuration">
+              <widget class="QPushButton" name="configuration_move_up">
                <property name="text">
-                <string>删除</string>
+                <string>上移</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="configuration_move_down">
+               <property name="text">
+                <string>下移</string>
                </property>
               </widget>
              </item>
@@ -3290,91 +3283,38 @@
             </widget>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_14">
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
              <item>
-              <layout class="QVBoxLayout" name="verticalLayout_5">
-               <item>
-                <widget class="QLabel" name="label_9">
-                 <property name="text">
-                  <string>计算历史</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QListWidget" name="run_history_list">
-                 <property name="alternatingRowColors">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_7">
-                 <item>
-                  <widget class="QPushButton" name="clear_history">
-                   <property name="text">
-                    <string>清空</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="add_to_selection">
-                   <property name="text">
-                    <string>添加至库中</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <widget class="Line" name="line_8">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
+              <widget class="QGroupBox" name="groupBox_5">
+               <property name="title">
+                <string>计算历史</string>
                </property>
+               <layout class="QGridLayout" name="gridLayout_4">
+                <item row="0" column="0">
+                 <widget class="QListWidget" name="run_history_list">
+                  <property name="alternatingRowColors">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </widget>
              </item>
              <item>
-              <layout class="QVBoxLayout" name="verticalLayout_3">
-               <item>
-                <widget class="QLabel" name="label_10">
-                 <property name="text">
-                  <string>库</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QListWidget" name="selection_list">
-                 <property name="alternatingRowColors">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_13">
-                 <item>
-                  <spacer name="horizontalSpacer_6">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="del_selection">
-                   <property name="text">
-                    <string>删除</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-              </layout>
+              <widget class="QGroupBox" name="groupBox_6">
+               <property name="title">
+                <string>库</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_5">
+                <item row="0" column="0">
+                 <widget class="QListWidget" name="selection_list">
+                  <property name="alternatingRowColors">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
              </item>
             </layout>
            </item>
@@ -3538,49 +3478,28 @@
       <widget class="QWidget" name="page_2">
        <layout class="QVBoxLayout" name="verticalLayout_11">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_21">
-          <item>
-           <widget class="QGroupBox" name="groupBox_6">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>300</height>
-             </size>
-            </property>
-            <property name="title">
-             <string>光谱展示</string>
-            </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_20">
-             <item>
-              <widget class="QWebEngineView" name="page2_add_spectrum_web">
-               <property name="url">
-                <url>
-                 <string>about:blank</string>
-                </url>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox">
-            <property name="minimumSize">
-             <size>
-              <width>200</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>200</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="title">
-             <string>绘图选项</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_9">
+         <widget class="QGroupBox" name="groupBox_3">
+          <property name="title">
+           <string>GroupBox</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_10">
+           <item>
+            <widget class="QWebEngineView" name="page2_add_spectrum_web">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>300</height>
+              </size>
+             </property>
+             <property name="url">
+              <url>
+               <string>about:blank</string>
+              </url>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
              <item>
               <widget class="QLabel" name="label_18">
                <property name="text">
@@ -3609,38 +3528,34 @@
               </widget>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_15">
-               <item>
-                <widget class="QDoubleSpinBox" name="page2_density_base">
-                 <property name="singleStep">
-                  <double>0.100000000000000</double>
-                 </property>
-                 <property name="value">
-                  <double>1.000000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QDoubleSpinBox" name="page2_density_index">
-                 <property name="singleStep">
-                  <double>0.100000000000000</double>
-                 </property>
-                 <property name="value">
-                  <double>19.000000000000000</double>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+              <widget class="QDoubleSpinBox" name="page2_density_base">
+               <property name="singleStep">
+                <double>0.100000000000000</double>
+               </property>
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
              </item>
              <item>
-              <spacer name="verticalSpacer">
+              <widget class="QDoubleSpinBox" name="page2_density_index">
+               <property name="singleStep">
+                <double>0.100000000000000</double>
+               </property>
+               <property name="value">
+                <double>19.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Horizontal</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>20</width>
-                 <height>197</height>
+                 <width>40</width>
+                 <height>20</height>
                 </size>
                </property>
               </spacer>
@@ -3653,20 +3568,26 @@
               </widget>
              </item>
             </layout>
-           </widget>
-          </item>
-         </layout>
+           </item>
+          </layout>
+         </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_22">
+         <layout class="QHBoxLayout" name="horizontalLayout_23">
+          <item>
+           <widget class="QGroupBox" name="groupBox_4">
+            <property name="title">
+             <string>GroupBox</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_22">
+             <item>
+              <widget class="QTableWidget" name="page2_grid_list"/>
+             </item>
+            </layout>
+           </widget>
+          </item>
           <item>
            <widget class="QGroupBox" name="groupBox_2">
-            <property name="minimumSize">
-             <size>
-              <width>200</width>
-              <height>0</height>
-             </size>
-            </property>
             <property name="maximumSize">
              <size>
               <width>200</width>
@@ -3674,9 +3595,9 @@
              </size>
             </property>
             <property name="title">
-             <string>选择器</string>
+             <string>GroupBox</string>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <layout class="QVBoxLayout" name="verticalLayout_9">
              <item>
               <widget class="QListWidget" name="page2_selection_list">
                <property name="alternatingRowColors">
@@ -3696,103 +3617,43 @@
                </property>
               </widget>
              </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox_3">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="title">
-             <string>相似度</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_12">
              <item>
-              <widget class="QWebEngineView" name="page2_grid_web">
-               <property name="url">
-                <url>
-                 <string>about:blank</string>
-                </url>
+              <widget class="Line" name="line_9">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QProgressBar" name="page2_progressBar">
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>12</height>
-                </size>
-               </property>
-               <property name="value">
-                <number>0</number>
-               </property>
-               <property name="textVisible">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox_4">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="title">
-             <string>结果</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_4">
-             <item row="0" column="0">
-              <widget class="QTableWidget" name="page2_grid_list"/>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox_5">
-            <property name="minimumSize">
-             <size>
-              <width>200</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>200</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="title">
-             <string>参数调整</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_10">
-             <item>
-              <widget class="QLabel" name="label_16">
-               <property name="text">
-                <string>温度范围</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_21">
+               <item>
+                <widget class="QLabel" name="label_16">
+                 <property name="text">
+                  <string>温度范围</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_9">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="temperature_num">
+                 <property name="value">
+                  <number>20</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_18">
@@ -3813,18 +3674,35 @@
               </layout>
              </item>
              <item>
-              <widget class="QSpinBox" name="temperature_num">
-               <property name="value">
-                <number>20</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_17">
-               <property name="text">
-                <string>密度范围</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_20">
+               <item>
+                <widget class="QLabel" name="label_17">
+                 <property name="text">
+                  <string>密度范围</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_10">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="density_num">
+                 <property name="value">
+                  <number>20</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_16">
@@ -3863,30 +3741,114 @@
               </layout>
              </item>
              <item>
-              <widget class="QSpinBox" name="density_num">
-               <property name="value">
-                <number>20</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="verticalSpacer_4">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
               <widget class="QPushButton" name="page2_cal_grid">
                <property name="text">
                 <string>开始计算</string>
                </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox">
+            <property name="maximumSize">
+             <size>
+              <width>450</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="title">
+             <string>时空分辨</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_15">
+               <item>
+                <widget class="QLabel" name="label_15">
+                 <property name="text">
+                  <string>实验数据</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lineEdit"/>
+               </item>
+               <item>
+                <widget class="QToolButton" name="toolButton">
+                 <property name="text">
+                  <string>...</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_19">
+               <item>
+                <widget class="QLabel" name="label_20">
+                 <property name="text">
+                  <string>位置</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lineEdit_2"/>
+               </item>
+               <item>
+                <widget class="QLabel" name="label_21">
+                 <property name="text">
+                  <string>时间</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lineEdit_3"/>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_8">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButton">
+                 <property name="text">
+                  <string>记录</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QTableWidget" name="tableWidget">
+               <column>
+                <property name="text">
+                 <string>时间</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>位置</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>温度</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>密度</string>
+                </property>
+               </column>
               </widget>
              </item>
             </layout>
