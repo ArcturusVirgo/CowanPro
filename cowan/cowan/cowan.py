@@ -1,3 +1,4 @@
+import copy
 import os
 import shutil
 import subprocess
@@ -48,20 +49,26 @@ class SpaceTimeResolution:
 class SimulateSpectral:
     def __init__(self):
         self.cowan_list: List[Cowan] = []
-        self.exp_data: Optional[ExpData] = None
+        self.add_or_not: List[bool] = []
+        self.exp_data: Optional[List[ExpData, Path]] = None
         self.spectrum_similarity = None
 
         self.abundance = []
         self.sim_data = None
 
+        self.plot_path = PROJECT_PATH.joinpath('figure/add.html').as_posix()
+
     def load_exp_data(self, path: Path):
         self.exp_data = ExpData(path)
 
     def add_cowan(self, *args):
-        self.cowan_list += args
+        for cowan in args:
+            self.cowan_list.append(copy.deepcopy(cowan))
+            self.add_or_not.append(True)
 
     def del_cowan(self, index):
         self.cowan_list.pop(index)
+        self.add_or_not.pop(index)
 
     def get_simulate_data(self, temperature, electron_density):
         """
@@ -74,16 +81,33 @@ class SimulateSpectral:
 
         """
         self.__update_abundance(temperature, electron_density)
-        for cowan in self.cowan_list:
-            cowan.run()
-            cowan.cal_data.widen_all.widen(temperature)
+        for cowan, flag in zip(self.cowan_list, self.add_or_not):
+            if flag:
+                cowan.run()
+                cowan.cal_data.widen_all.widen(temperature)
         res = pd.DataFrame()
         res['wavelength'] = self.cowan_list[0].cal_data.widen_all.widen_data['wavelength']
         temp = np.zeros(res.shape[0])
-        for cowan, abu in zip(self.cowan_list, self.abundance):
-            temp += cowan.cal_data.widen_all.widen_data['cross_P'].values * abu
+        for cowan, abu, flag in zip(self.cowan_list, self.abundance, self.add_or_not):
+            if flag:
+                temp += cowan.cal_data.widen_all.widen_data['cross_P'].values * abu
         res['intensity'] = temp
         self.sim_data = res
+
+    def plot_html(self):
+        x1 = self.exp_data[0].data['wavelength']
+        y1 = self.exp_data[0].data['intensity'] / self.exp_data[0].data['intensity'].max() + 0.5
+        x2 = self.sim_data['wavelength']
+        y2 = self.sim_data['intensity'] / self.sim_data['intensity'].max()
+        trace1 = go.Scatter(x=x1, y=y1, mode='lines')
+        trace2 = go.Scatter(x=x2, y=y2, mode='lines')
+        data = [trace1, trace2]
+        layout = go.Layout(margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
+                           xaxis=go.layout.XAxis(range=self.exp_data[0].x_range),
+                           )
+        # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
+        fig = go.Figure(data=data, layout=layout)
+        plot(fig, filename=self.plot_path, auto_open=False)
 
     # 计算离子丰度
     def __update_abundance(self, temperature, electron_density):
@@ -218,17 +242,22 @@ class SimulateSpectral:
 
 
 class Cowan:
-    def __init__(self):
-        self.in36: Optional[In36] = None
-        self.in2: Optional[In2] = None
-        self.name: Optional[str] = None
-        self.exp_data: Optional[ExpData] = None
-        self.coupling_mode = 1  # 1是L-S耦合 2是j-j耦合
+    def __init__(self, in36, in2, name, exp_data, coupling_mode=1):
+        self.in36: In36 = copy.deepcopy(in36)
+        self.in2: In2 = copy.deepcopy(in2)
+        self.name: str = name
+        self.exp_data: ExpData = copy.deepcopy(exp_data)
+        self.coupling_mode = coupling_mode  # 1是L-S耦合 2是j-j耦合
 
         self.cal_data: Optional[CalData] = None
         self.run_path = PROJECT_PATH / f'cal_result/{self.name}'
 
     def run(self):
+        """
+        运行 Cowan 程序，创建 cal_data 对象
+        Returns:
+
+        """
         self.__get_ready()
         # 获取最初的运行路径
         original_path = Path.cwd()
@@ -262,8 +291,8 @@ class Cowan:
 
 
 class In36:
-    def __init__(self):
-        self.atom: Optional[Atom] = None
+    def __init__(self, atom):
+        self.atom: Atom = copy.deepcopy(atom)
 
         self.control_card = ['2', ' ', ' ', '-9', ' ', '  ', ' 2', '   ', '10', '  1.0', '    5.e-08', '    1.e-11',
                              '-2', '  ', ' ', '1', '90', '  ', '  1.0', ' 0.65', '  0.0', '  0.0', '     ']
@@ -474,7 +503,7 @@ class CalData:
                                             'index_l', 'index_h', 'J_l', 'J_h'])
         self.widen_all = WidenAll(self.name, self.init_data, self.exp_data)
 
-    def plot_html(self):
+    def plot_line(self):
         temp_data = self.__get_line_data(self.init_data[['wavelength_ev', 'intensity']])
         trace1 = go.Scatter(x=temp_data['wavelength'], y=temp_data['intensity'], mode='lines')
         data = [trace1]
@@ -611,7 +640,7 @@ class WidenAll:
                  name,
                  init_data,
                  exp_data: ExpData,
-                 delta_lambda=0.0,
+                 delta_lambda=0.0,  # 单位是nm
                  n=None, ):
         self.name = name
         self.init_data = init_data.copy()
@@ -659,10 +688,16 @@ class WidenAll:
         new_data = new_data[(new_data['wavelength_ev'] > min_wavelength_ev) &
                             (new_data['wavelength_ev'] < max_wavelength_ev)]
         if new_data.empty:
+            result = pd.DataFrame()
+            result['wavelength'] = [0, 0]
+            result['gauss'] = [0, 0]
+            result['cross_NP'] = [0, 0]
+            result['cross_P'] = [0, 0]
+            self.widen_data = result
             return -1
         new_data = new_data.reindex()
         # 获取展宽所需要的数据
-        new_wavelength = abs(1239.85 / (1239.85 / new_data['wavelength_ev'] - self.delta_lambda))  # 单位时ev
+        new_wavelength = abs(1239.85 / (1239.85 / new_data['wavelength_ev'] + self.delta_lambda))  # 单位时ev
         new_wavelength = new_wavelength.values
         new_intensity = abs(new_data['intensity'])
         new_intensity = new_intensity.values
@@ -736,41 +771,40 @@ class WidenAll:
 class WidenPart:
     pass
 
-
-if __name__ == '__main__':
-    in36_3 = In36()
-    in36_3.read_from_file(PROJECT_PATH / 'in36_3')
-    in36_4 = In36()
-    in36_4.read_from_file(PROJECT_PATH / 'in36_4')
-    in36_5 = In36()
-    in36_5.read_from_file(PROJECT_PATH / 'in36_5')
-    in36_6 = In36()
-    in36_6.atom = Atom(13, 6)
-    in36_6.add_configuration(in36_6.atom.get_configuration())
-    arouse = ['3s', '3d', '4s', '4d', '5d']
-    for v in arouse:
-        in36_6.atom.arouse_electron('2p', v)
-        in36_6.add_configuration(in36_6.atom.get_configuration())
-        in36_6.atom.revert_to_ground_state()
-    in36_6.control_card = in36_5.control_card.copy()
-
-    in2 = In2()
-    in2.read_from_file(PROJECT_PATH / 'in2')
-
-    exp_data = ExpData(PROJECT_PATH / 'exp_data.csv')
-
-    cowan_3 = Cowan(in36_3, in2, 'Al_3', exp_data)
-    cowan_4 = Cowan(in36_4, in2, 'Al_4', exp_data)
-    cowan_5 = Cowan(in36_5, in2, 'Al_5', exp_data)
-    cowan_6 = Cowan(in36_6, in2, 'Al_6', exp_data)
-
-    sim = SimulateSpectral()
-    sim.add_cowan(cowan_3, cowan_4, cowan_5, cowan_6)
-    for c in sim.cowan_list:
-        c.run()
-        c.cal_data.widen_all.widen(23.5)
-    sim.get_simulate_data(23.5, 1e20)
-    sim.load_exp_data(Path('f:/Cowan/Al/exp_data.csv'))
-    plt.plot(sim.exp_data.data['wavelength'], sim.exp_data.data['intensity'] / sim.exp_data.data['intensity'].max())
-    plt.plot(sim.sim_data['wavelength'], sim.sim_data['intensity'] / sim.sim_data['intensity'].max())
-    # plt.show()
+# if __name__ == '__main__':
+#     in36_3 = In36()
+#     in36_3.read_from_file(PROJECT_PATH / 'in36_3')
+#     in36_4 = In36()
+#     in36_4.read_from_file(PROJECT_PATH / 'in36_4')
+#     in36_5 = In36()
+#     in36_5.read_from_file(PROJECT_PATH / 'in36_5')
+#     in36_6 = In36()
+#     in36_6.atom = Atom(13, 6)
+#     in36_6.add_configuration(in36_6.atom.get_configuration())
+#     arouse = ['3s', '3d', '4s', '4d', '5d']
+#     for v in arouse:
+#         in36_6.atom.arouse_electron('2p', v)
+#         in36_6.add_configuration(in36_6.atom.get_configuration())
+#         in36_6.atom.revert_to_ground_state()
+#     in36_6.control_card = in36_5.control_card.copy()
+#
+#     in2 = In2()
+#     in2.read_from_file(PROJECT_PATH / 'in2')
+#
+#     exp_data = ExpData(PROJECT_PATH / 'exp_data.csv')
+#
+#     cowan_3 = Cowan(in36_3, in2, 'Al_3', exp_data)
+#     cowan_4 = Cowan(in36_4, in2, 'Al_4', exp_data)
+#     cowan_5 = Cowan(in36_5, in2, 'Al_5', exp_data)
+#     cowan_6 = Cowan(in36_6, in2, 'Al_6', exp_data)
+#
+#     sim = SimulateSpectral()
+#     sim.add_cowan(cowan_3, cowan_4, cowan_5, cowan_6)
+#     for c in sim.cowan_list:
+#         c.run()
+#         c.cal_data.widen_all.widen(23.5)
+#     sim.get_simulate_data(23.5, 1e20)
+#     sim.load_exp_data(Path('f:/Cowan/Al/exp_data.csv'))
+#     plt.plot(sim.exp_data.data['wavelength'], sim.exp_data.data['intensity'] / sim.exp_data.data['intensity'].max())
+#     plt.plot(sim.sim_data['wavelength'], sim.sim_data['intensity'] / sim.sim_data['intensity'].max())
+#     # plt.show()
