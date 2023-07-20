@@ -47,6 +47,7 @@ class MainWindow(QMainWindow):
         self.cowan: Optional[Cowan] = None
 
         # 第二页使用
+        self.exp_data_2: Optional[ExpData] = None
         self.simulate: Optional[SimulateSpectral] = SimulateSpectral()
 
         # 测试
@@ -57,6 +58,11 @@ class MainWindow(QMainWindow):
         self.bind_slot()
 
     def test(self):
+        delta = {3: 0.05,
+                 4: -0.04,
+                 5: 0.0,
+                 6: 0.05}
+
         for i in range(3, 7):
             self.atom = Atom(1, 0)
             self.in36 = In36(self.atom)
@@ -65,6 +71,7 @@ class MainWindow(QMainWindow):
             self.exp_data_1 = ExpData(PROJECT_PATH / './exp_data.csv')
             self.cowan = Cowan(self.in36, self.in2, f'Al_{i}', self.exp_data_1, 1)
             self.cowan.run()
+            self.cowan.cal_data.widen_all.delta_lambda = delta[i]
             self.cowan.cal_data.widen_all.widen(25.6, False)
             self.run_history.append(copy.deepcopy(self.cowan))
             self.simulate.add_cowan(self.cowan)
@@ -156,6 +163,11 @@ class MainWindow(QMainWindow):
             item = QListWidgetItem(cowan.name)
             item.setCheckState(Qt.CheckState.Checked)
             self.ui.page2_selection_list.addItem(item)
+
+        # --------------- 第二页
+        self.exp_data_2 = ExpData(PROJECT_PATH / 'exp_data.csv')
+        # 更新界面
+        self.ui.page2_exp_data_path_name.setText(self.exp_data_2.filepath.name)
 
     def init(self):
         # 给元素选择器设置初始值

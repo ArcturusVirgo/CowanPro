@@ -667,9 +667,11 @@ class Page2(MainWindow):
                 self.simulate.add_or_not[i] = False
 
     def plot_spectrum(self):
-        if self.simulate.exp_data is None:
+        if self.exp_data_2 is None:
             QMessageBox.warning(self, '警告', '请先导入实验数据！')
             return
+        else:
+            self.simulate.exp_data = copy.deepcopy(self.exp_data_2)
         temperature = self.ui.page2_temperature.value()
         density = self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value()
         self.simulate.get_simulate_data(temperature, density)
@@ -680,7 +682,6 @@ class Page2(MainWindow):
     def load_exp_data(self):
         path, types = QFileDialog.getOpenFileName(self, '请选择实验数据', PROJECT_PATH.as_posix(),
                                                   '数据文件(*.txt *.csv)')
-        self.simulate.exp_data = [ExpData(Path(path)), Path(path)]
-
+        self.exp_data_2 = ExpData(Path(path))
         # 更新界面
-        self.ui.page2_exp_data_path_name.setText(Path(path).name)
+        self.ui.page2_exp_data_path_name.setText(self.exp_data_2.filepath.name)

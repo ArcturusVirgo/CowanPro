@@ -47,7 +47,7 @@ class SimulateSpectral:
     def __init__(self):
         self.cowan_list: List[Cowan] = []
         self.add_or_not: List[bool] = []
-        self.exp_data: Optional[List[ExpData, Path]] = None
+        self.exp_data: Optional[ExpData] = None
         self.spectrum_similarity = None
 
         self.abundance = []
@@ -91,15 +91,15 @@ class SimulateSpectral:
         self.sim_data = res
 
     def plot_html(self):
-        x1 = self.exp_data[0].data['wavelength']
-        y1 = self.exp_data[0].data['intensity'] / self.exp_data[0].data['intensity'].max() + 0.5
+        x1 = self.exp_data.data['wavelength']
+        y1 = self.exp_data.data['intensity'] / self.exp_data.data['intensity'].max() + 0.5
         x2 = self.sim_data['wavelength']
         y2 = self.sim_data['intensity'] / self.sim_data['intensity'].max()
         trace1 = go.Scatter(x=x1, y=y1, mode='lines')
         trace2 = go.Scatter(x=x2, y=y2, mode='lines')
         data = [trace1, trace2]
         layout = go.Layout(margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
-                           xaxis=go.layout.XAxis(range=self.exp_data[0].x_range),
+                           xaxis=go.layout.XAxis(range=self.exp_data.x_range),
                            )
         # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
         fig = go.Figure(data=data, layout=layout)
