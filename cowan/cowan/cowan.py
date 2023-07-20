@@ -3,14 +3,11 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from pprint import pprint
-from typing import Optional, List, Dict, Tuple, Union
+from typing import Optional, List, Dict, Tuple
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from fastdtw import fastdtw
-from matplotlib import pyplot as plt
 from plotly.offline import plot
 
 from cowan.constant import *
@@ -83,7 +80,6 @@ class SimulateSpectral:
         self.__update_abundance(temperature, electron_density)
         for cowan, flag in zip(self.cowan_list, self.add_or_not):
             if flag:
-                cowan.run()
                 cowan.cal_data.widen_all.widen(temperature)
         res = pd.DataFrame()
         res['wavelength'] = self.cowan_list[0].cal_data.widen_all.widen_data['wavelength']
@@ -657,15 +653,11 @@ class WidenAll:
 
     def widen(self, temperature: float, only_p=True):
         """
-
+            列标题依次为：energy_l, energy_h, wavelength_ev, intensity, index_l, index_h, J_l, J_h
+            分别代表：下态能量，上态能量，波长，强度，下态序号，上态序号，下态J值，上态J值
         Args:
             only_p: 只计算含有布局的
-            data (pandas.DataFrame):
-                pandas的DataFrame格式数据
-                列标题依次为：energy_l, energy_h, wavelength_ev, intensity, index_l, index_h, J_l, J_h
-                分别代表：下态能量，上态能量，波长，强度，下态序号，上态序号，下态J值，上态J值
             temperature (float): 等离子体温度
-
         Returns:
             返回一个DataFrame，包含了展宽后的数据
             列标题为：wavelength, gaussian, cross-NP, cross-P

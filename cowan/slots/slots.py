@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QFileDialog, QTableWidgetItem, QDialog, QTextBrows
     QMessageBox
 
 from cowan import PROJECT_PATH
-from cowan.cowan import ExpData, Atom, SUBSHELL_SEQUENCE, ANGULAR_QUANTUM_NUM_NAME, In36, In2, Cowan, SimulateSpectral
+from cowan.cowan import ExpData, Atom, SUBSHELL_SEQUENCE, ANGULAR_QUANTUM_NUM_NAME, In36, In2, Cowan
 from main import MainWindow, VerticalLine
 
 

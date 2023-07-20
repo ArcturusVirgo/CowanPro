@@ -1,18 +1,8 @@
-import inspect
-import shutil
-import sys
-import shelve
-from pathlib import Path
-from typing import Optional
-import functools
-import copy
-
-from PySide6.QtWidgets import QAbstractItemView, QFileDialog, QDialog, QTextBrowser, QMessageBox
+from PySide6.QtWidgets import QAbstractItemView
 
 from cowan.cowan import *
-from cowan.ui import *
-from cowan.constant import *
 from cowan.slots.slots import *
+from cowan.ui import *
 
 
 class VerticalLine(QWidget):
