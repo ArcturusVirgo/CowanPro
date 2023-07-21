@@ -20,10 +20,11 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (QApplication, QComboBox, QDoubleSpinBox, QFrame,
     QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
     QLabel, QLineEdit, QListWidget, QListWidgetItem,
-    QMainWindow, QMenu, QMenuBar, QPushButton,
-    QRadioButton, QSizePolicy, QSpacerItem, QSpinBox,
-    QStackedWidget, QStatusBar, QTabWidget, QTableWidget,
-    QTableWidgetItem, QToolButton, QVBoxLayout, QWidget)
+    QMainWindow, QMenu, QMenuBar, QProgressBar,
+    QPushButton, QRadioButton, QSizePolicy, QSpacerItem,
+    QSpinBox, QStackedWidget, QStatusBar, QTabWidget,
+    QTableWidget, QTableWidgetItem, QToolButton, QVBoxLayout,
+    QWidget)
 
 class Ui_main_window(object):
     def setupUi(self, main_window):
@@ -1629,6 +1630,14 @@ class Ui_main_window(object):
 
         self.verticalLayout_9.addLayout(self.horizontalLayout_17)
 
+        self.page2_progressBar = QProgressBar(self.groupBox_2)
+        self.page2_progressBar.setObjectName(u"page2_progressBar")
+        self.page2_progressBar.setMaximumSize(QSize(16777215, 10))
+        self.page2_progressBar.setValue(0)
+        self.page2_progressBar.setTextVisible(False)
+
+        self.verticalLayout_9.addWidget(self.page2_progressBar)
+
         self.page2_cal_grid = QPushButton(self.groupBox_2)
         self.page2_cal_grid.setObjectName(u"page2_cal_grid")
 
@@ -1746,7 +1755,7 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(1)
         self.tabWidget.setCurrentIndex(0)
 
 

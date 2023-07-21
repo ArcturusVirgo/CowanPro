@@ -1,3 +1,5 @@
+import functools
+
 from PySide6.QtWidgets import QAbstractItemView
 
 from cowan.cowan import *
@@ -49,6 +51,7 @@ class MainWindow(QMainWindow):
         # 第二页使用
         self.exp_data_2: Optional[ExpData] = None
         self.simulate: Optional[SimulateSpectral] = SimulateSpectral()
+        self.sim_grid: Optional[SimulateGrid] = None
 
         # 测试
         self.test()
@@ -56,6 +59,8 @@ class MainWindow(QMainWindow):
         # 初始化
         self.init()
         self.bind_slot()
+
+        self.ui.navigation.setCurrentRow(1)
 
     def test(self):
         delta = {3: 0.05,
@@ -185,6 +190,8 @@ class MainWindow(QMainWindow):
         self.ui.in36_configuration_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.run_history_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.selection_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        # 设置单选
+        self.ui.page2_grid_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
     def bind_slot(self):
         # 设置左侧列表与右侧页面切换之间的关联
@@ -238,6 +245,10 @@ class MainWindow(QMainWindow):
         # 按钮
         self.ui.page2_plot_spectrum.clicked.connect(functools.partial(Page2.plot_spectrum, self))  # 绘制模拟谱
         self.ui.page2_load_exp_data.clicked.connect(functools.partial(Page2.load_exp_data, self))  # 加载实验数据
+        self.ui.page2_cal_grid.clicked.connect(functools.partial(Page2.cal_grid, self))  # 计算网格
+        # 双击操作
+        self.ui.page2_grid_list.itemSelectionChanged.connect(functools.partial(Page2.grid_list_double_clicked, self))  # 网格列表
+
         # 列表
         self.ui.page2_selection_list.itemChanged.connect(
             functools.partial(Page2.selection_list_changed, self))  # 选择列表

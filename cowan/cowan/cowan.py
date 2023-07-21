@@ -1,289 +1,171 @@
 import copy
+import functools
 import os
 import shutil
 import subprocess
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import Optional, List, Dict, Tuple
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from PySide6 import QtCore
+from PySide6.QtCore import Signal
+from fastdtw import fastdtw
 from plotly.offline import plot
+
+from scipy.interpolate import interp1d
+from scipy.signal import find_peaks
 
 from cowan.constant import *
 from .atom_info import *
 
 
-class SpaceTimeResolution:
-    def __init__(self):
-        # 实验数据对象 列表
-        self.exp_data_list: List[ExpData] = []
-        # 模拟光谱数据对象 列表
-        self.simulate_spectral_list: List[SimulateSpectral] = []
-        # 对应关系
-        self.location_to_index: Dict[Tuple[str]: int] = {}
+class Atom:
+    def __init__(self, num: int, ion: int):
+        self.num = num  # 原子序数
+        self.symbol = ATOM[self.num][0]  # 元素符号
+        self.name = ATOM[self.num][1]  # 元素名称
+        self.ion = ion  # 离化度
+        self.electron_num = self.num - self.ion  # 实际的电子数量
+        self.electron_arrangement = self.get_base_electron_arrangement()
+        self.base_configuration = self.get_base_configuration()  # 基组态
 
-    # 添加一个位置时间
-    def add_location(self, location, exp_data, simulate_spectral):
-        # 如果已经存在这个位置的值，就先将这个位置的值删除
-        if location in self.location_to_index.keys():
-            self.del_location(location)
-        # 开始添加
-        self.location_to_index[location] = len(self.exp_data_list) - 1
-        self.exp_data_list.append(exp_data)
-        self.simulate_spectral_list.append(simulate_spectral)
-
-    # 删除一个位置时间
-    def del_location(self, location):
-        self.exp_data_list.pop(self.location_to_index[location])
-        self.simulate_spectral_list.pop(self.location_to_index[location])
-        self.location_to_index.pop(location)
-
-    def run(self):
-        pass
-
-
-class SimulateSpectral:
-    def __init__(self):
-        self.cowan_list: List[Cowan] = []
-        self.add_or_not: List[bool] = []
-        self.exp_data: Optional[ExpData] = None
-        self.spectrum_similarity = None
-
-        self.abundance = []
-        self.sim_data = None
-
-        self.plot_path = PROJECT_PATH.joinpath('figure/add.html').as_posix()
-
-    def load_exp_data(self, path: Path):
-        self.exp_data = ExpData(path)
-
-    def add_cowan(self, *args):
-        for cowan in args:
-            self.cowan_list.append(copy.deepcopy(cowan))
-            self.add_or_not.append(True)
-
-    def del_cowan(self, index):
-        self.cowan_list.pop(index)
-        self.add_or_not.pop(index)
-
-    def get_simulate_data(self, temperature, electron_density):
+    def get_base_electron_arrangement(self):
         """
-        获取模拟光谱
-        Args:
-            temperature:
-            electron_density:
+            获取电子基组态的核外排布情况
 
         Returns:
+            返回一个字典，键为子壳层，值为子壳层的电子数
+            例如 {
+                '1s': 2,
+                '2s': 2,
+                '2p': 6,
+                '3s': 2,
+                '3p': 4,
+            }
 
         """
-        self.__update_abundance(temperature, electron_density)
-        for cowan, flag in zip(self.cowan_list, self.add_or_not):
-            if flag:
-                cowan.cal_data.widen_all.widen(temperature)
-        res = pd.DataFrame()
-        res['wavelength'] = self.cowan_list[0].cal_data.widen_all.widen_data['wavelength']
-        temp = np.zeros(res.shape[0])
-        for cowan, abu, flag in zip(self.cowan_list, self.abundance, self.add_or_not):
-            if flag:
-                temp += cowan.cal_data.widen_all.widen_data['cross_P'].values * abu
-        res['intensity'] = temp
-        self.sim_data = res
+        electron_arrangement = {}
+        for key, value in map(lambda x: [str(x[:2]), int(x[2:])], BASE_CONFIGURATION[self.electron_num].split(' ')):
+            electron_arrangement[key] = value
+        return electron_arrangement
+
+    def revert_to_ground_state(self):
+        """
+            将电子排布状态重置为基态基态
+        """
+        self.electron_arrangement = self.get_base_electron_arrangement()
+
+    def get_base_configuration(self):
+        self.electron_arrangement = self.get_base_electron_arrangement()
+        return self.get_configuration()
+
+    def get_configuration(self) -> str:
+        """
+            根据当前的电子排布情况，获取当前的电子组态
+
+        Returns:
+            返回一个字符串
+            例如 1. 基态：3s02 3p04
+                2. 激发态： 3s02 3p03 4s01
+         """
+
+        configuration = {}  # 按照子壳层的顺序排列的电子组态
+        for i, subshell_name in enumerate(SUBSHELL_NAME):
+            if subshell_name in self.electron_arrangement.keys():
+                configuration[subshell_name] = self.electron_arrangement[subshell_name]
+        delete_name = []
+        for i, (subshell_name, num) in enumerate(configuration.items()):
+            l_ = ANGULAR_QUANTUM_NUM_NAME.index(subshell_name[1])
+            if num == 4 * l_ + 2:
+                delete_name.append(subshell_name)
+            else:
+                delete_name.append(subshell_name)
+                break
+        if len(delete_name) >= 2:
+            delete_name.pop(-1)
+            delete_name.pop(-1)
+        else:
+            delete_name = []
+        for name in delete_name:
+            configuration.pop(name)
+
+        configuration_list = []
+        for name, num in configuration.items():
+            configuration_list.append('{}{:0>2}'.format(name, num))
+        return ' '.join(configuration_list)
+
+    def arouse_electron(self, low_name, high_name):
+        """
+            激发电子，改变电子排布情况
+
+        Args:
+            low_name: 下态的支壳层名称
+            high_name: 上态的支壳层名称
+        """
+        if low_name not in SUBSHELL_SEQUENCE:
+            raise Exception(f'没有名为{low_name}的支壳层！')
+        elif high_name not in SUBSHELL_SEQUENCE:
+            raise Exception(f'没有名为{high_name}的支壳层!')
+        elif low_name not in self.electron_arrangement.keys():
+            raise Exception(f'没有处于{low_name}的电子！')
+        elif self.electron_arrangement.get(high_name, 0) == 4 * ANGULAR_QUANTUM_NUM_NAME.index(high_name[1]) + 2:
+            raise Exception(f'{high_name}的电子已经排满！')
+
+        self.electron_arrangement[low_name] -= 1
+        self.electron_arrangement[high_name] = self.electron_arrangement.get(high_name, 0) + 1
+        if self.electron_arrangement[low_name] == 0:
+            self.electron_arrangement.pop(low_name)
+
+
+class ExpData:
+    def __init__(self, filepath: Path):
+        self.plot_path = (PROJECT_PATH / 'figure/exp.html').as_posix()
+        self.filepath: Path = filepath
+
+        self.data: Optional[pd.DataFrame] = None
+        self.x_range: Optional[List[float]] = None
+
+        self.__read_file()
+
+    def set_range(self, x_range: List[float]):
+        """
+        设置x轴范围
+        Args:
+            x_range: x轴范围，单位是nm
+        """
+        self.x_range = x_range
+        self.data = self.data[(self.data['wavelength'] < self.x_range[1]) &
+                              (self.data['wavelength'] > self.x_range[0])]
+
+    def __read_file(self):
+        """
+        读取实验数据
+        设置最小值和最大值
+        """
+        filetype = self.filepath.suffix[1:]
+        if filetype == 'csv':
+            temp_data = pd.read_csv(self.filepath, sep=',', skiprows=1, names=['wavelength', 'intensity'])
+        elif filetype == 'txt':
+            temp_data = pd.read_csv(self.filepath, sep='\s+', skiprows=1, names=['wavelength', 'intensity'])
+        else:
+            raise ValueError(f'filetype {filetype} is not supported')
+        temp_data['intensity_normalization'] = temp_data['intensity'] / temp_data['intensity'].max()
+
+        self.data = temp_data
+        self.x_range = [self.data['wavelength'].min(), self.data['wavelength'].max()]
 
     def plot_html(self):
-        x1 = self.exp_data.data['wavelength']
-        y1 = self.exp_data.data['intensity'] / self.exp_data.data['intensity'].max() + 0.5
-        x2 = self.sim_data['wavelength']
-        y2 = self.sim_data['intensity'] / self.sim_data['intensity'].max()
-        trace1 = go.Scatter(x=x1, y=y1, mode='lines')
-        trace2 = go.Scatter(x=x2, y=y2, mode='lines')
-        data = [trace1, trace2]
+        trace1 = go.Scatter(x=self.data['wavelength'], y=self.data['intensity'], mode='lines')
+        data = [trace1]
         layout = go.Layout(margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
-                           xaxis=go.layout.XAxis(range=self.exp_data.x_range),
-                           )
+                           xaxis=go.layout.XAxis(range=self.x_range), )
         # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
         fig = go.Figure(data=data, layout=layout)
+
         plot(fig, filename=self.plot_path, auto_open=False)
-
-    # 计算离子丰度
-    def __update_abundance(self, temperature, electron_density):
-        """
-            将所需要的离子丰度挑选出来
-        Args:
-            temperature:
-            electron_density:
-
-        Returns:
-
-        """
-        all_abundance = self.__cal_abundance2(temperature, electron_density)
-        temp_abundance = []
-        for c in self.cowan_list:
-            ion = int(c.name.split('_')[1]) - 1
-            temp_abundance.append(all_abundance[ion])
-        self.abundance = temp_abundance
-
-    def __cal_abundance1(self, temperature, electron_density) -> np.ndarray:
-        """
-            计算各种离子的丰度（用我自己的方法）
-
-        Args:
-            temperature: 等离子体温度，单位是ev
-            electron_density: 等离子体粒子数密度
-
-        Returns:
-            返回一个列表，类型为np.ndarray，每个元素为对应离子的丰度
-            例如：[0 1 2 3 4 5 6 7 8]
-            分别代表 一次离化，二次离化，三次离化，四次离化，五次离化，六次离化，七次离化，八次离化 九次离化 的粒子数密度
-        """
-        atomic_num = self.cowan_list[0].in36.atom.num
-        ion_num = np.array([i for i in range(atomic_num - 1)])
-        ion_energy = np.array(IONIZATION_ENERGY[atomic_num][1:])
-        electron_num = np.array([self.__get_outermost_num(i) for i in range(1, atomic_num)])
-
-        S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
-                ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
-        Ar = 5.2 * 1e-14 * np.sqrt(ion_energy / temperature) * ion_num * (
-                0.429 + 0.5 * np.log(ion_energy / temperature) + 0.469 * np.sqrt(temperature / ion_energy))
-        A3r = 2.97 * 1e-27 * electron_num / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy))
-
-        ratio = S / (Ar + electron_density * A3r)
-        abundance = self.__calculate_a_over_S(ratio)
-        return abundance
-
-    def __cal_abundance2(self, temperature, electron_density):
-        """
-        使用fortran程序中的方法计算离子丰度
-        Args:
-            temperature:
-            electron_density:
-
-        Returns:
-
-        """
-        atomic_num = self.cowan_list[0].in36.atom.num
-        ion_num = np.array([i for i in range(atomic_num)])
-        ion_energy = np.array(IONIZATION_ENERGY[atomic_num])
-        electron_num = np.array([self.__get_outermost_num(i) for i in range(atomic_num)])
-
-        S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
-                ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
-        Ar = 5.2 * 1e-14 * np.sqrt(ion_energy / temperature) * ion_num * (
-                0.429 + 0.5 * np.log(ion_energy / temperature) + 0.469 * np.sqrt(temperature / ion_energy))
-        A3r = 2.97 * 1e-27 * electron_num / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy))
-
-        Co = S / (Ar + electron_density * A3r)
-        CoM = [Co[0]]
-        for i in range(1, atomic_num):
-            CoM.append(Co[i] * CoM[i - 1])
-        Cosum = 0
-        CoMM = []
-        for i in range(atomic_num):
-            CoMM.append((i + 1) * CoM[i])
-            Cosum += CoMM[i]
-        Rat = [electron_density / Cosum]
-        for i in range(1, atomic_num):
-            Rat.append(Co[i - 1] * Rat[i - 1])
-        Ratsum = sum(Rat)
-        aveion = electron_density / Ratsum
-        Ratio = []
-        for i in range(atomic_num):
-            Ratio.append(Rat[i] / Ratsum)
-        return Ratio
-
-    def __get_outermost_num(self, ion: int):
-        """
-            获取离子的最外层电子数
-        Args:
-            ion: 离化度，0为原子，1为1次离化，2为2次离化，以此类推
-
-        Returns:
-            electron_num : 最外层电子数
-        """
-        temp_electron_num = self.cowan_list[0].in36.atom.num - ion
-        for n in range(1, 7):
-            if temp_electron_num > 2 * n ** 2:
-                temp_electron_num -= 2 * n ** 2
-            else:
-                electron_num = temp_electron_num
-                return electron_num
-
-    @staticmethod
-    def __calculate_a_over_S(a_ratios):
-        """
-            已知a1/a2, a2/a3, ..., a_n-1/a_n，计算a1/S, a2/S, ..., a_n/S，其中S=a1+a2+...+a_n
-
-        Args:
-            a_ratios: a1/a2, a2/a3, ..., a_n-1/a_n
-
-        Returns:
-            a1/S, a2/S, ..., a_n/S
-        """
-        a = np.zeros(len(a_ratios) + 1)
-        a[0] = 1
-        for i in range(1, len(a)):
-            a[i] = a[i - 1] * a_ratios[i - 1]
-
-        # 计算S
-        S = np.sum(a)
-
-        # 计算a1/S, a2/S, ..., a_n/S
-        a_over_S = a / S
-
-        return a_over_S
-
-    # 计算光谱相似度
-    def get_spectrum_similarity(self):
-        pass
-
-
-class Cowan:
-    def __init__(self, in36, in2, name, exp_data, coupling_mode=1):
-        self.in36: In36 = copy.deepcopy(in36)
-        self.in2: In2 = copy.deepcopy(in2)
-        self.name: str = name
-        self.exp_data: ExpData = copy.deepcopy(exp_data)
-        self.coupling_mode = coupling_mode  # 1是L-S耦合 2是j-j耦合
-
-        self.cal_data: Optional[CalData] = None
-        self.run_path = PROJECT_PATH / f'cal_result/{self.name}'
-
-    def run(self):
-        """
-        运行 Cowan 程序，创建 cal_data 对象
-        Returns:
-
-        """
-        self.__get_ready()
-        # 获取最初的运行路径
-        original_path = Path.cwd()
-
-        # 运行文件
-        os.chdir(self.run_path)
-        rcn = subprocess.run('./RCN.exe')
-        rcn2 = subprocess.run('./RCN2.exe')
-        self.__edit_ing11()
-        rcg = subprocess.run('./RCG.exe')
-        os.chdir(original_path)
-
-        # 更新 cal_data 对象
-        self.cal_data = CalData(self.name, self.exp_data)
-
-    def __get_ready(self):
-        if self.run_path.exists():
-            shutil.rmtree(self.run_path)
-        shutil.copytree(PROJECT_PATH / 'bin', self.run_path)
-        self.in36.save(self.run_path / 'in36')
-        self.in2.save(self.run_path / 'in2')
-
-    def __edit_ing11(self):
-        with open('./out2ing', 'r', encoding='utf-8') as f:
-            text = f.read()
-        text = f'    {self.coupling_mode}{text[5:]}'
-        with open('./ing11', 'w', encoding='utf-8') as f:
-            f.write(text)
-        with open('./out2ing', 'w', encoding='utf-8') as f:
-            f.write(text)
 
 
 class In36:
@@ -431,52 +313,53 @@ class In2:
             f.write(self.get_text())
 
 
-class ExpData:
-    def __init__(self, filepath: Path):
-        self.plot_path = (PROJECT_PATH / 'figure/exp.html').as_posix()
-        self.filepath: Path = filepath
+class Cowan:
+    def __init__(self, in36, in2, name, exp_data, coupling_mode=1):
+        self.in36: In36 = copy.deepcopy(in36)
+        self.in2: In2 = copy.deepcopy(in2)
+        self.name: str = name
+        self.exp_data: ExpData = copy.deepcopy(exp_data)
+        self.coupling_mode = coupling_mode  # 1是L-S耦合 2是j-j耦合
 
-        self.data: Optional[pd.DataFrame] = None
-        self.x_range: Optional[List[float]] = None
+        self.cal_data: Optional[CalData] = None
+        self.run_path = PROJECT_PATH / f'cal_result/{self.name}'
 
-        self.__read_file()
-
-    def set_range(self, x_range: List[float]):
+    def run(self):
         """
-        设置x轴范围
-        Args:
-            x_range: x轴范围，单位是nm
+        运行 Cowan 程序，创建 cal_data 对象
+        Returns:
+
         """
-        self.x_range = x_range
-        self.data = self.data[(self.data['wavelength'] < self.x_range[1]) &
-                              (self.data['wavelength'] > self.x_range[0])]
+        self.__get_ready()
+        # 获取最初的运行路径
+        original_path = Path.cwd()
 
-    def __read_file(self):
-        """
-        读取实验数据
-        设置最小值和最大值
-        """
-        filetype = self.filepath.suffix[1:]
-        if filetype == 'csv':
-            temp_data = pd.read_csv(self.filepath, sep=',', skiprows=1, names=['wavelength', 'intensity'])
-        elif filetype == 'txt':
-            temp_data = pd.read_csv(self.filepath, sep='\s+', skiprows=1, names=['wavelength', 'intensity'])
-        else:
-            raise ValueError(f'filetype {filetype} is not supported')
-        temp_data['intensity_normalization'] = temp_data['intensity'] / temp_data['intensity'].max()
+        # 运行文件
+        os.chdir(self.run_path)
+        rcn = subprocess.run('./RCN.exe')
+        rcn2 = subprocess.run('./RCN2.exe')
+        self.__edit_ing11()
+        rcg = subprocess.run('./RCG.exe')
+        os.chdir(original_path)
 
-        self.data = temp_data
-        self.x_range = [self.data['wavelength'].min(), self.data['wavelength'].max()]
+        # 更新 cal_data 对象
+        self.cal_data = CalData(self.name, self.exp_data)
 
-    def plot_html(self):
-        trace1 = go.Scatter(x=self.data['wavelength'], y=self.data['intensity'], mode='lines')
-        data = [trace1]
-        layout = go.Layout(margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
-                           xaxis=go.layout.XAxis(range=self.x_range), )
-        # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
-        fig = go.Figure(data=data, layout=layout)
+    def __get_ready(self):
+        if self.run_path.exists():
+            shutil.rmtree(self.run_path)
+        shutil.copytree(PROJECT_PATH / 'bin', self.run_path)
+        self.in36.save(self.run_path / 'in36')
+        self.in2.save(self.run_path / 'in2')
 
-        plot(fig, filename=self.plot_path, auto_open=False)
+    def __edit_ing11(self):
+        with open('./out2ing', 'r', encoding='utf-8') as f:
+            text = f.read()
+        text = f'    {self.coupling_mode}{text[5:]}'
+        with open('./ing11', 'w', encoding='utf-8') as f:
+            f.write(text)
+        with open('./out2ing', 'w', encoding='utf-8') as f:
+            f.write(text)
 
 
 class CalData:
@@ -531,104 +414,6 @@ class CalData:
             'intensity': strength
         })
         return temp
-
-
-class Atom:
-    def __init__(self, num: int, ion: int):
-        self.num = num  # 原子序数
-        self.symbol = ATOM[self.num][0]  # 元素符号
-        self.name = ATOM[self.num][1]  # 元素名称
-        self.ion = ion  # 离化度
-        self.electron_num = self.num - self.ion  # 实际的电子数量
-        self.electron_arrangement = self.get_base_electron_arrangement()
-        self.base_configuration = self.get_base_configuration()  # 基组态
-
-    def get_base_electron_arrangement(self):
-        """
-            获取电子基组态的核外排布情况
-
-        Returns:
-            返回一个字典，键为子壳层，值为子壳层的电子数
-            例如 {
-                '1s': 2,
-                '2s': 2,
-                '2p': 6,
-                '3s': 2,
-                '3p': 4,
-            }
-
-        """
-        electron_arrangement = {}
-        for key, value in map(lambda x: [str(x[:2]), int(x[2:])], BASE_CONFIGURATION[self.electron_num].split(' ')):
-            electron_arrangement[key] = value
-        return electron_arrangement
-
-    def revert_to_ground_state(self):
-        """
-            将电子排布状态重置为基态基态
-        """
-        self.electron_arrangement = self.get_base_electron_arrangement()
-
-    def get_base_configuration(self):
-        self.electron_arrangement = self.get_base_electron_arrangement()
-        return self.get_configuration()
-
-    def get_configuration(self) -> str:
-        """
-            根据当前的电子排布情况，获取当前的电子组态
-
-        Returns:
-            返回一个字符串
-            例如 1. 基态：3s02 3p04
-                2. 激发态： 3s02 3p03 4s01
-         """
-
-        configuration = {}  # 按照子壳层的顺序排列的电子组态
-        for i, subshell_name in enumerate(SUBSHELL_NAME):
-            if subshell_name in self.electron_arrangement.keys():
-                configuration[subshell_name] = self.electron_arrangement[subshell_name]
-        delete_name = []
-        for i, (subshell_name, num) in enumerate(configuration.items()):
-            l_ = ANGULAR_QUANTUM_NUM_NAME.index(subshell_name[1])
-            if num == 4 * l_ + 2:
-                delete_name.append(subshell_name)
-            else:
-                delete_name.append(subshell_name)
-                break
-        if len(delete_name) >= 2:
-            delete_name.pop(-1)
-            delete_name.pop(-1)
-        else:
-            delete_name = []
-        for name in delete_name:
-            configuration.pop(name)
-
-        configuration_list = []
-        for name, num in configuration.items():
-            configuration_list.append('{}{:0>2}'.format(name, num))
-        return ' '.join(configuration_list)
-
-    def arouse_electron(self, low_name, high_name):
-        """
-            激发电子，改变电子排布情况
-
-        Args:
-            low_name: 下态的支壳层名称
-            high_name: 上态的支壳层名称
-        """
-        if low_name not in SUBSHELL_SEQUENCE:
-            raise Exception(f'没有名为{low_name}的支壳层！')
-        elif high_name not in SUBSHELL_SEQUENCE:
-            raise Exception(f'没有名为{high_name}的支壳层!')
-        elif low_name not in self.electron_arrangement.keys():
-            raise Exception(f'没有处于{low_name}的电子！')
-        elif self.electron_arrangement.get(high_name, 0) == 4 * ANGULAR_QUANTUM_NUM_NAME.index(high_name[1]) + 2:
-            raise Exception(f'{high_name}的电子已经排满！')
-
-        self.electron_arrangement[low_name] -= 1
-        self.electron_arrangement[high_name] = self.electron_arrangement.get(high_name, 0) + 1
-        if self.electron_arrangement[low_name] == 0:
-            self.electron_arrangement.pop(low_name)
 
 
 class WidenAll:
@@ -762,6 +547,368 @@ class WidenAll:
 
 class WidenPart:
     pass
+
+
+class SimulateSpectral:
+    def __init__(self):
+        self.cowan_list: List[Cowan] = []
+        self.add_or_not: List[bool] = []
+        self.exp_data: Optional[ExpData] = None
+        self.spectrum_similarity = None
+
+        self.abundance = []
+        self.sim_data = None
+
+        self.plot_path = PROJECT_PATH.joinpath('figure/add.html').as_posix()
+
+    def load_exp_data(self, path: Path):
+        self.exp_data = ExpData(path)
+
+    def add_cowan(self, *args):
+        for cowan in args:
+            self.cowan_list.append(copy.deepcopy(cowan))
+            self.add_or_not.append(True)
+
+    def del_cowan(self, index):
+        self.cowan_list.pop(index)
+        self.add_or_not.pop(index)
+
+    def get_simulate_data(self, temperature, electron_density):
+        """
+        获取模拟光谱
+        Args:
+            temperature:
+            electron_density:
+
+        Returns:
+
+        """
+        self.__update_abundance(temperature, electron_density)
+        for cowan, flag in zip(self.cowan_list, self.add_or_not):
+            if flag:
+                cowan.cal_data.widen_all.widen(temperature)
+        res = pd.DataFrame()
+        res['wavelength'] = self.cowan_list[0].cal_data.widen_all.widen_data['wavelength']
+        temp = np.zeros(res.shape[0])
+        for cowan, abu, flag in zip(self.cowan_list, self.abundance, self.add_or_not):
+            if flag:
+                temp += cowan.cal_data.widen_all.widen_data['cross_P'].values * abu
+        res['intensity'] = temp
+        self.sim_data = res
+        self.get_spectrum_similarity()
+        return copy.deepcopy(self)
+
+    def plot_html(self):
+        x1 = self.exp_data.data['wavelength']
+        y1 = self.exp_data.data['intensity'] / self.exp_data.data['intensity'].max() + 0.5
+        x2 = self.sim_data['wavelength']
+        y2 = self.sim_data['intensity'] / self.sim_data['intensity'].max()
+        trace1 = go.Scatter(x=x1, y=y1, mode='lines')
+        trace2 = go.Scatter(x=x2, y=y2, mode='lines')
+        data = [trace1, trace2]
+        layout = go.Layout(margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
+                           xaxis=go.layout.XAxis(range=self.exp_data.x_range),
+                           )
+        # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
+        fig = go.Figure(data=data, layout=layout)
+        plot(fig, filename=self.plot_path, auto_open=False)
+
+    # 计算离子丰度
+    def __update_abundance(self, temperature, electron_density):
+        """
+            将所需要的离子丰度挑选出来
+        Args:
+            temperature:
+            electron_density:
+
+        Returns:
+
+        """
+        all_abundance = self.__cal_abundance2(temperature, electron_density)
+        temp_abundance = []
+        for c in self.cowan_list:
+            ion = int(c.name.split('_')[1]) - 1
+            temp_abundance.append(all_abundance[ion])
+        self.abundance = temp_abundance
+
+    def __cal_abundance1(self, temperature, electron_density) -> np.ndarray:
+        """
+            计算各种离子的丰度（用我自己的方法）
+
+        Args:
+            temperature: 等离子体温度，单位是ev
+            electron_density: 等离子体粒子数密度
+
+        Returns:
+            返回一个列表，类型为np.ndarray，每个元素为对应离子的丰度
+            例如：[0 1 2 3 4 5 6 7 8]
+            分别代表 一次离化，二次离化，三次离化，四次离化，五次离化，六次离化，七次离化，八次离化 九次离化 的粒子数密度
+        """
+        atomic_num = self.cowan_list[0].in36.atom.num
+        ion_num = np.array([i for i in range(atomic_num - 1)])
+        ion_energy = np.array(IONIZATION_ENERGY[atomic_num][1:])
+        electron_num = np.array([self.__get_outermost_num(i) for i in range(1, atomic_num)])
+
+        S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
+                ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
+        Ar = 5.2 * 1e-14 * np.sqrt(ion_energy / temperature) * ion_num * (
+                0.429 + 0.5 * np.log(ion_energy / temperature) + 0.469 * np.sqrt(temperature / ion_energy))
+        A3r = 2.97 * 1e-27 * electron_num / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy))
+
+        ratio = S / (Ar + electron_density * A3r)
+        abundance = self.__calculate_a_over_S(ratio)
+        return abundance
+
+    def __cal_abundance2(self, temperature, electron_density):
+        """
+        使用fortran程序中的方法计算离子丰度
+        Args:
+            temperature:
+            electron_density:
+
+        Returns:
+
+        """
+        atomic_num = self.cowan_list[0].in36.atom.num
+        ion_num = np.array([i for i in range(atomic_num)])
+        ion_energy = np.array(IONIZATION_ENERGY[atomic_num])
+        electron_num = np.array([self.__get_outermost_num(i) for i in range(atomic_num)])
+
+        S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
+                ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
+        Ar = 5.2 * 1e-14 * np.sqrt(ion_energy / temperature) * ion_num * (
+                0.429 + 0.5 * np.log(ion_energy / temperature) + 0.469 * np.sqrt(temperature / ion_energy))
+        A3r = 2.97 * 1e-27 * electron_num / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy))
+
+        Co = S / (Ar + electron_density * A3r)
+        CoM = [Co[0]]
+        for i in range(1, atomic_num):
+            CoM.append(Co[i] * CoM[i - 1])
+        Cosum = 0
+        CoMM = []
+        for i in range(atomic_num):
+            CoMM.append((i + 1) * CoM[i])
+            Cosum += CoMM[i]
+        Rat = [electron_density / Cosum]
+        for i in range(1, atomic_num):
+            Rat.append(Co[i - 1] * Rat[i - 1])
+        Ratsum = sum(Rat)
+        aveion = electron_density / Ratsum
+        Ratio = []
+        for i in range(atomic_num):
+            Ratio.append(Rat[i] / Ratsum)
+        return Ratio
+
+    def __get_outermost_num(self, ion: int):
+        """
+            获取离子的最外层电子数
+        Args:
+            ion: 离化度，0为原子，1为1次离化，2为2次离化，以此类推
+
+        Returns:
+            electron_num : 最外层电子数
+        """
+        temp_electron_num = self.cowan_list[0].in36.atom.num - ion
+        for n in range(1, 7):
+            if temp_electron_num > 2 * n ** 2:
+                temp_electron_num -= 2 * n ** 2
+            else:
+                electron_num = temp_electron_num
+                return electron_num
+
+    @staticmethod
+    def __calculate_a_over_S(a_ratios):
+        """
+            已知a1/a2, a2/a3, ..., a_n-1/a_n，计算a1/S, a2/S, ..., a_n/S，其中S=a1+a2+...+a_n
+
+        Args:
+            a_ratios: a1/a2, a2/a3, ..., a_n-1/a_n
+
+        Returns:
+            a1/S, a2/S, ..., a_n/S
+        """
+        a = np.zeros(len(a_ratios) + 1)
+        a[0] = 1
+        for i in range(1, len(a)):
+            a[i] = a[i - 1] * a_ratios[i - 1]
+
+        # 计算S
+        S = np.sum(a)
+
+        # 计算a1/S, a2/S, ..., a_n/S
+        a_over_S = a / S
+
+        return a_over_S
+
+    # 计算光谱相似度
+    def get_spectrum_similarity(self):
+        self.spectrum_similarity = self.spectrum_similarity3(self.exp_data.data[['wavelength', 'intensity']],
+                                                             self.sim_data[['wavelength', 'intensity']])
+
+    @staticmethod
+    def spectrum_similarity1(fax: pd.DataFrame, fbx: pd.DataFrame):
+        """
+        计算两个光谱的相似度
+        遍历实验光谱的每个点，找到模拟光谱中最近的点，计算距离，并求和
+        Args:
+            fax: 实验光谱
+            fbx: 模拟光谱
+
+        Returns:
+
+        """
+        col_names_a = fax.columns
+        col_names_b = fbx.columns
+        x1 = fax[col_names_a[0]].values
+        y1 = fax[col_names_a[1]].values
+        x2 = fbx[col_names_b[0]].values
+        y2 = fbx[col_names_b[1]].values
+        y1 = y1 / y1.max()
+        y2 = y2 / y2.max()
+
+        res = 0
+        for i in range(fax.shape[0]):
+            res += min(np.sqrt((x1[i] - x2) ** 2 + (y1[i] - y2) ** 2))
+        return res / fax.shape[0]
+
+    def spectrum_similarity2(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+        """
+        计算两个光谱的相似度，根据R2进行判断
+        Args:
+            fax: 实验光谱
+            fbx: 模拟光谱
+
+        Returns:
+
+        """
+        y1, y2 = self.get_y1y2(fax, fbx)
+
+        # y2是测量值，y1是预测值
+        SS_reg = np.power(y1 - y2.mean(), 2).sum()
+        SS_tot = np.power(y2 - y2.mean(), 2).sum()
+        R2 = SS_reg / SS_tot
+        if R2 > 1:
+            return 1 / R2
+        else:
+            return R2
+
+    def spectrum_similarity3(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+        y1, y2 = self.get_y1y2(fax, fbx)
+
+        distance, path = fastdtw(y1, y2)
+        return distance
+
+    def spectrum_similarity4(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+        y1, y2 = self.get_y1y2(fax, fbx)
+        corr = np.corrcoef(y1, y2)[0, 1]
+        return corr + 1
+
+    def spectrum_similarity5(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+        """
+        峰值匹配法
+        :param fax:
+        :param fbx:
+        :return:
+        """
+        y1, y2 = self.get_y1y2(fax, fbx)
+        # 找出两个光谱数据的峰值位置
+        peaks1, _ = find_peaks(y1, height=0.5)
+        peaks2, _ = find_peaks(y2, height=0.5)
+
+        # 计算两个光谱数据峰值位置的相似性
+        match = np.intersect1d(peaks1, peaks2)
+        similarity = len(match) / min(len(peaks1), len(peaks2))
+        return similarity
+
+    @staticmethod
+    def get_y1y2(fax: pd.DataFrame, fbx: pd.DataFrame, min_x=None, max_x=None):
+        col_names_a = fax.columns
+        col_names_b = fbx.columns
+        if (min_x is None) and (max_x is None):
+            min_x = max(fax[col_names_a[0]].min(), fbx[col_names_b[0]].min())
+            max_x = min(fax[col_names_a[0]].max(), fbx[col_names_b[0]].max())
+        fax_new = fax[(fax[col_names_a[0]] <= max_x) & (min_x <= fax[col_names_a[0]])]
+        fbx_new = fbx[(fbx[col_names_b[0]] <= max_x) & (min_x <= fbx[col_names_b[0]])]
+        f2 = interp1d(fbx_new[col_names_b[0]], fbx_new[col_names_b[1]], fill_value="extrapolate")
+        x = fax_new[col_names_a[0]].values
+        y1 = fax_new[col_names_a[1]].values
+        y2 = f2(x)
+        y1 = y1 / max(y1)
+        y2 = y2 / max(y2)
+        return y1, y2
+
+
+class SimulateGrid(QtCore.QThread):
+    progress = Signal(str)  # 计数完成后发送一次信号
+    end = Signal(str)  # 计数完成后发送一次信号
+
+    def __init__(self, temperature, density, simulate):
+        super().__init__()
+        self.simulate = copy.deepcopy(simulate)
+        self.t_num: int = int(temperature[-1])
+        self.ne_num: int = int(density[-1])
+        t_list = np.linspace(temperature[0], temperature[1], self.t_num)
+        ne_list = np.power(10, np.linspace(
+            np.log10(density[0] * 10 ** density[1]),
+            np.log10(density[2] * 10 ** density[3]), self.ne_num))
+        self.t_list = ['{:.3f}'.format(v) for v in t_list]
+        self.ne_list = ['{:.3e}'.format(v) for v in ne_list]
+
+        self.grid_data = {}
+
+    def run(self):
+        def callback(t, ne, f):
+            nonlocal current_progress
+            current_progress += 1
+            self.grid_data[(t, ne)] = f.result()
+            self.progress.emit(str(current_progress))
+
+        # 多线程
+        self.grid_data = {}
+        current_progress = 0
+        pool = ProcessPoolExecutor(os.cpu_count())
+        for temperature in self.t_list:
+            for density in self.ne_list:
+                future = pool.submit(self.simulate.get_simulate_data, eval(temperature), eval(density))
+                future.add_done_callback(functools.partial(callback, temperature, density))
+        pool.shutdown()
+        self.end.emit(0)
+
+        # 单线程
+        # self.grid_data = {}
+        # for temperature in self.t_list:
+        #     for density in self.ne_list:
+        #         self.simulate.get_simulate_data(eval(temperature), eval(density))
+        #         self.grid_data[(temperature, density)] = copy.deepcopy(self.simulate)
+
+
+class SpaceTimeResolution:
+    def __init__(self):
+        # 实验数据对象 列表
+        self.exp_data_list: List[ExpData] = []
+        # 模拟光谱数据对象 列表
+        self.simulate_spectral_list: List[SimulateSpectral] = []
+        # 对应关系
+        self.location_to_index: Dict[Tuple[str]: int] = {}
+
+    # 添加一个位置时间
+    def add_location(self, location, exp_data, simulate_spectral):
+        # 如果已经存在这个位置的值，就先将这个位置的值删除
+        if location in self.location_to_index.keys():
+            self.del_location(location)
+        # 开始添加
+        self.location_to_index[location] = len(self.exp_data_list) - 1
+        self.exp_data_list.append(exp_data)
+        self.simulate_spectral_list.append(simulate_spectral)
+
+    # 删除一个位置时间
+    def del_location(self, location):
+        self.exp_data_list.pop(self.location_to_index[location])
+        self.simulate_spectral_list.pop(self.location_to_index[location])
+        self.location_to_index.pop(location)
+
+    def run(self):
+        pass
 
 # if __name__ == '__main__':
 #     in36_3 = In36()

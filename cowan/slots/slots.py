@@ -1,16 +1,18 @@
 import copy
 import functools
 import shutil
+import time
 from pathlib import Path
 
+import matplotlib
 import pandas as pd
 from PySide6.QtCore import Qt, QUrl
-from PySide6.QtGui import QAction, QCursor
+from PySide6.QtGui import QAction, QCursor, QBrush, QColor
 from PySide6.QtWidgets import QFileDialog, QTableWidgetItem, QDialog, QTextBrowser, QVBoxLayout, QMenu, QListWidgetItem, \
     QMessageBox
 
 from cowan import PROJECT_PATH
-from cowan.cowan import ExpData, Atom, SUBSHELL_SEQUENCE, ANGULAR_QUANTUM_NUM_NAME, In36, In2, Cowan
+from cowan.cowan import ExpData, Atom, SUBSHELL_SEQUENCE, ANGULAR_QUANTUM_NUM_NAME, In36, In2, Cowan, SimulateGrid
 from main import MainWindow, VerticalLine
 
 
@@ -685,3 +687,73 @@ class Page2(MainWindow):
         self.exp_data_2 = ExpData(Path(path))
         # 更新界面
         self.ui.page2_exp_data_path_name.setText(self.exp_data_2.filepath.name)
+
+    def cal_grid(self):
+        def update_progress_bar(progress):
+            self.ui.page2_progressBar.setValue(int(progress))
+
+        def update_ui(*args):
+            # -------------------------- 更新页面 --------------------------
+            self.ui.page2_grid_list.clear()
+            self.ui.page2_grid_list.setRowCount(self.sim_grid.t_num)
+            self.ui.page2_grid_list.setColumnCount(self.sim_grid.ne_num)
+            self.ui.page2_grid_list.setHorizontalHeaderLabels(self.sim_grid.t_list)
+            self.ui.page2_grid_list.setVerticalHeaderLabels(self.sim_grid.ne_list)
+            sim_max = max(self.sim_grid.grid_data.values(), key=lambda x: x.spectrum_similarity).spectrum_similarity
+            for t in self.sim_grid.t_list:
+                for ne in self.sim_grid.ne_list:
+                    similarity = self.sim_grid.grid_data[(t, ne)].spectrum_similarity
+                    item = QTableWidgetItem('{:.4f}'.format(similarity))
+                    item.setBackground(QBrush(
+                        QColor(*Page2.rainbow_color(similarity / sim_max))))
+                    self.ui.page2_grid_list.setItem(self.sim_grid.t_list.index(t), self.sim_grid.ne_list.index(ne),
+                                                    item)
+
+        if self.exp_data_2 is None:
+            QMessageBox.warning(self, '警告', '请先导入实验数据！')
+            return
+        else:
+            self.simulate.exp_data = copy.deepcopy(self.exp_data_2)
+        t_range = [self.ui.temperature_min.value(),
+                   self.ui.temperature_max.value(),
+                   self.ui.temperature_num.value()]
+        ne_range = [self.ui.density_min_base.value(),
+                    self.ui.density_min_index.value(),
+                    self.ui.density_max_base.value(),
+                    self.ui.density_max_index.value(),
+                    self.ui.density_num.value()]
+
+        self.ui.page2_progressBar.setRange(0, t_range[2] * ne_range[4])
+        self.sim_grid = SimulateGrid(t_range, ne_range, self.simulate)
+        self.sim_grid.start()
+        self.sim_grid.end.connect(update_ui)
+        self.sim_grid.progress.connect(update_progress_bar)
+
+    def grid_list_double_clicked(self):
+        item = self.ui.page2_grid_list.currentItem()
+        if not item:
+            return
+        temperature = self.sim_grid.t_list[item.column()]
+        density = self.sim_grid.ne_list[item.row()]
+        self.simulate = copy.deepcopy(self.sim_grid.grid_data[(temperature, density)])
+
+        temp = density.split('e+')
+        self.ui.page2_temperature.setValue(eval(temperature))
+        self.ui.page2_density_base.setValue(eval(temp[0]))
+        self.ui.page2_density_index.setValue(eval(temp[1]))
+        self.simulate.plot_html()
+        self.ui.page2_add_spectrum_web.load(QUrl.fromLocalFile(self.simulate.plot_path))
+
+    @staticmethod
+    def rainbow_color(x):
+        """
+        将 0 - 1 之间的浮点数转换为彩虹色
+        Args:
+            x: 0-1 之间的浮点数
+
+        Returns:
+            返回一个元组 (r,g,b,a)
+        """
+        camp = matplotlib.colormaps['rainbow']
+        rgba = camp(x)
+        return int(rgba[0] * 255), int(rgba[1] * 255), int(rgba[2] * 255), int(rgba[3] * 255)
