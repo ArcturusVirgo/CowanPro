@@ -5,16 +5,16 @@ import shutil
 import subprocess
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import scipy
 from PySide6 import QtCore
 from PySide6.QtCore import Signal
 from fastdtw import fastdtw
 from plotly.offline import plot
-
 from scipy.interpolate import interp1d
 from scipy.signal import find_peaks
 
@@ -324,7 +324,7 @@ class Cowan:
         self.cal_data: Optional[CalData] = None
         self.run_path = PROJECT_PATH / f'cal_result/{self.name}'
 
-    def run(self):
+    def run(self, delta_lambda=0.0):
         """
         运行 Cowan 程序，创建 cal_data 对象
         Returns:
@@ -366,13 +366,12 @@ class CalData:
     def __init__(self, name, exp_data: ExpData):
         self.name = name
         self.exp_data = exp_data
-        self.x_range = exp_data.x_range
         self.filepath = (PROJECT_PATH / f'cal_result/{name}/spectra.dat').as_posix()
         self.plot_path = (PROJECT_PATH / f'figure/line/{name}.html').as_posix()
         self.init_data: pd.DataFrame | None = None
 
         self.widen_all: Optional[WidenAll] = None
-        self.widen_part = None
+        self.widen_part: Optional[WidenPart] = None
 
         self.read_file()
 
@@ -381,13 +380,14 @@ class CalData:
                                      names=['energy_l', 'energy_h', 'wavelength_ev', 'intensity',
                                             'index_l', 'index_h', 'J_l', 'J_h'])
         self.widen_all = WidenAll(self.name, self.init_data, self.exp_data)
+        self.widen_part = WidenPart(self.name, self.init_data, self.exp_data)
 
     def plot_line(self):
         temp_data = self.__get_line_data(self.init_data[['wavelength_ev', 'intensity']])
         trace1 = go.Scatter(x=temp_data['wavelength'], y=temp_data['intensity'], mode='lines')
         data = [trace1]
         layout = go.Layout(margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
-                           xaxis=go.layout.XAxis(range=self.x_range),
+                           xaxis=go.layout.XAxis(range=self.exp_data.x_range),
                            )
         # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
         fig = go.Figure(data=data, layout=layout)
@@ -396,18 +396,18 @@ class CalData:
     def __get_line_data(self, origin_data):
         temp_data = origin_data.copy()
         temp_data['wavelength'] = 1239.85 / temp_data['wavelength_ev']
-        temp_data = temp_data[(temp_data['wavelength'] < self.x_range[1]) &
-                              (temp_data['wavelength'] > self.x_range[0])]
+        temp_data = temp_data[(temp_data['wavelength'] < self.exp_data.x_range[1]) &
+                              (temp_data['wavelength'] > self.exp_data.x_range[0])]
         lambda_ = []
         strength = []
-        if temp_data['wavelength'].min() > self.x_range[0]:
-            lambda_ += [self.x_range[0]]
+        if temp_data['wavelength'].min() > self.exp_data.x_range[0]:
+            lambda_ += [self.exp_data.x_range[0]]
             strength += [0]
         for x, y in zip(temp_data['wavelength'], temp_data['intensity']):
             lambda_ += [x, x, x]
             strength += [0, y, 0]
-        if temp_data['wavelength'].max() < self.x_range[1]:
-            lambda_ += [self.x_range[1]]
+        if temp_data['wavelength'].max() < self.exp_data.x_range[1]:
+            lambda_ += [self.exp_data.x_range[1]]
             strength += [0]
         temp = pd.DataFrame({
             'wavelength': lambda_,
@@ -546,7 +546,155 @@ class WidenAll:
 
 
 class WidenPart:
-    pass
+    def __init__(self,
+                 name,
+                 init_data,
+                 exp_data: ExpData,
+                 delta_lambda=0.0,  # 单位是nm
+                 n=None, ):
+        self.name = name
+        self.init_data = init_data.copy()
+        self.exp_data = exp_data
+        self.delta_lambda: float = delta_lambda
+        self.n = n
+        self.only_p = None
+
+        self.plot_path_list = {}
+
+        self.widen_data: Optional[pd.DataFrame] = None
+        self.grouped_widen_data: Optional[Dict[str, pd.DataFrame]] = None
+
+    def widen_by_group(self, temperature=25.6):
+        """
+        返回一个字典，包含了按跃迁正例分组后的展宽数据，例如
+        {'1-2': pd.DataFrame, '1-3': pd.DataFrame, ...}
+        pd.DataFrame的列标题为：wavelength, gaussian, cross-NP, cross-P
+        Args:
+            temperature: 展宽时的温度
+
+        Returns:
+
+        """
+        temp_data = {}
+        # 按照跃迁正例展宽
+        data_grouped = self.init_data.groupby(by=['index_l', 'index_h'])
+        for index in data_grouped.groups.keys():
+            temp_group = pd.DataFrame(data_grouped.get_group(index))
+            temp_result = self.__widen(temperature, temp_group)
+            # 如果这个波段没有跃迁正例
+            if type(temp_result) == int:
+                continue
+            temp_data[f'{index[0]}_{index[1]}'] = temp_result
+        self.plot_path_list = {}
+        for key, value in temp_data.items():
+            self.plot_path_list[key] = (PROJECT_PATH / f'figure/part/{self.name}_{key}.html').as_posix()
+        self.grouped_widen_data = temp_data
+
+    def __widen(self, temperature: float, temp_data: pd.DataFrame, only_p=True):
+        """
+            列标题依次为：energy_l, energy_h, wavelength_ev, intensity, index_l, index_h, J_l, J_h
+            分别代表：下态能量，上态能量，波长，强度，下态序号，上态序号，下态J值，上态J值
+        Args:
+            temp_data:
+            only_p: 只计算含有布局的
+            temperature (float): 等离子体温度
+        Returns:
+            返回一个DataFrame，包含了展宽后的数据
+            列标题为：wavelength, gaussian, cross-NP, cross-P
+        """
+        self.only_p = only_p
+
+        data = temp_data.copy()
+        fwhmgauss = self.__fwhmgauss
+        lambda_range = self.exp_data.x_range
+
+        new_data = data.copy()
+        # 找到下态最小能量和最小能量对应的J值
+        min_energy = new_data['energy_l'].min()
+        min_J = new_data[new_data['energy_l'] == min_energy]['J_l'].min()
+        # 筛选波长范围在实验数据范围内的跃迁正例个数
+        min_wavelength_nm = lambda_range[0]
+        max_wavelength_nm = lambda_range[1]
+        min_wavelength_ev = 1239.85 / max_wavelength_nm
+        max_wavelength_ev = 1239.85 / min_wavelength_nm
+        new_data = new_data[(new_data['wavelength_ev'] > min_wavelength_ev) &
+                            (new_data['wavelength_ev'] < max_wavelength_ev)]
+        if new_data.empty:
+            result = pd.DataFrame()
+            result['wavelength'] = self.exp_data.data['wavelength'].values
+            result['gauss'] = np.zeros(self.exp_data.data['wavelength'].values.shape)
+            result['cross_NP'] = np.zeros(self.exp_data.data['wavelength'].values.shape)
+            result['cross_P'] = np.zeros(self.exp_data.data['wavelength'].values.shape)
+            return result
+        new_data = new_data.reindex()
+        # 获取展宽所需要的数据
+        new_wavelength = abs(1239.85 / (1239.85 / new_data['wavelength_ev'] + self.delta_lambda))  # 单位时ev
+        new_wavelength = new_wavelength.values
+        new_intensity = abs(new_data['intensity'])
+        new_intensity = new_intensity.values
+        flag = new_data['energy_l'] > new_data['energy_h']
+        not_flag = np.bitwise_not(flag)
+        temp_1 = new_data['energy_l'][flag]
+        temp_2 = new_data['energy_h'][not_flag]
+        new_energy = temp_1.combine_first(temp_2)
+        new_energy = new_energy.values
+        temp_1 = new_data['J_l'][flag]
+        temp_2 = new_data['J_h'][not_flag]
+        new_J = temp_1.combine_first(temp_2)
+        new_J = new_J.values
+        # 计算布居
+        population = (2 * new_J + 1) * np.exp(-abs(new_energy - min_energy) * 0.124 / temperature) / (2 * min_J + 1)
+        if self.n is None:
+            wave = 1239.85 / self.exp_data.data['wavelength'].values
+        else:
+            wave = np.linspace(min_wavelength_ev, max_wavelength_ev, self.n)
+        result = pd.DataFrame()
+        result['wavelength'] = 1239.85 / wave
+
+        res = [self.__complex_cal(val, new_intensity, fwhmgauss(val), new_wavelength, population, new_J)
+               for val in wave]
+        res = list(zip(*res))
+        if not self.only_p:
+            result['gauss'] = res[0]
+            result['cross_NP'] = res[1]
+        result['cross_P'] = res[2]
+        return result
+
+    def plot_widen_by_group(self):
+        for key, value in self.grouped_widen_data.items():
+            self.__plot_html(value, self.plot_path_list[key], 'wavelength', 'cross_P')
+
+    def __plot_html(self, data, path, x_name, y_name):
+        trace1 = go.Scatter(x=data[x_name], y=data[y_name], mode='lines')
+        data = [trace1]
+        layout = go.Layout(margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
+                           xaxis=go.layout.XAxis(range=self.exp_data.x_range),
+                           )
+        # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
+        fig = go.Figure(data=data, layout=layout)
+        plot(fig, filename=path, auto_open=False)
+
+    def __complex_cal(self,
+                      wave: float,
+                      new_intensity: np.array,
+                      fwhmgauss: float,
+                      new_wavelength: np.array,
+                      population: np.array,
+                      new_J: np.array):
+        uu = (new_intensity * population / (2 * new_J + 1)) * 2 * fwhmgauss / (
+                2 * np.pi * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4))
+        if self.only_p:
+            return -1, -1, uu.sum()
+        else:
+            tt = new_intensity / np.sqrt(2 * np.pi) / fwhmgauss * 2.355 * np.exp(
+                -2.355 ** 2 * (new_wavelength - wave) ** 2 / fwhmgauss ** 2 / 2)
+            ss = (new_intensity / (2 * new_J + 1)) * 2 * fwhmgauss / (
+                    2 * np.pi * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4))
+            return tt.sum(), ss.sum(), uu.sum()
+
+    @staticmethod
+    def __fwhmgauss(wavelength: float):
+        return 0.5
 
 
 class SimulateSpectral:
@@ -555,11 +703,14 @@ class SimulateSpectral:
         self.add_or_not: List[bool] = []
         self.exp_data: Optional[ExpData] = None
         self.spectrum_similarity = None
+        self.temperature = None
+        self.electron_density = None
 
         self.abundance = []
         self.sim_data = None
 
         self.plot_path = PROJECT_PATH.joinpath('figure/add.html').as_posix()
+        self.example_path = PROJECT_PATH.joinpath('figure/part/example.html').as_posix()
 
     def load_exp_data(self, path: Path):
         self.exp_data = ExpData(path)
@@ -583,6 +734,8 @@ class SimulateSpectral:
         Returns:
 
         """
+        self.temperature = temperature
+        self.electron_density = electron_density
         self.__update_abundance(temperature, electron_density)
         for cowan, flag in zip(self.cowan_list, self.add_or_not):
             if flag:
@@ -612,6 +765,35 @@ class SimulateSpectral:
         # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
         fig = go.Figure(data=data, layout=layout)
         plot(fig, filename=self.plot_path, auto_open=False)
+
+    def plot_example_html(self, add_list):
+        # for c in self.cowan_list:
+        #     c.cal_data.widen_part.widen_by_group()
+        height = 0
+        trace = []
+        for i, c in enumerate(self.cowan_list):
+            if add_list[i][0]:
+                for j, (key, value) in enumerate(c.cal_data.widen_part.grouped_widen_data.items()):
+                    if add_list[i][1][j]:
+                        if value['cross_P'].max() == 0:
+                            trace.append(
+                                go.Scatter(x=value['wavelength'],
+                                           y=value['cross_P'] + height,
+                                           mode='lines',
+                                           name=f'{c.name}_{key}'))
+                        else:
+                            trace.append(
+                                go.Scatter(x=value['wavelength'],
+                                           y=value['cross_P'] / value['cross_P'].max() + height,
+                                           mode='lines',
+                                           name=f'{c.name}_{key}'))
+                        height += 1.2
+        layout = go.Layout(margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
+                           xaxis=go.layout.XAxis(range=self.exp_data.x_range),
+                           )
+        # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
+        fig = go.Figure(data=trace, layout=layout)
+        plot(fig, filename=self.example_path, auto_open=False)
 
     # 计算离子丰度
     def __update_abundance(self, temperature, electron_density):
@@ -742,7 +924,8 @@ class SimulateSpectral:
 
     # 计算光谱相似度
     def get_spectrum_similarity(self):
-        self.spectrum_similarity = self.spectrum_similarity3(self.exp_data.data[['wavelength', 'intensity']],
+
+        self.spectrum_similarity = self.spectrum_similarity5(self.exp_data.data[['wavelength', 'intensity']],
                                                              self.sim_data[['wavelength', 'intensity']])
 
     @staticmethod
@@ -781,7 +964,7 @@ class SimulateSpectral:
         Returns:
 
         """
-        y1, y2 = self.get_y1y2(fax, fbx)
+        x, y1, y2 = self.get_y1y2(fax, fbx)
 
         # y2是测量值，y1是预测值
         SS_reg = np.power(y1 - y2.mean(), 2).sum()
@@ -793,13 +976,13 @@ class SimulateSpectral:
             return R2
 
     def spectrum_similarity3(self, fax: pd.DataFrame, fbx: pd.DataFrame):
-        y1, y2 = self.get_y1y2(fax, fbx)
+        x, y1, y2 = self.get_y1y2(fax, fbx)
 
         distance, path = fastdtw(y1, y2)
         return distance
 
     def spectrum_similarity4(self, fax: pd.DataFrame, fbx: pd.DataFrame):
-        y1, y2 = self.get_y1y2(fax, fbx)
+        x, y1, y2 = self.get_y1y2(fax, fbx)
         corr = np.corrcoef(y1, y2)[0, 1]
         return corr + 1
 
@@ -810,15 +993,35 @@ class SimulateSpectral:
         :param fbx:
         :return:
         """
-        y1, y2 = self.get_y1y2(fax, fbx)
+        x, y1, y2 = self.get_y1y2(fax, fbx)
         # 找出两个光谱数据的峰值位置
-        peaks1, _ = find_peaks(y1, height=0.5)
-        peaks2, _ = find_peaks(y2, height=0.5)
-
+        peaks1, _ = find_peaks(y1, height=0.1)
+        peaks2, _ = find_peaks(y2, height=0.1)
         # 计算两个光谱数据峰值位置的相似性
         match = np.intersect1d(peaks1, peaks2)
         similarity = len(match) / min(len(peaks1), len(peaks2))
         return similarity
+
+    def spectrum_similarity6(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+        x, y1, y2 = self.get_y1y2(fax, fbx)
+        n = len(y1)
+        rho = (n * (y1 * y2).sum() - y1.sum() * y2.sum()) / \
+              (np.sqrt((n * (y1 ** 2).sum() - (y1.sum()) ** 2) * (n * (y2 ** 2).sum() - (y2.sum()) ** 2)))
+        return rho
+
+    def spectrum_similarity7(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+        x, y1, y2 = self.get_y1y2(fax, fbx)
+        return scipy.stats.pearsonr(y1, y2)[0]
+
+    def spectrum_similarity8(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+        x, y1, y2 = self.get_y1y2(fax, fbx)
+        return np.sqrt(sum(pow(a - b, 2) for a, b in zip(y1, y2)))
+
+    def spectrum_similarity9(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+        x, y1, y2 = self.get_y1y2(fax, fbx)
+        tmp = np.sum(y1 * y2)
+        non = np.linalg.norm(x) * np.linalg.norm(y2)
+        return np.round(tmp / float(non), 9)
 
     @staticmethod
     def get_y1y2(fax: pd.DataFrame, fbx: pd.DataFrame, min_x=None, max_x=None):
@@ -835,7 +1038,7 @@ class SimulateSpectral:
         y2 = f2(x)
         y1 = y1 / max(y1)
         y2 = y2 / max(y2)
-        return y1, y2
+        return x, y1, y2
 
 
 class SimulateGrid(QtCore.QThread):
@@ -884,28 +1087,16 @@ class SimulateGrid(QtCore.QThread):
 
 class SpaceTimeResolution:
     def __init__(self):
-        # 实验数据对象 列表
-        self.exp_data_list: List[ExpData] = []
         # 模拟光谱数据对象 列表
-        self.simulate_spectral_list: List[SimulateSpectral] = []
-        # 对应关系
-        self.location_to_index: Dict[Tuple[str]: int] = {}
+        self.simulate_spectral_dict = {}
 
     # 添加一个位置时间
-    def add_location(self, location, exp_data, simulate_spectral):
-        # 如果已经存在这个位置的值，就先将这个位置的值删除
-        if location in self.location_to_index.keys():
-            self.del_location(location)
-        # 开始添加
-        self.location_to_index[location] = len(self.exp_data_list) - 1
-        self.exp_data_list.append(exp_data)
-        self.simulate_spectral_list.append(simulate_spectral)
+    def add_st(self, location: tuple, simulate_spectral):
+        self.simulate_spectral_dict[location] = copy.deepcopy(simulate_spectral)
 
     # 删除一个位置时间
-    def del_location(self, location):
-        self.exp_data_list.pop(self.location_to_index[location])
-        self.simulate_spectral_list.pop(self.location_to_index[location])
-        self.location_to_index.pop(location)
+    def del_st(self, location):
+        self.simulate_spectral_dict.pop(location)
 
     def run(self):
         pass

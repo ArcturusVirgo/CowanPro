@@ -50,8 +50,10 @@ class MainWindow(QMainWindow):
 
         # 第二页使用
         self.exp_data_2: Optional[ExpData] = None
-        self.simulate: Optional[SimulateSpectral] = SimulateSpectral()
         self.sim_grid: Optional[SimulateGrid] = None
+        self.simulate: Optional[SimulateSpectral] = SimulateSpectral()
+        self.simulate_page3: Optional[SimulateSpectral] = None
+        self.space_time_resolution = SpaceTimeResolution()
 
         # 测试
         self.test()
@@ -60,7 +62,7 @@ class MainWindow(QMainWindow):
         self.init()
         self.bind_slot()
 
-        self.ui.navigation.setCurrentRow(1)
+        self.ui.navigation.setCurrentRow(2)
 
     def test(self):
         delta = {3: 0.05,
@@ -80,6 +82,9 @@ class MainWindow(QMainWindow):
             self.cowan.cal_data.widen_all.widen(25.6, False)
             self.run_history.append(copy.deepcopy(self.cowan))
             self.simulate.add_cowan(self.cowan)
+            self.simulate.exp_data = copy.deepcopy(self.exp_data_1)
+        self.space_time_resolution.add_st((1, 2), self.simulate)
+        self.space_time_resolution.add_st((1, 3), self.simulate)
         # -------------------------- 更新页面 --------------------------
         # ----- 原子信息 -----
         # 改变元素选择器
@@ -158,14 +163,14 @@ class MainWindow(QMainWindow):
         # ----- 历史数据 -----
         # 更新历史记录列表
         self.ui.run_history_list.clear()
-        for cowan in self.run_history:
-            self.ui.run_history_list.addItem(QListWidgetItem(cowan.name))
+        for c in self.run_history:
+            self.ui.run_history_list.addItem(QListWidgetItem(c.name))
         # 更新选择列表
         self.ui.selection_list.clear()
         self.ui.page2_selection_list.clear()
-        for cowan in self.simulate.cowan_list:
-            self.ui.selection_list.addItem(QListWidgetItem(cowan.name))
-            item = QListWidgetItem(cowan.name)
+        for c in self.simulate.cowan_list:
+            self.ui.selection_list.addItem(QListWidgetItem(c.name))
+            item = QListWidgetItem(c.name)
             item.setCheckState(Qt.CheckState.Checked)
             self.ui.page2_selection_list.addItem(item)
 
@@ -173,6 +178,13 @@ class MainWindow(QMainWindow):
         self.exp_data_2 = ExpData(PROJECT_PATH / 'exp_data.csv')
         # 更新界面
         self.ui.page2_exp_data_path_name.setText(self.exp_data_2.filepath.name)
+        # 第三页
+        self.ui.comboBox.clear()
+        temp_list = []
+        for key in self.space_time_resolution.simulate_spectral_dict:
+            temp_list.append('时间：{:.2f}       位置：{:.2f}'.format(key[0], key[1]))
+        self.ui.comboBox.addItems(temp_list)
+        Page3.comboBox_changed(self, 0)
 
     def init(self):
         # 给元素选择器设置初始值
@@ -183,8 +195,13 @@ class MainWindow(QMainWindow):
         self.ui.in36_configuration_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)  # 设置行选择模式
         self.ui.in36_configuration_view.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.ResizeToContents)  # 设置表格列宽自适应
+
         self.ui.page2_grid_list.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # 设置表格不可编辑
         self.ui.page2_grid_list.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents)  # 设置表格列宽自适应
+
+        self.ui.st_resolution_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # 设置表格不可编辑
+        self.ui.st_resolution_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.ResizeToContents)  # 设置表格列宽自适应
         # 设置右键菜单
         self.ui.in36_configuration_view.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -192,6 +209,8 @@ class MainWindow(QMainWindow):
         self.ui.selection_list.setContextMenuPolicy(Qt.CustomContextMenu)
         # 设置单选
         self.ui.page2_grid_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        #
+        self.ui.treeWidget.header().hide()
 
     def bind_slot(self):
         # 设置左侧列表与右侧页面切换之间的关联
@@ -246,12 +265,21 @@ class MainWindow(QMainWindow):
         self.ui.page2_plot_spectrum.clicked.connect(functools.partial(Page2.plot_spectrum, self))  # 绘制模拟谱
         self.ui.page2_load_exp_data.clicked.connect(functools.partial(Page2.load_exp_data, self))  # 加载实验数据
         self.ui.page2_cal_grid.clicked.connect(functools.partial(Page2.cal_grid, self))  # 计算网格
+        self.ui.recoder.clicked.connect(functools.partial(Page2.st_resolution_recoder, self))  # 记录
         # 双击操作
         self.ui.page2_grid_list.itemSelectionChanged.connect(functools.partial(Page2.grid_list_double_clicked, self))  # 网格列表
 
         # 列表
         self.ui.page2_selection_list.itemChanged.connect(
             functools.partial(Page2.selection_list_changed, self))  # 选择列表
+
+        # ------------------------------- 第三页 -------------------------------
+        # 按钮
+        self.ui.pushButton.clicked.connect(functools.partial(Page3.plot_example, self))  # 绘制模拟谱
+        # 下拉框
+        self.ui.comboBox.activated.connect(functools.partial(Page3.comboBox_changed, self))  # 选择列表
+        # tree view
+        self.ui.treeWidget.itemChanged.connect(functools.partial(Page3.tree_item_changed, self))  # 选择列表
 
 
 if __name__ == '__main__':

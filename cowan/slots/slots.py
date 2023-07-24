@@ -1,7 +1,6 @@
 import copy
 import functools
 import shutil
-import time
 from pathlib import Path
 
 import matplotlib
@@ -9,7 +8,7 @@ import pandas as pd
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QAction, QCursor, QBrush, QColor
 from PySide6.QtWidgets import QFileDialog, QTableWidgetItem, QDialog, QTextBrowser, QVBoxLayout, QMenu, QListWidgetItem, \
-    QMessageBox
+    QMessageBox, QTreeWidgetItem
 
 from cowan import PROJECT_PATH
 from cowan.cowan import ExpData, Atom, SUBSHELL_SEQUENCE, ANGULAR_QUANTUM_NUM_NAME, In36, In2, Cowan, SimulateGrid
@@ -365,12 +364,15 @@ class Page1(MainWindow):
         self.cowan = Cowan(self.in36, self.in2, name, self.exp_data_1, coupling_mode)
         self.cowan.run()
         self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
+        self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
         self.cowan.cal_data.widen_all.widen(
             temperature=25.6,
             only_p=False)
+        # self.cowan.cal_data.widen_part.widen_by_group(temperature=25.6)
         # -------------------------- 画图 --------------------------
         self.cowan.cal_data.plot_line()
         self.cowan.cal_data.widen_all.plot_widen()
+        self.cowan.cal_data.widen_part.plot_widen_by_group()
         # -------------------------- 添加到运行历史 --------------------------
         # 如果已经存在，先删除
         index = -1
@@ -561,6 +563,7 @@ class Page1(MainWindow):
 
     def offset_changed(self):
         self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
+        self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
         self.cowan.cal_data.widen_all.widen(25.6, False)
         for i, cowan in enumerate(self.run_history):
             if cowan.name == self.cowan.name:
@@ -708,6 +711,7 @@ class Page2(MainWindow):
                         QColor(*Page2.rainbow_color(similarity / sim_max))))
                     self.ui.page2_grid_list.setItem(self.sim_grid.t_list.index(t), self.sim_grid.ne_list.index(ne),
                                                     item)
+            self.ui.page2_cal_grid.setDisabled(False)
 
         if self.exp_data_2 is None:
             QMessageBox.warning(self, '警告', '请先导入实验数据！')
@@ -722,7 +726,7 @@ class Page2(MainWindow):
                     self.ui.density_max_base.value(),
                     self.ui.density_max_index.value(),
                     self.ui.density_num.value()]
-
+        self.ui.page2_cal_grid.setDisabled(True)
         self.ui.page2_progressBar.setRange(0, t_range[2] * ne_range[4])
         self.sim_grid = SimulateGrid(t_range, ne_range, self.simulate)
         self.sim_grid.start()
@@ -744,6 +748,39 @@ class Page2(MainWindow):
         self.simulate.plot_html()
         self.ui.page2_add_spectrum_web.load(QUrl.fromLocalFile(self.simulate.plot_path))
 
+    def st_resolution_recoder(self):
+        st_time = eval(self.ui.st_time.text())
+        st_space = eval(self.ui.st_space.text())
+        if self.simulate.exp_data is None:
+            QMessageBox.warning(self, '警告', '请先确定温度和密度！')
+            return
+        self.space_time_resolution.add_st((st_time, st_space), self.simulate)
+
+        # -------------------------- 更新页面 --------------------------
+
+        self.ui.st_resolution_table.clear()
+        self.ui.st_resolution_table.setRowCount(len(self.space_time_resolution.simulate_spectral_dict))
+        self.ui.st_resolution_table.setColumnCount(5)
+        self.ui.st_resolution_table.setHorizontalHeaderLabels(['时间', '位置', '温度', '密度', '实验谱'])
+        for i, (key, value) in enumerate(self.space_time_resolution.simulate_spectral_dict.items()):
+            item1 = QTableWidgetItem(str(key[0]))
+            item2 = QTableWidgetItem(str(key[1]))
+            item3 = QTableWidgetItem('{:.3f}'.format(value.temperature))
+            item4 = QTableWidgetItem('{:.3e}'.format(value.electron_density))
+            item5 = QTableWidgetItem(value.exp_data.filepath.name)
+            self.ui.st_resolution_table.setItem(i, 0, item1)
+            self.ui.st_resolution_table.setItem(i, 1, item2)
+            self.ui.st_resolution_table.setItem(i, 2, item3)
+            self.ui.st_resolution_table.setItem(i, 3, item4)
+            self.ui.st_resolution_table.setItem(i, 4, item5)
+        # 更新第三页元素
+
+        self.ui.comboBox.clear()
+        temp_list = []
+        for key in self.space_time_resolution.simulate_spectral_dict:
+            temp_list.append('时间：{:.2f}       位置：{:.2f}'.format(key[0], key[1]))
+        self.ui.comboBox.addItems(temp_list)
+
     @staticmethod
     def rainbow_color(x):
         """
@@ -757,3 +794,52 @@ class Page2(MainWindow):
         camp = matplotlib.colormaps['rainbow']
         rgba = camp(x)
         return int(rgba[0] * 255), int(rgba[1] * 255), int(rgba[2] * 255), int(rgba[3] * 255)
+
+
+class Page3(MainWindow):
+    # def
+    def comboBox_changed(self, index):
+        self.ui.treeWidget.clear()
+        self.simulate_page3 = copy.deepcopy(list(self.space_time_resolution.simulate_spectral_dict.values())[index])
+
+        for c in self.simulate_page3.cowan_list:
+            c.cal_data.widen_part.widen_by_group()
+
+            parents = QTreeWidgetItem()
+            parents.setText(0, c.name)
+            parents.setCheckState(0, Qt.Checked)
+            self.ui.treeWidget.addTopLevelItem(parents)
+
+            for example in c.cal_data.widen_part.grouped_widen_data:
+                child = QTreeWidgetItem()
+
+                child.setCheckState(0, Qt.Checked)
+                child.setText(0, example)
+                parents.addChild(child)
+
+    def plot_example(self):
+        add_example = []
+        for i in range(self.ui.treeWidget.topLevelItemCount()):
+            parent = self.ui.treeWidget.topLevelItem(i)
+            if parent.checkState(0) == Qt.Checked:
+                add_example.append([True, []])
+            else:
+                add_example.append([False, []])
+            for j in range(parent.childCount()):
+                child = parent.child(j)
+                if child.checkState(0) == Qt.Checked:
+                    add_example[i][1].append(True)
+                else:
+                    add_example[i][1].append(False)
+
+        self.simulate_page3.plot_example_html(add_example)
+        self.ui.webEngineView_2.load(QUrl.fromLocalFile(self.simulate_page3.example_path))
+
+    @staticmethod
+    def tree_item_changed(self, item, column):
+        if item.checkState(0) == Qt.Checked:
+            for i in range(item.childCount()):
+                item.child(i).setCheckState(0, Qt.Checked)
+        else:
+            for i in range(item.childCount()):
+                item.child(i).setCheckState(0, Qt.Unchecked)
