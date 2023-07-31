@@ -5,7 +5,8 @@ import shutil
 import subprocess
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Optional, List, Dict
+from pprint import pprint
+from typing import Optional, List, Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -244,6 +245,44 @@ class In36:
 
     def del_configuration(self, index):
         self.configuration_card.pop(index)
+
+    def get_configuration_name(self, low_index, high_index):
+        first_parity = self.configuration_card[0][1]
+        first_configuration = []
+        second_configuration = []
+        for configuration, parity in self.configuration_card:
+            if parity == first_parity:
+                first_configuration.append(configuration[-1])
+            else:
+                second_configuration.append(configuration[-1])
+        low_index, high_index = low_index - 1, high_index - 1
+        low_configuration = first_configuration[low_index]
+        high_configuration = second_configuration[high_index]
+
+        low_configuration = low_configuration.split(' ')
+        high_configuration = high_configuration.split(' ')
+
+        low_dict = {}
+        high_dict = {}
+
+        for low in low_configuration:
+            low_dict[low[:2]] = low[2:]
+        for high in high_configuration:
+            high_dict[high[:2]] = high[2:]
+        configuration_name = list(set(list(low_dict.keys()) + list(high_dict.keys())))
+        res = {}
+        for name in configuration_name:
+            res[name] = int(low_dict.get(name, 0)) - int(high_dict.get(name, 0))
+        low_name = []
+        high_name = []
+        for key, value in res.items():
+            if value < 0:
+                for i in range(-value):
+                    high_name.append(key)
+            elif value > 0:
+                for i in range(value):
+                    low_name.append(key)
+        return '{} --> {}'.format(','.join(low_name), ','.join(high_name))
 
     def get_text(self):
         in36 = ''
@@ -767,31 +806,35 @@ class SimulateSpectral:
         plot(fig, filename=self.plot_path, auto_open=False)
 
     def plot_example_html(self, add_list):
-        # for c in self.cowan_list:
-        #     c.cal_data.widen_part.widen_by_group()
         height = 0
         trace = []
         for i, c in enumerate(self.cowan_list):
             if add_list[i][0]:
                 for j, (key, value) in enumerate(c.cal_data.widen_part.grouped_widen_data.items()):
                     if add_list[i][1][j]:
+                        index_low, index_high = map(int, key.split('_'))
+                        name = '{}<br />{}'.format(
+                            c.name.replace('_', '+'),
+                            c.in36.get_configuration_name(index_low, index_high)
+                        )
                         if value['cross_P'].max() == 0:
                             trace.append(
                                 go.Scatter(x=value['wavelength'],
                                            y=value['cross_P'] + height,
                                            mode='lines',
-                                           name=f'{c.name}_{key}'))
+                                           name=name))
                         else:
                             trace.append(
                                 go.Scatter(x=value['wavelength'],
                                            y=value['cross_P'] / value['cross_P'].max() + height,
                                            mode='lines',
-                                           name=f'{c.name}_{key}'))
+                                           name=name))
                         height += 1.2
-        layout = go.Layout(margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
-                           xaxis=go.layout.XAxis(range=self.exp_data.x_range),
-                           )
-        # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
+        layout = go.Layout(
+            margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
+            xaxis=go.layout.XAxis(range=self.exp_data.x_range),
+            # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
+        )
         fig = go.Figure(data=trace, layout=layout)
         plot(fig, filename=self.example_path, auto_open=False)
 
@@ -924,9 +967,8 @@ class SimulateSpectral:
 
     # 计算光谱相似度
     def get_spectrum_similarity(self):
-
-        self.spectrum_similarity = self.spectrum_similarity5(self.exp_data.data[['wavelength', 'intensity']],
-                                                             self.sim_data[['wavelength', 'intensity']])
+        self.spectrum_similarity = self.spectrum_similarity10(self.exp_data.data[['wavelength', 'intensity']],
+                                                              self.sim_data[['wavelength', 'intensity']])
 
     @staticmethod
     def spectrum_similarity1(fax: pd.DataFrame, fbx: pd.DataFrame):
@@ -1023,6 +1065,38 @@ class SimulateSpectral:
         non = np.linalg.norm(x) * np.linalg.norm(y2)
         return np.round(tmp / float(non), 9)
 
+    def spectrum_similarity10(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+        """
+        峰值匹配法
+        :param fax:
+        :param fbx:
+        :return:
+        """
+        x, y1, y2 = self.get_y1y2(fax, fbx)
+        peaks1, _ = find_peaks(y1)
+        peaks2, _ = find_peaks(y2)
+        d = {}
+        for index in peaks2:
+            d[index] = y2[index]
+        peaks2 = sorted(d.items(), key=lambda item: item[1], reverse=True)
+        peaks2 = list(zip(*peaks2[:5]))[0]
+        temp_peaks = []
+        for index in peaks2:
+            min_index, temp = -1, abs(index - peaks1[0])
+            for i, index_1 in enumerate(peaks1[1:]):
+                if temp > abs(index - index_1):
+                    temp = abs(index - index_1)
+                    min_index = i + 1
+            temp_peaks.append(peaks1[min_index])
+        peaks1 = temp_peaks
+        similarity = 0
+        for i in range(len(peaks1) - 1):
+            for j in range(i + 1, len(peaks1)):
+                similarity += abs(y1[peaks1[i]] / y1[peaks1[j]] - y2[peaks2[i]] / y2[peaks2[j]])
+        if similarity > len(peaks1):
+            similarity = len(peaks1)
+        return similarity
+
     @staticmethod
     def get_y1y2(fax: pd.DataFrame, fbx: pd.DataFrame, min_x=None, max_x=None):
         col_names_a = fax.columns
@@ -1090,16 +1164,108 @@ class SpaceTimeResolution:
         # 模拟光谱数据对象 列表
         self.simulate_spectral_dict = {}
 
+        self.change_by_time_path = PROJECT_PATH.joinpath('figure/change/by_time.html').as_posix()
+        self.change_by_location_path = PROJECT_PATH.joinpath('figure/change/by_location.html').as_posix()
+        self.change_by_space_time_path = PROJECT_PATH.joinpath('figure/change/by_space_time.html').as_posix()
+
     # 添加一个位置时间
-    def add_st(self, location: tuple, simulate_spectral):
-        self.simulate_spectral_dict[location] = copy.deepcopy(simulate_spectral)
+    def add_st(self, st: tuple, simulate_spectral):
+        self.simulate_spectral_dict[st] = copy.deepcopy(simulate_spectral)
 
     # 删除一个位置时间
-    def del_st(self, location):
-        self.simulate_spectral_dict.pop(location)
+    def del_st(self, st):
+        self.simulate_spectral_dict.pop(st)
 
     def run(self):
         pass
+
+    def plot_change_by_time(self, location: Tuple[str, str, str]):
+        times = []
+        for key, value in self.simulate_spectral_dict.items():
+            if key[1] == location:
+                times.append(eval(key[0]))
+        times = sorted(times)
+        temperature = []
+        electron_density = []
+        for time in times:
+            temperature.append(self.simulate_spectral_dict[(str(time), location)].temperature)
+            electron_density.append(self.simulate_spectral_dict[(str(time), location)].electron_density)
+
+        trace1 = go.Scatter(x=times, y=temperature, mode='lines')
+        trace2 = go.Scatter(x=times, y=electron_density, mode='lines', yaxis='y2')
+        data = [trace1, trace2]
+        layout = go.Layout(
+            margin=go.layout.Margin(autoexpand=True, b=15, l=30, r=0, t=0),
+            yaxis2=dict(anchor='x', overlaying='y', side='right'),  # 设置坐标轴的格式，一般次坐标轴在右侧
+            # xaxis=go.layout.XAxis(range=self.exp_data.x_range),
+        )
+        fig = go.Figure(data=data, layout=layout)
+        plot(fig, filename=self.change_by_time_path, auto_open=False)
+
+    def plot_change_by_location(self, time):
+        x_s = []
+        for key, value in self.simulate_spectral_dict.items():
+            if key[0] == time:
+                x_s.append(eval(key[1][0]))
+        x_s = sorted(x_s)
+
+        temperature = {}
+        electron_density = {}
+
+        for x in x_s:
+            temperature[(x, 0, 0)] = self.simulate_spectral_dict[(time, (str(x), '0', '0'))].temperature
+            electron_density[(x, 0, 0)] = self.simulate_spectral_dict[(time, (str(x), '0', '0'))].electron_density
+
+        def fun(xx, yy=0, zz=0):
+            return temperature[(xx, yy, zz)], electron_density[(xx, yy, zz)]
+
+        trace1 = go.Scatter(x=x_s, y=[fun(v)[0] for v in x_s], mode='lines')
+        trace2 = go.Scatter(x=x_s, y=[fun(v)[1] for v in x_s], mode='lines', yaxis='y2')
+        data = [trace1, trace2]
+        layout = go.Layout(
+            margin=go.layout.Margin(autoexpand=True, b=15, l=30, r=0, t=0),
+            yaxis2=dict(anchor='x', overlaying='y', side='right'),  # 设置坐标轴的格式，一般次坐标轴在右侧
+            # xaxis=go.layout.XAxis(range=self.exp_data.x_range),
+        )
+        fig = go.Figure(data=data, layout=layout)
+        plot(fig, filename=self.change_by_location_path, auto_open=False)
+
+    def plot_change_by_space_time(self, var_index):
+        spaces = []
+        times = []
+        for key in self.simulate_spectral_dict:
+            if key[0] not in times:
+                times.append(key[0])
+            if key[1][0] not in spaces:
+                spaces.append(key[1][0])
+        spaces = sorted(spaces, key=lambda x: eval(x))
+        times = sorted(times, key=lambda x: eval(x))
+        t_res = []
+        d_res = []
+        for time in times:
+            temp_t_res = []
+            temp_d_res = []
+            for space in spaces:
+                temp_t_res.append(self.simulate_spectral_dict[(time, (space, '0', '0'))].temperature)
+                temp_d_res.append(self.simulate_spectral_dict[(time, (space, '0', '0'))].electron_density)
+            t_res.append(temp_t_res)
+            d_res.append(temp_d_res)
+
+        if var_index == 0:
+            trace1 = go.Heatmap(x=spaces, y=times, z=t_res)
+        else:
+            trace1 = go.Heatmap(x=spaces, y=times, z=d_res)
+        data = [trace1]
+        layout = go.Layout(
+            margin=go.layout.Margin(b=15, l=60, r=0, t=0),
+            # yaxis={
+            #     'type': 'log',
+            #     'tickformat': '.2e'
+            # }
+        )
+        fig = go.Figure(data=data, layout=layout)
+        plot(fig, filename=self.change_by_space_time_path, auto_open=False)
+
 
 # if __name__ == '__main__':
 #     in36_3 = In36()

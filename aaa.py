@@ -1,32 +1,38 @@
-from pathlib import Path
+import copy
+from pprint import pprint
+
+import numpy as np
 
 from cowan import PROJECT_PATH
-from cowan.cowan import In36, Atom, In2, ExpData, Cowan, SimulateSpectral
+from cowan.cowan import In36, Atom, In2, ExpData, Cowan, SimulateSpectral, SpaceTimeResolution
 
-in36_3 = In36(Atom(1, 0))
-in36_3.read_from_file(PROJECT_PATH / 'in36_3')
-in36_4 = In36(Atom(1, 0))
-in36_4.read_from_file(PROJECT_PATH / 'in36_4')
-in36_5 = In36(Atom(1, 0))
-in36_5.read_from_file(PROJECT_PATH / 'in36_5')
-in36_6 = In36(Atom(1, 0))
-in36_6.read_from_file(PROJECT_PATH / 'in36_6')
-
-in2 = In2()
-in2.read_from_file(PROJECT_PATH / 'in2')
-
-exp_data = ExpData(PROJECT_PATH / 'exp_data.csv')
-
-cowan_3 = Cowan(in36_3, in2, 'Al_3', exp_data)
-cowan_4 = Cowan(in36_4, in2, 'Al_4', exp_data)
-cowan_5 = Cowan(in36_5, in2, 'Al_5', exp_data)
-cowan_6 = Cowan(in36_6, in2, 'Al_6', exp_data)
-
-sim = SimulateSpectral()
-sim.add_cowan(cowan_3, cowan_4, cowan_5, cowan_6)
-for c in sim.cowan_list:
-    c.run()
-    c.cal_data.widen_all.widen(23.5)
-sim.load_exp_data(Path('f:/Cowan/Al/exp_data.csv'))
-sim.get_simulate_data(23.5, 1e20)
-print(sim.spectrum_similarity)
+atom = None
+simulate = SimulateSpectral()
+space_time_resolution = SpaceTimeResolution()
+delta = {3: 0.05,
+         4: -0.04,
+         5: 0.0,
+         6: 0.05}
+exp_data_1 = ExpData(PROJECT_PATH / './exp_data.csv')
+for i in range(3, 7):
+    atom = Atom(1, 0)
+    in36 = In36(atom)
+    in36.read_from_file(PROJECT_PATH / f'in36_{i}')
+    in2 = In2()
+    cowan = Cowan(in36, in2, f'Al_{i}', exp_data_1, 1)
+    cowan.run()
+    cowan.cal_data.widen_all.delta_lambda = delta[i]
+    cowan.cal_data.widen_all.widen(25.6, False)
+    simulate.add_cowan(cowan)
+simulate.exp_data = copy.deepcopy(exp_data_1)
+for x in range(5):
+    for time in range(6):
+        temp = 20 + np.random.random() * 30
+        dishu = np.random.random() * 10
+        zhishu = 17 + np.random.random() * 4
+        den = dishu * 10 ** zhishu
+        simulate.temperature = temp
+        simulate.electron_density = den
+        space_time_resolution.add_st((str(time), (str(x), '0', '0')), simulate)
+#
+space_time_resolution.plot_change_by_space_time(1)

@@ -1,5 +1,3 @@
-import functools
-
 from PySide6.QtWidgets import QAbstractItemView
 
 from cowan.cowan import *
@@ -82,9 +80,16 @@ class MainWindow(QMainWindow):
             self.cowan.cal_data.widen_all.widen(25.6, False)
             self.run_history.append(copy.deepcopy(self.cowan))
             self.simulate.add_cowan(self.cowan)
-            self.simulate.exp_data = copy.deepcopy(self.exp_data_1)
-        self.space_time_resolution.add_st((1, 2), self.simulate)
-        self.space_time_resolution.add_st((1, 3), self.simulate)
+        self.simulate.exp_data = copy.deepcopy(self.exp_data_1)
+        for x in range(5):
+            for time in range(5):
+                temp = 20 + np.random.random() * 30
+                dishu = np.random.random() * 10
+                zhishu = 17 + np.random.random() * 4
+                den = dishu * 10 ** zhishu
+                self.simulate.get_simulate_data(temp, den)
+                self.space_time_resolution.add_st((str(time), (str(x), '0', '0')), self.simulate)
+
         # -------------------------- 更新页面 --------------------------
         # ----- 原子信息 -----
         # 改变元素选择器
@@ -178,13 +183,45 @@ class MainWindow(QMainWindow):
         self.exp_data_2 = ExpData(PROJECT_PATH / 'exp_data.csv')
         # 更新界面
         self.ui.page2_exp_data_path_name.setText(self.exp_data_2.filepath.name)
-        # 第三页
+        # 时空分辨表格
+        self.ui.st_resolution_table.clear()
+        self.ui.st_resolution_table.setRowCount(len(self.space_time_resolution.simulate_spectral_dict))
+        self.ui.st_resolution_table.setColumnCount(5)
+        self.ui.st_resolution_table.setHorizontalHeaderLabels(['时间', '位置', '温度', '密度', '实验谱'])
+        for i, (key, value) in enumerate(self.space_time_resolution.simulate_spectral_dict.items()):
+            item1 = QTableWidgetItem(key[0])
+            item2 = QTableWidgetItem(f'({key[1][0]}, {key[1][1]}, {key[1][2]})')
+            item3 = QTableWidgetItem('{:.3f}'.format(value.temperature))
+            item4 = QTableWidgetItem('{:.3e}'.format(value.electron_density))
+            item5 = QTableWidgetItem(value.exp_data.filepath.name)
+            self.ui.st_resolution_table.setItem(i, 0, item1)
+            self.ui.st_resolution_table.setItem(i, 1, item2)
+            self.ui.st_resolution_table.setItem(i, 2, item3)
+            self.ui.st_resolution_table.setItem(i, 3, item4)
+            self.ui.st_resolution_table.setItem(i, 4, item5)
+
+        # --------------- 第三页
+        # 更新第三页元素
+        self.ui.location_select.clear()
+        temp_times = []
+        temp_locations = []
+        for key in self.space_time_resolution.simulate_spectral_dict:
+            temp_times.append(key[0])
+            temp_locations.append(key[1])
+        temp_times = set(temp_times)
+        temp_locations = set(temp_locations)
+        temp_locations = [f'({key[0]}, {key[1]}, {key[2]})' for key in temp_locations]
+        self.ui.location_select.addItems(temp_locations)
+        self.ui.time_select.addItems(temp_times)
+
+        # --------------- 第四页
         self.ui.comboBox.clear()
         temp_list = []
         for key in self.space_time_resolution.simulate_spectral_dict:
-            temp_list.append('时间：{:.2f}       位置：{:.2f}'.format(key[0], key[1]))
+            temp_list.append(
+                f'时间：{key[0]}    位置：{key[1][0]}, {key[1][1]}, {key[1][2]}')
         self.ui.comboBox.addItems(temp_list)
-        Page3.comboBox_changed(self, 0)
+        Page4.comboBox_changed(self, 0)
 
     def init(self):
         # 给元素选择器设置初始值
@@ -267,7 +304,7 @@ class MainWindow(QMainWindow):
         self.ui.page2_cal_grid.clicked.connect(functools.partial(Page2.cal_grid, self))  # 计算网格
         self.ui.recoder.clicked.connect(functools.partial(Page2.st_resolution_recoder, self))  # 记录
         # 双击操作
-        self.ui.page2_grid_list.itemSelectionChanged.connect(functools.partial(Page2.grid_list_double_clicked, self))  # 网格列表
+        self.ui.page2_grid_list.itemSelectionChanged.connect(functools.partial(Page2.grid_list_clicked, self))  # 网格列表
 
         # 列表
         self.ui.page2_selection_list.itemChanged.connect(
@@ -275,11 +312,16 @@ class MainWindow(QMainWindow):
 
         # ------------------------------- 第三页 -------------------------------
         # 按钮
-        self.ui.pushButton.clicked.connect(functools.partial(Page3.plot_example, self))  # 绘制模拟谱
+        self.ui.td_by_t.clicked.connect(functools.partial(Page3.plot_by_times, self))  # 绘制模拟谱
+        self.ui.td_by_s.clicked.connect(functools.partial(Page3.plot_by_locations, self))  # 绘制模拟谱
+        self.ui.td_by_st.clicked.connect(functools.partial(Page3.plot_by_space_time, self))  # 绘制模拟谱
+        # ------------------------------- 第四页 -------------------------------
+        # 按钮
+        self.ui.pushButton.clicked.connect(functools.partial(Page4.plot_example, self))  # 绘制模拟谱
         # 下拉框
-        self.ui.comboBox.activated.connect(functools.partial(Page3.comboBox_changed, self))  # 选择列表
+        self.ui.comboBox.activated.connect(functools.partial(Page4.comboBox_changed, self))  # 选择列表
         # tree view
-        self.ui.treeWidget.itemChanged.connect(functools.partial(Page3.tree_item_changed, self))  # 选择列表
+        self.ui.treeWidget.itemChanged.connect(functools.partial(Page4.tree_item_changed, self))  # 选择列表
 
 
 if __name__ == '__main__':

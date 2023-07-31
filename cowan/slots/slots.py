@@ -11,7 +11,8 @@ from PySide6.QtWidgets import QFileDialog, QTableWidgetItem, QDialog, QTextBrows
     QMessageBox, QTreeWidgetItem
 
 from cowan import PROJECT_PATH
-from cowan.cowan import ExpData, Atom, SUBSHELL_SEQUENCE, ANGULAR_QUANTUM_NUM_NAME, In36, In2, Cowan, SimulateGrid
+from cowan.cowan import ExpData, Atom, SUBSHELL_SEQUENCE, ANGULAR_QUANTUM_NUM_NAME, In36, In2, Cowan, SimulateGrid, \
+    SimulateSpectral
 from main import MainWindow, VerticalLine
 
 
@@ -698,8 +699,8 @@ class Page2(MainWindow):
         def update_ui(*args):
             # -------------------------- 更新页面 --------------------------
             self.ui.page2_grid_list.clear()
-            self.ui.page2_grid_list.setRowCount(self.sim_grid.t_num)
-            self.ui.page2_grid_list.setColumnCount(self.sim_grid.ne_num)
+            self.ui.page2_grid_list.setRowCount(self.sim_grid.ne_num)
+            self.ui.page2_grid_list.setColumnCount(self.sim_grid.t_num)
             self.ui.page2_grid_list.setHorizontalHeaderLabels(self.sim_grid.t_list)
             self.ui.page2_grid_list.setVerticalHeaderLabels(self.sim_grid.ne_list)
             sim_max = max(self.sim_grid.grid_data.values(), key=lambda x: x.spectrum_similarity).spectrum_similarity
@@ -709,7 +710,7 @@ class Page2(MainWindow):
                     item = QTableWidgetItem('{:.4f}'.format(similarity))
                     item.setBackground(QBrush(
                         QColor(*Page2.rainbow_color(similarity / sim_max))))
-                    self.ui.page2_grid_list.setItem(self.sim_grid.t_list.index(t), self.sim_grid.ne_list.index(ne),
+                    self.ui.page2_grid_list.setItem(self.sim_grid.ne_list.index(ne), self.sim_grid.t_list.index(t),
                                                     item)
             self.ui.page2_cal_grid.setDisabled(False)
 
@@ -733,7 +734,7 @@ class Page2(MainWindow):
         self.sim_grid.end.connect(update_ui)
         self.sim_grid.progress.connect(update_progress_bar)
 
-    def grid_list_double_clicked(self):
+    def grid_list_clicked(self):
         item = self.ui.page2_grid_list.currentItem()
         if not item:
             return
@@ -749,8 +750,10 @@ class Page2(MainWindow):
         self.ui.page2_add_spectrum_web.load(QUrl.fromLocalFile(self.simulate.plot_path))
 
     def st_resolution_recoder(self):
-        st_time = eval(self.ui.st_time.text())
-        st_space = eval(self.ui.st_space.text())
+        st_time = self.ui.st_time.text()
+        st_space = (self.ui.st_space_x.text(),
+                    self.ui.st_space_y.text(),
+                    self.ui.st_space_z.text())
         if self.simulate.exp_data is None:
             QMessageBox.warning(self, '警告', '请先确定温度和密度！')
             return
@@ -763,8 +766,8 @@ class Page2(MainWindow):
         self.ui.st_resolution_table.setColumnCount(5)
         self.ui.st_resolution_table.setHorizontalHeaderLabels(['时间', '位置', '温度', '密度', '实验谱'])
         for i, (key, value) in enumerate(self.space_time_resolution.simulate_spectral_dict.items()):
-            item1 = QTableWidgetItem(str(key[0]))
-            item2 = QTableWidgetItem(str(key[1]))
+            item1 = QTableWidgetItem(key[0])
+            item2 = QTableWidgetItem(f'({key[1][0]}, {key[1][1]}, {key[1][2]})')
             item3 = QTableWidgetItem('{:.3f}'.format(value.temperature))
             item4 = QTableWidgetItem('{:.3e}'.format(value.electron_density))
             item5 = QTableWidgetItem(value.exp_data.filepath.name)
@@ -773,12 +776,26 @@ class Page2(MainWindow):
             self.ui.st_resolution_table.setItem(i, 2, item3)
             self.ui.st_resolution_table.setItem(i, 3, item4)
             self.ui.st_resolution_table.setItem(i, 4, item5)
-        # 更新第三页元素
 
+        # 更新第三页元素
+        self.ui.location_select.clear()
+        temp_times = []
+        temp_locations = []
+        for key in self.space_time_resolution.simulate_spectral_dict:
+            temp_times.append(key[0])
+            temp_locations.append(key[1])
+        temp_times = set(temp_times)
+        temp_locations = set(temp_locations)
+        temp_locations = [f'({key[0]}, {key[1]}, {key[2]})' for key in temp_locations]
+        self.ui.location_select.addItems(temp_locations)
+        self.ui.time_select_1.addItems(temp_times)
+
+        # 更新第四页元素
         self.ui.comboBox.clear()
         temp_list = []
         for key in self.space_time_resolution.simulate_spectral_dict:
-            temp_list.append('时间：{:.2f}       位置：{:.2f}'.format(key[0], key[1]))
+            temp_list.append(
+                '时间：{:.2f}       位置：{:.2f}, {:.2f}, {:.2f}'.format(key[0], key[1][0], key[1][1], key[1][2]))
         self.ui.comboBox.addItems(temp_list)
 
     @staticmethod
@@ -797,25 +814,54 @@ class Page2(MainWindow):
 
 
 class Page3(MainWindow):
-    # def
+    def plot_by_times(self):
+        temp = self.ui.location_select.currentText().strip('(').strip(')')
+        x, y, z = temp.split(',')
+        x, y, z = x.strip(), y.strip(), z.strip()
+        self.space_time_resolution.plot_change_by_time((x, y, z))
+
+        self.ui.webEngineView_3.load(QUrl.fromLocalFile(self.space_time_resolution.change_by_time_path))
+
+    def plot_by_locations(self):
+        t = self.ui.time_select.currentText()
+        self.space_time_resolution.plot_change_by_location(t)
+
+        self.ui.webEngineView_4.load(QUrl.fromLocalFile(self.space_time_resolution.change_by_location_path))
+
+    def plot_by_space_time(self):
+        variable_index = self.ui.variable_select.currentIndex()
+        self.space_time_resolution.plot_change_by_space_time(variable_index)
+
+        self.ui.webEngineView_5.load(QUrl.fromLocalFile(self.space_time_resolution.change_by_space_time_path))
+
+
+
+
+
+class Page4(MainWindow):
     def comboBox_changed(self, index):
+        # 设置树状列表
         self.ui.treeWidget.clear()
-        self.simulate_page3 = copy.deepcopy(list(self.space_time_resolution.simulate_spectral_dict.values())[index])
+        self.simulate_page3: SimulateSpectral = copy.deepcopy(
+            list(self.space_time_resolution.simulate_spectral_dict.values())[index])
 
         for c in self.simulate_page3.cowan_list:
             c.cal_data.widen_part.widen_by_group()
 
             parents = QTreeWidgetItem()
-            parents.setText(0, c.name)
+            parents.setText(0, c.name.replace('_', '+'))
             parents.setCheckState(0, Qt.Checked)
             self.ui.treeWidget.addTopLevelItem(parents)
 
             for example in c.cal_data.widen_part.grouped_widen_data:
                 child = QTreeWidgetItem()
-
                 child.setCheckState(0, Qt.Checked)
-                child.setText(0, example)
+                index_low, index_high = map(int, example.split('_'))
+                child.setText(0, c.in36.get_configuration_name(index_low, index_high))
                 parents.addChild(child)
+        # 画实验谱线
+        self.simulate_page3.plot_html()
+        self.ui.webEngineView.load(QUrl.fromLocalFile(self.simulate_page3.plot_path))
 
     def plot_example(self):
         add_example = []
