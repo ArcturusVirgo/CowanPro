@@ -1673,6 +1673,11 @@ class Ui_main_window(object):
 
         self.horizontalLayout_15.addWidget(self.page2_load_exp_data)
 
+        self.plot_exp_2 = QPushButton(self.groupBox)
+        self.plot_exp_2.setObjectName(u"plot_exp_2")
+
+        self.horizontalLayout_15.addWidget(self.plot_exp_2)
+
 
         self.verticalLayout.addLayout(self.horizontalLayout_15)
 
@@ -1696,23 +1701,24 @@ class Ui_main_window(object):
 
         self.st_space_x = QLineEdit(self.groupBox)
         self.st_space_x.setObjectName(u"st_space_x")
+        self.st_space_x.setEnabled(True)
         self.st_space_x.setMaximumSize(QSize(40, 16777215))
 
         self.horizontalLayout_19.addWidget(self.st_space_x)
 
-        self.st_space__y = QLineEdit(self.groupBox)
-        self.st_space__y.setObjectName(u"st_space__y")
-        self.st_space__y.setEnabled(False)
-        self.st_space__y.setMaximumSize(QSize(40, 16777215))
+        self.st_space_y = QLineEdit(self.groupBox)
+        self.st_space_y.setObjectName(u"st_space_y")
+        self.st_space_y.setEnabled(False)
+        self.st_space_y.setMaximumSize(QSize(40, 16777215))
 
-        self.horizontalLayout_19.addWidget(self.st_space__y)
+        self.horizontalLayout_19.addWidget(self.st_space_y)
 
-        self.st_space__z = QLineEdit(self.groupBox)
-        self.st_space__z.setObjectName(u"st_space__z")
-        self.st_space__z.setEnabled(False)
-        self.st_space__z.setMaximumSize(QSize(40, 16777215))
+        self.st_space_z = QLineEdit(self.groupBox)
+        self.st_space_z.setObjectName(u"st_space_z")
+        self.st_space_z.setEnabled(False)
+        self.st_space_z.setMaximumSize(QSize(40, 16777215))
 
-        self.horizontalLayout_19.addWidget(self.st_space__z)
+        self.horizontalLayout_19.addWidget(self.st_space_z)
 
         self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
@@ -1722,6 +1728,18 @@ class Ui_main_window(object):
         self.recoder.setObjectName(u"recoder")
 
         self.horizontalLayout_19.addWidget(self.recoder)
+
+        self.line_8 = QFrame(self.groupBox)
+        self.line_8.setObjectName(u"line_8")
+        self.line_8.setFrameShape(QFrame.VLine)
+        self.line_8.setFrameShadow(QFrame.Sunken)
+
+        self.horizontalLayout_19.addWidget(self.line_8)
+
+        self.load_space_time = QPushButton(self.groupBox)
+        self.load_space_time.setObjectName(u"load_space_time")
+
+        self.horizontalLayout_19.addWidget(self.load_space_time)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_19)
@@ -1953,7 +1971,7 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(2)
+        self.stackedWidget.setCurrentIndex(1)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -2190,13 +2208,15 @@ class Ui_main_window(object):
         self.groupBox.setTitle(QCoreApplication.translate("main_window", u"\u65f6\u7a7a\u5206\u8fa8", None))
         self.label_15.setText(QCoreApplication.translate("main_window", u"\u5b9e\u9a8c\u6570\u636e", None))
         self.page2_load_exp_data.setText(QCoreApplication.translate("main_window", u"...", None))
+        self.plot_exp_2.setText(QCoreApplication.translate("main_window", u"\u7ed8\u5236", None))
         self.label_21.setText(QCoreApplication.translate("main_window", u"\u65f6\u95f4", None))
         self.st_time.setText(QCoreApplication.translate("main_window", u"1", None))
         self.label_20.setText(QCoreApplication.translate("main_window", u"\u4f4d\u7f6e", None))
         self.st_space_x.setText(QCoreApplication.translate("main_window", u"1", None))
-        self.st_space__y.setText(QCoreApplication.translate("main_window", u"0", None))
-        self.st_space__z.setText(QCoreApplication.translate("main_window", u"0", None))
+        self.st_space_y.setText(QCoreApplication.translate("main_window", u"0", None))
+        self.st_space_z.setText(QCoreApplication.translate("main_window", u"0", None))
         self.recoder.setText(QCoreApplication.translate("main_window", u"\u8bb0\u5f55", None))
+        self.load_space_time.setText(QCoreApplication.translate("main_window", u"\u6279\u91cf\u52a0\u8f7d", None))
         ___qtablewidgetitem3 = self.st_resolution_table.horizontalHeaderItem(0)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("main_window", u"\u65f6\u95f4", None));
         ___qtablewidgetitem4 = self.st_resolution_table.horizontalHeaderItem(1)
