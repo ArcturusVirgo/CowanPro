@@ -70,6 +70,7 @@ class Ui_main_window(object):
         QListWidgetItem(self.navigation)
         QListWidgetItem(self.navigation)
         QListWidgetItem(self.navigation)
+        QListWidgetItem(self.navigation)
         self.navigation.setObjectName(u"navigation")
         self.navigation.setMinimumSize(QSize(50, 0))
         self.navigation.setMaximumSize(QSize(100, 16777215))
@@ -1459,6 +1460,11 @@ class Ui_main_window(object):
 
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
+        self.pushButton_2 = QPushButton(self.groupBox_3)
+        self.pushButton_2.setObjectName(u"pushButton_2")
+
+        self.horizontalLayout_8.addWidget(self.pushButton_2)
+
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_8.addItem(self.horizontalSpacer)
@@ -1555,7 +1561,7 @@ class Ui_main_window(object):
 
         self.temperature_num = QSpinBox(self.groupBox_2)
         self.temperature_num.setObjectName(u"temperature_num")
-        self.temperature_num.setValue(40)
+        self.temperature_num.setValue(20)
 
         self.horizontalLayout_21.addWidget(self.temperature_num)
 
@@ -1592,7 +1598,7 @@ class Ui_main_window(object):
 
         self.density_num = QSpinBox(self.groupBox_2)
         self.density_num.setObjectName(u"density_num")
-        self.density_num.setValue(40)
+        self.density_num.setValue(20)
         self.density_num.setDisplayIntegerBase(10)
 
         self.horizontalLayout_20.addWidget(self.density_num)
@@ -1971,7 +1977,7 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(3)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -1995,13 +2001,15 @@ class Ui_main_window(object):
         __sortingEnabled = self.navigation.isSortingEnabled()
         self.navigation.setSortingEnabled(False)
         ___qlistwidgetitem = self.navigation.item(0)
-        ___qlistwidgetitem.setText(QCoreApplication.translate("main_window", u"1", None));
+        ___qlistwidgetitem.setText(QCoreApplication.translate("main_window", u"\u5149\u8c31\u6307\u8ba4", None));
         ___qlistwidgetitem1 = self.navigation.item(1)
-        ___qlistwidgetitem1.setText(QCoreApplication.translate("main_window", u"2", None));
+        ___qlistwidgetitem1.setText(QCoreApplication.translate("main_window", u"\u5b9e\u9a8c\u8c31\u7ebf\u6a21\u62df", None));
         ___qlistwidgetitem2 = self.navigation.item(2)
-        ___qlistwidgetitem2.setText(QCoreApplication.translate("main_window", u"3", None));
+        ___qlistwidgetitem2.setText(QCoreApplication.translate("main_window", u"\u6f14\u5316\u8fc7\u7a0b", None));
         ___qlistwidgetitem3 = self.navigation.item(3)
-        ___qlistwidgetitem3.setText(QCoreApplication.translate("main_window", u"4", None));
+        ___qlistwidgetitem3.setText(QCoreApplication.translate("main_window", u"\u7ec4\u6001\u8d21\u732e", None));
+        ___qlistwidgetitem4 = self.navigation.item(4)
+        ___qlistwidgetitem4.setText(QCoreApplication.translate("main_window", u"\u6570\u636e\u7edf\u8ba1", None));
         self.navigation.setSortingEnabled(__sortingEnabled)
 
 #if QT_CONFIG(tooltip)
@@ -2197,6 +2205,7 @@ class Ui_main_window(object):
         self.crossNP.setText(QCoreApplication.translate("main_window", u"cross-NP", None))
         self.label_2.setText(QCoreApplication.translate("main_window", u"\u8ba1\u7b97\u8c31", None))
         self.groupBox_3.setTitle(QCoreApplication.translate("main_window", u"\u6a21\u62df\u8c31\u7ebf", None))
+        self.pushButton_2.setText(QCoreApplication.translate("main_window", u"\u8c31\u7ebf\u76f8\u4f3c\u5ea6\u5224\u65ad\u914d\u7f6e", None))
         self.label_18.setText(QCoreApplication.translate("main_window", u"\u6e29\u5ea6", None))
         self.label_19.setText(QCoreApplication.translate("main_window", u"\u5bc6\u5ea6", None))
         self.page2_plot_spectrum.setText(QCoreApplication.translate("main_window", u"\u7ed8\u5236", None))
@@ -2239,7 +2248,7 @@ class Ui_main_window(object):
         self.label_22.setText(QCoreApplication.translate("main_window", u"\u65f6\u95f4\u9009\u62e9", None))
         self.td_by_s.setText(QCoreApplication.translate("main_window", u"\u7ed8\u5236", None))
         self.groupBox_7.setTitle(QCoreApplication.translate("main_window", u"GroupBox", None))
-        self.pushButton.setText(QCoreApplication.translate("main_window", u"PushButton", None))
+        self.pushButton.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u7ec4\u6001\u7684\u8d21\u732e", None))
         self.groupBox_8.setTitle(QCoreApplication.translate("main_window", u"GroupBox", None))
         self.menu.setTitle(QCoreApplication.translate("main_window", u"\u6587\u4ef6", None))
         self.menu_2.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))

@@ -1,0 +1,7 @@
+        self.ui.selection_list.clear()
+        self.ui.page2_selection_list.clear()
+        for c in self.simulate.cowan_list:
+            self.ui.selection_list.addItem(QListWidgetItem(c.name))
+            item = QListWidgetItem(c.name)
+            item.setCheckState(Qt.CheckState.Checked)
+            self.ui.page2_selection_list.addItem(item)

@@ -13,21 +13,21 @@
 #          4: -0.04,
 #          5: 0.0,
 #          6: 0.05}
-# exp_data_1 = ExpData(PROJECT_PATH / './exp_data.csv')
+# expdata_1 = ExpData(PROJECT_PATH / './exp_data.csv')
 # for i in range(3, 7):
 #     atom = Atom(1, 0)
 #     in36 = In36(atom)
 #     in36.read_from_file(PROJECT_PATH / f'in36_{i}')
 #     in2 = In2()
-#     cowan = Cowan(in36, in2, f'Al_{i}', exp_data_1, 1)
+#     cowan = Cowan(in36, in2, f'Al_{i}', expdata_1, 1)
 #     cowan.run()
 #
 #     simulate.add_cowan(cowan)
-# simulate.exp_data = copy.deepcopy(exp_data_1)
+# simulate.exp_data = copy.deepcopy(expdata_1)
 # simulate.get_simulate_data(25.6, 3.15e20)
 # print(simulate.get_abu(25.6, 3.15e20))
 # simulate.__cal_abundance2(self, temperature, electron_density)
-# simulate.exp_data = copy.deepcopy(exp_data_1)
+# simulate.exp_data = copy.deepcopy(expdata_1)
 # for x in range(5):
 #     for time in range(6):
 #         temp = 20 + np.random.random() * 30

@@ -61,22 +61,27 @@
       </property>
       <item>
        <property name="text">
-        <string>1</string>
+        <string>光谱指认</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>2</string>
+        <string>实验谱线模拟</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>3</string>
+        <string>演化过程</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>4</string>
+        <string>组态贡献</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>数据统计</string>
        </property>
       </item>
      </widget>
@@ -84,7 +89,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="page">
        <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,4">
@@ -3537,6 +3542,13 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_8">
              <item>
+              <widget class="QPushButton" name="pushButton_2">
+               <property name="text">
+                <string>谱线相似度判断配置</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <spacer name="horizontalSpacer">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
@@ -3685,7 +3697,7 @@
                <item>
                 <widget class="QSpinBox" name="temperature_num">
                  <property name="value">
-                  <number>40</number>
+                  <number>20</number>
                  </property>
                 </widget>
                </item>
@@ -3734,7 +3746,7 @@
                <item>
                 <widget class="QSpinBox" name="density_num">
                  <property name="value">
-                  <number>40</number>
+                  <number>20</number>
                  </property>
                  <property name="displayIntegerBase">
                   <number>10</number>
@@ -4215,7 +4227,7 @@
            <item>
             <widget class="QPushButton" name="pushButton">
              <property name="text">
-              <string>PushButton</string>
+              <string>查看各组态的贡献</string>
              </property>
             </widget>
            </item>

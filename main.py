@@ -1,8 +1,7 @@
 from PySide6.QtWidgets import QAbstractItemView
 
-import cowan.constant
 from cowan.cowan import *
-from cowan.slots.slots import *
+from cowan.slots import *
 from cowan.ui import *
 
 
@@ -42,21 +41,20 @@ class MainWindow(QMainWindow):
         self.atom: Optional[Atom] = Atom(1, 0)
         self.in36: Optional[In36] = In36(self.atom)
         self.in2: Optional[In2] = In2()
-        self.exp_data_1: Optional[ExpData] = None
+        self.expdata_1: Optional[ExpData] = None
 
         self.run_history: List[Cowan] = []
         self.cowan: Optional[Cowan] = None
 
-        # 第二页使用
-        self.exp_data_2: Optional[ExpData] = None
-        self.sim_grid: Optional[SimulateGrid] = None
+        self.expdata_2: Optional[ExpData] = None
+        self.simulated_grid: Optional[SimulateGrid] = None
         self.simulate: Optional[SimulateSpectral] = SimulateSpectral()
-        self.simulate_page3: Optional[SimulateSpectral] = None
+        self.simulate_page4: Optional[SimulateSpectral] = None
         self.space_time_resolution = SpaceTimeResolution()
 
         # 测试
-        # self.test()
-        self.load_Ge()
+        self.test()
+        # self.load_Ge()
 
         # 初始化
         self.init()
@@ -73,14 +71,14 @@ class MainWindow(QMainWindow):
             self.in36 = In36(self.atom)
             self.in36.read_from_file(PROJECT_PATH / f'in36_{i}')
             self.in2 = In2()
-            self.exp_data_1 = ExpData(PROJECT_PATH / './exp_data.csv')
-            self.cowan = Cowan(self.in36, self.in2, f'Al_{i}', self.exp_data_1, 1)
+            self.expdata_1 = ExpData(PROJECT_PATH / './exp_data.csv')
+            self.cowan = Cowan(self.in36, self.in2, f'Al_{i}', self.expdata_1, 1)
             self.cowan.run()
             self.cowan.cal_data.widen_all.delta_lambda = delta[i]
             self.cowan.cal_data.widen_all.widen(25.6, False)
             self.run_history.append(copy.deepcopy(self.cowan))
             self.simulate.add_cowan(self.cowan)
-        self.simulate.exp_data = copy.deepcopy(self.exp_data_1)
+        self.simulate.exp_data = copy.deepcopy(self.expdata_1)
         for x in range(5):
             for time in range(5):
                 temp = 20 + np.random.random() * 30
@@ -94,130 +92,29 @@ class MainWindow(QMainWindow):
 
         # -------------------------- 更新页面 --------------------------
         # ----- 原子信息 -----
-        # 改变元素选择器
-        self.ui.atomic_num.setCurrentIndex(self.atom.num - 1)
-        self.ui.atomic_name.setCurrentIndex(self.atom.num - 1)
-        self.ui.atomic_symbol.setCurrentIndex(self.atom.num - 1)
-        # 改变离化度列表
-        self.ui.atomic_ion.clear()
-        self.ui.atomic_ion.addItems([str(i) for i in range(self.atom.num)])
-        self.ui.atomic_ion.setCurrentIndex(self.atom.ion)
-        # 改变基组态
-        self.ui.base_configuration.setText(self.atom.base_configuration)
-        # 改变下态列表
-        self.ui.low_configuration.clear()
-        self.ui.low_configuration.addItems(list(self.atom.electron_arrangement.keys()))
-        self.ui.low_configuration.setCurrentIndex(
-            len(self.atom.electron_arrangement.keys()) - 1
-        )
-        # 改变上态列表
-        self.ui.high_configuration.clear()
-        temp_list = []
-        for value in SUBSHELL_SEQUENCE:
-            l_ = ANGULAR_QUANTUM_NUM_NAME.index(value[1])
-            if value in self.atom.electron_arrangement.keys():
-                if self.atom.electron_arrangement[value] != 4 * l_ + 2:
-                    temp_list.append(value)
-            else:
-                temp_list.append(value)
-        self.ui.high_configuration.addItems(temp_list)
-        self.ui.high_configuration.setCurrentIndex(1)
+        functools.partial(UpdatePage1.update_atom, self)()
         # ----- in36 -----
-        # 更新in36控制卡输入区
-        for i in range(23):
-            eval(f'self.ui.in36_{i + 1}').setText(self.in36.control_card[i].strip(' '))
-        # 更新in36组态输入区
-        df = pd.DataFrame(
-            list(zip(*self.in36.configuration_card))[0],
-            columns=['原子序数', '原子状态', '标识符', '空格', '组态'],
-            index=list(range(1, len(self.in36.configuration_card) + 1)),
-        )
-        df['宇称'] = list(zip(*self.in36.configuration_card))[1]
-        df = df[['宇称', '原子状态', '组态']]
-        # 更新表格
-        self.ui.in36_configuration_view.clear()
-        self.ui.in36_configuration_view.setRowCount(df.shape[0])
-        self.ui.in36_configuration_view.setColumnCount(df.shape[1])
-        self.ui.in36_configuration_view.setHorizontalHeaderLabels(df.columns)
-        for i in range(df.shape[0]):
-            for j in range(df.shape[1]):
-                item = QTableWidgetItem(str(df.iloc[i, j]))
-                self.ui.in36_configuration_view.setItem(i, j, item)
+        functools.partial(UpdatePage1.update_in36, self)()
         # ----- in2 -----
-        in2_input_name = [
-            'in2_1',
-            'in2_2',
-            'in2_3',
-            'in2_4',
-            'in2_5',
-            'in2_6',
-            'in2_7',
-            'in2_8',
-            'in2_9_a',
-            'in2_9_b',
-            'in2_9_c',
-            'in2_9_d',
-            'in2_10',
-            'in2_11_a',
-            'in2_11_b',
-            'in2_11_c',
-            'in2_11_d',
-            'in2_11_e',
-            'in2_12',
-            'in2_13',
-            'in2_14',
-            'in2_15',
-            'in2_16',
-            'in2_17',
-            'in2_18',
-            'in2_19',
-        ]
-        for i, n in enumerate(in2_input_name):
-            if '11' in n:
-                eval(f'self.ui.{n}').setValue(int(self.in2.input_card[i].strip(' ')))
-            else:
-                eval(f'self.ui.{n}').setText(self.in2.input_card[i].strip(' '))
-        # ----- 实验数据 -----
-        self.exp_data_1.plot_html()
-        self.ui.exp_web.load(QUrl.fromLocalFile(self.exp_data_1.plot_path))
+        functools.partial(UpdatePage1.update_in2, self)()
         # ----- 偏移量 -----
         self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
+        # ----- 实验数据 -----
+        functools.partial(UpdatePage1.update_exp_figure, self)()
         # ----- 线状谱和展宽 -----
-        self.cowan.cal_data.plot_line()
-        self.cowan.cal_data.widen_all.plot_widen()
-        # 加载线状谱
-        self.ui.web_cal_line.load(QUrl.fromLocalFile(self.cowan.cal_data.plot_path))
-        # 加载展宽数据
-        if self.ui.crossP.isChecked():
-            self.ui.web_cal_widen.load(
-                QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_P)
-            )
-        elif self.ui.crossNP.isChecked():
-            self.ui.web_cal_widen.load(
-                QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_NP)
-            )
-        elif self.ui.gauss.isChecked():
-            self.ui.web_cal_widen.load(
-                QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_gauss)
-            )
+        functools.partial(UpdatePage1.update_line_figure, self)()
+        functools.partial(UpdatePage1.update_widen_figure, self)()
+
         # ----- 历史数据 -----
         # 更新历史记录列表
-        self.ui.run_history_list.clear()
-        for c in self.run_history:
-            self.ui.run_history_list.addItem(QListWidgetItem(c.name))
+        functools.partial(UpdatePage1.update_history_list, self)()
         # 更新选择列表
-        self.ui.selection_list.clear()
-        self.ui.page2_selection_list.clear()
-        for c in self.simulate.cowan_list:
-            self.ui.selection_list.addItem(QListWidgetItem(c.name))
-            item = QListWidgetItem(c.name)
-            item.setCheckState(Qt.CheckState.Checked)
-            self.ui.page2_selection_list.addItem(item)
+        functools.partial(UpdatePage1.update_selection_list, self)()
 
         # --------------- 第二页
-        self.exp_data_2 = ExpData(PROJECT_PATH / 'exp_data.csv')
+        self.expdata_2 = ExpData(PROJECT_PATH / 'exp_data.csv')
         # 更新界面
-        self.ui.page2_exp_data_path_name.setText(self.exp_data_2.filepath.name)
+        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
         # 时空分辨表格
         self.ui.st_resolution_table.clear()
         self.ui.st_resolution_table.setRowCount(
@@ -266,7 +163,7 @@ class MainWindow(QMainWindow):
     def load_Ge(self):
         PROJECT_PATH = Path('F:/Cowan/Ge')
         folder_path = Path(r'E:\研究生工作\科研工作\2023_08_08_Ge等离子体光谱\计算数据')
-        self.exp_data_1 = ExpData(Path(r'F:\Cowan\Ge\0.4mm.csv'))
+        self.expdata_1 = ExpData(Path(r'F:\Cowan\Ge\0.4mm.csv'))
         for path in folder_path.iterdir():
             self.atom = Atom(1, 0)
             self.in36 = In36(self.atom)
@@ -274,8 +171,8 @@ class MainWindow(QMainWindow):
             self.in2 = In2()
             self.in2.read_from_file(path / f'in2')
             name = path.name.split('Ge')[-1].strip('+')
-            self.cowan = Cowan(self.in36, self.in2, f'Ge_{name}', self.exp_data_1, 1)
-            self.cowan.cal_data = CalData(f'Ge_{name}', self.exp_data_1)
+            self.cowan = Cowan(self.in36, self.in2, f'Ge_{name}', self.expdata_1, 1)
+            self.cowan.cal_data = CalData(f'Ge_{name}', self.expdata_1)
             self.cowan.cal_data.widen_all.widen(25.6, False)
             self.run_history.append(copy.deepcopy(self.cowan))
             self.simulate.add_cowan(self.cowan)
@@ -378,8 +275,8 @@ class MainWindow(QMainWindow):
             else:
                 eval(f'self.ui.{n}').setText(self.in2.input_card[i].strip(' '))
         # ----- 实验数据 -----
-        self.exp_data_1.plot_html()
-        self.ui.exp_web.load(QUrl.fromLocalFile(self.exp_data_1.plot_path))
+        self.expdata_1.plot_html()
+        self.ui.exp_web.load(QUrl.fromLocalFile(self.expdata_1.plot_path))
         # ----- 偏移量 -----
         self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
         # ----- 线状谱和展宽 -----
@@ -415,9 +312,9 @@ class MainWindow(QMainWindow):
             self.ui.page2_selection_list.addItem(item)
 
         # --------------- 第二页
-        self.exp_data_2 = ExpData(Path(r'F:\Cowan\Ge\0.4mm.csv'))
+        self.expdata_2 = ExpData(Path(r'F:\Cowan\Ge\0.4mm.csv'))
         # 更新界面
-        self.ui.page2_exp_data_path_name.setText(self.exp_data_2.filepath.name)
+        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
         # 时空分辨表格
         self.ui.st_resolution_table.clear()
         self.ui.st_resolution_table.setRowCount(
