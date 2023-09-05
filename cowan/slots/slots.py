@@ -38,16 +38,16 @@ from main import MainWindow, VerticalLine
 class Menu(MainWindow):
     def load_exp_data(self):
         path, types = QFileDialog.getOpenFileName(
-            self, "请选择实验数据", PROJECT_PATH.as_posix(), "数据文件(*.txt *.csv)"
+            self, '请选择实验数据', PROJECT_PATH.as_posix(), '数据文件(*.txt *.csv)'
         )
         path = Path(path)
         # 将实验数据复制到项目路径下
-        if "csv" in path.name:
-            new_path = PROJECT_PATH / f"exp_data.csv"
-        elif "txt" in path.name:
-            new_path = PROJECT_PATH / f"exp_data.txt"
+        if 'csv' in path.name:
+            new_path = PROJECT_PATH / f'exp_data.csv'
+        elif 'txt' in path.name:
+            new_path = PROJECT_PATH / f'exp_data.txt'
         else:
-            raise Exception("文件格式错误")
+            raise Exception('文件格式错误')
         try:
             shutil.copyfile(path, new_path)
         except shutil.SameFileError:
@@ -64,11 +64,11 @@ class Menu(MainWindow):
             x, y = self.ui.exp_web.mapToGlobal(self.ui.exp_web.pos()).toTuple()
             self.v_line = VerticalLine(x, y - 100, self.window().height() - 100)
             self.v_line.show()
-            self.ui.show_guides.setText("隐藏参考线")
+            self.ui.show_guides.setText('隐藏参考线')
         else:
             self.v_line.close()
             self.v_line = None
-            self.ui.show_guides.setText("显示参考线")
+            self.ui.show_guides.setText('显示参考线')
 
 
 class Page1(MainWindow):
@@ -156,11 +156,11 @@ class Page1(MainWindow):
         # 更新表格
         df = pd.DataFrame(
             list(zip(*self.in36.configuration_card))[0],
-            columns=["原子序数", "原子状态", "标识符", "空格", "组态"],
+            columns=['原子序数', '原子状态', '标识符', '空格', '组态'],
             index=list(range(1, len(self.in36.configuration_card) + 1)),
         )
-        df["宇称"] = list(zip(*self.in36.configuration_card))[1]
-        df = df[["宇称", "原子状态", "组态"]]
+        df['宇称'] = list(zip(*self.in36.configuration_card))[1]
+        df = df[['宇称', '原子状态', '组态']]
         self.ui.in36_configuration_view.clear()
         self.ui.in36_configuration_view.setRowCount(df.shape[0])
         self.ui.in36_configuration_view.setColumnCount(df.shape[1])
@@ -172,9 +172,9 @@ class Page1(MainWindow):
 
     def load_in36(self):
         path, types = QFileDialog.getOpenFileName(
-            self, "请选择in36文件", PROJECT_PATH.as_posix(), ""
+            self, '请选择in36文件', PROJECT_PATH.as_posix(), ''
         )
-        if path == "":
+        if path == '':
             return
         self.in36.read_from_file(Path(path))
         self.atom = copy.deepcopy(self.in36.atom)
@@ -210,15 +210,15 @@ class Page1(MainWindow):
         self.ui.high_configuration.setCurrentIndex(1)
         # 更新in36控制卡输入区
         for i in range(23):
-            eval(f"self.ui.in36_{i + 1}").setText(self.in36.control_card[i].strip(" "))
+            eval(f'self.ui.in36_{i + 1}').setText(self.in36.control_card[i].strip(' '))
         # 更新in36组态输入区
         df = pd.DataFrame(
             list(zip(*self.in36.configuration_card))[0],
-            columns=["原子序数", "原子状态", "标识符", "空格", "组态"],
+            columns=['原子序数', '原子状态', '标识符', '空格', '组态'],
             index=list(range(1, len(self.in36.configuration_card) + 1)),
         )
-        df["宇称"] = list(zip(*self.in36.configuration_card))[1]
-        df = df[["宇称", "原子状态", "组态"]]
+        df['宇称'] = list(zip(*self.in36.configuration_card))[1]
+        df = df[['宇称', '原子状态', '组态']]
         # 更新表格
         self.ui.in36_configuration_view.clear()
         self.ui.in36_configuration_view.setRowCount(df.shape[0])
@@ -231,45 +231,45 @@ class Page1(MainWindow):
 
     def load_in2(self):
         path, types = QFileDialog.getOpenFileName(
-            self, "请选择in2文件", PROJECT_PATH.as_posix(), ""
+            self, '请选择in2文件', PROJECT_PATH.as_posix(), ''
         )
-        if path == "":
+        if path == '':
             return
         self.in2.read_from_file(path)
         # ----------------------------- 更新页面 -----------------------------
         in2_input_name = [
-            "in2_1",
-            "in2_2",
-            "in2_3",
-            "in2_4",
-            "in2_5",
-            "in2_6",
-            "in2_7",
-            "in2_8",
-            "in2_9_a",
-            "in2_9_b",
-            "in2_9_c",
-            "in2_9_d",
-            "in2_10",
-            "in2_11_a",
-            "in2_11_b",
-            "in2_11_c",
-            "in2_11_d",
-            "in2_11_e",
-            "in2_12",
-            "in2_13",
-            "in2_14",
-            "in2_15",
-            "in2_16",
-            "in2_17",
-            "in2_18",
-            "in2_19",
+            'in2_1',
+            'in2_2',
+            'in2_3',
+            'in2_4',
+            'in2_5',
+            'in2_6',
+            'in2_7',
+            'in2_8',
+            'in2_9_a',
+            'in2_9_b',
+            'in2_9_c',
+            'in2_9_d',
+            'in2_10',
+            'in2_11_a',
+            'in2_11_b',
+            'in2_11_c',
+            'in2_11_d',
+            'in2_11_e',
+            'in2_12',
+            'in2_13',
+            'in2_14',
+            'in2_15',
+            'in2_16',
+            'in2_17',
+            'in2_18',
+            'in2_19',
         ]
         for i, n in enumerate(in2_input_name):
-            if "11" in n:
-                eval(f"self.ui.{n}").setValue(int(self.in2.input_card[i].strip(" ")))
+            if '11' in n:
+                eval(f'self.ui.{n}').setValue(int(self.in2.input_card[i].strip(' ')))
             else:
-                eval(f"self.ui.{n}").setText(self.in2.input_card[i].strip(" "))
+                eval(f'self.ui.{n}').setText(self.in2.input_card[i].strip(' '))
 
     def preview_in36(self):
         dialog = QDialog()
@@ -283,7 +283,7 @@ class Page1(MainWindow):
         Page1.get_in36_control_card(self, self.in36)
         in36 = self.in36.get_text()
 
-        temp = "↓         ↓         ↓         ↓         ↓         ↓         ↓         ↓         \n"
+        temp = '↓         ↓         ↓         ↓         ↓         ↓         ↓         ↓         \n'
         text_browser.setText(temp + in36)
         text_browser.setStyleSheet('font: 12pt "Consolas";')
 
@@ -303,7 +303,7 @@ class Page1(MainWindow):
         Page1.get_in2_control_card(self, self.in2)
         in2 = self.in2.get_text()
 
-        temp = "↓         ↓         ↓         ↓         ↓         ↓         ↓         ↓         \n"
+        temp = '↓         ↓         ↓         ↓         ↓         ↓         ↓         ↓         \n'
         text_browser.setText(temp + in2)
         text_browser.setStyleSheet('font: 12pt "Consolas";')
 
@@ -314,17 +314,17 @@ class Page1(MainWindow):
     def configuration_move_up(self):
         index = self.ui.in36_configuration_view.currentIndex().row()
         if 1 <= index <= len(self.in36.configuration_card):
-            self.in36.configuration_move(index, "up")
+            self.in36.configuration_move(index, 'up')
 
             # ----------------------------- 更新页面 -----------------------------
             # 更新 in36 组态输入区
             df = pd.DataFrame(
                 list(zip(*self.in36.configuration_card))[0],
-                columns=["原子序数", "原子状态", "标识符", "空格", "组态"],
+                columns=['原子序数', '原子状态', '标识符', '空格', '组态'],
                 index=list(range(1, len(self.in36.configuration_card) + 1)),
             )
-            df["宇称"] = list(zip(*self.in36.configuration_card))[1]
-            df = df[["宇称", "原子状态", "组态"]]
+            df['宇称'] = list(zip(*self.in36.configuration_card))[1]
+            df = df[['宇称', '原子状态', '组态']]
             self.ui.in36_configuration_view.clear()
             self.ui.in36_configuration_view.setRowCount(df.shape[0])
             self.ui.in36_configuration_view.setColumnCount(df.shape[1])
@@ -340,17 +340,17 @@ class Page1(MainWindow):
     def configuration_move_down(self):
         index = self.ui.in36_configuration_view.currentIndex().row()
         if 0 <= index <= len(self.in36.configuration_card) - 2:
-            self.in36.configuration_move(index, "down")
+            self.in36.configuration_move(index, 'down')
 
             # ----------------------------- 更新页面 -----------------------------
             # 更新 in36 组态输入区
             df = pd.DataFrame(
                 list(zip(*self.in36.configuration_card))[0],
-                columns=["原子序数", "原子状态", "标识符", "空格", "组态"],
+                columns=['原子序数', '原子状态', '标识符', '空格', '组态'],
                 index=list(range(1, len(self.in36.configuration_card) + 1)),
             )
-            df["宇称"] = list(zip(*self.in36.configuration_card))[1]
-            df = df[["宇称", "原子状态", "组态"]]
+            df['宇称'] = list(zip(*self.in36.configuration_card))[1]
+            df = df[['宇称', '原子状态', '组态']]
             self.ui.in36_configuration_view.clear()
             self.ui.in36_configuration_view.setRowCount(df.shape[0])
             self.ui.in36_configuration_view.setColumnCount(df.shape[1])
@@ -382,7 +382,7 @@ class Page1(MainWindow):
         right_menu = QMenu(self.ui.in36_configuration_view)
 
         # 设置动作
-        item_1 = QAction("删除", self.ui.in36_configuration_view)
+        item_1 = QAction('删除', self.ui.in36_configuration_view)
         item_1.triggered.connect(functools.partial(Page1.del_configuration, self))
 
         # 添加
@@ -401,11 +401,11 @@ class Page1(MainWindow):
         if self.in36.configuration_card:
             df = pd.DataFrame(
                 list(zip(*self.in36.configuration_card))[0],
-                columns=["原子序数", "原子状态", "标识符", "空格", "组态"],
+                columns=['原子序数', '原子状态', '标识符', '空格', '组态'],
                 index=list(range(1, len(self.in36.configuration_card) + 1)),
             )
-            df["宇称"] = list(zip(*self.in36.configuration_card))[1]
-            df = df[["宇称", "原子状态", "组态"]]
+            df['宇称'] = list(zip(*self.in36.configuration_card))[1]
+            df = df[['宇称', '原子状态', '组态']]
             self.ui.in36_configuration_view.clear()
             self.ui.in36_configuration_view.setRowCount(df.shape[0])
             self.ui.in36_configuration_view.setColumnCount(df.shape[1])
@@ -419,16 +419,16 @@ class Page1(MainWindow):
             self.ui.in36_configuration_view.setRowCount(0)
             self.ui.in36_configuration_view.setColumnCount(3)
             self.ui.in36_configuration_view.setHorizontalHeaderLabels(
-                ["原子序数", "原子状态", "标识符", "空格", "组态"]
+                ['原子序数', '原子状态', '标识符', '空格', '组态']
             )
 
     def run_cowan(self):
         # -------------------------- 准备工作 --------------------------
         Page1.get_in36_control_card(self, self.in36)
         Page1.get_in2_control_card(self, self.in2)
-        name = "{}_{}".format(self.atom.symbol, self.atom.ion)
+        name = '{}_{}'.format(self.atom.symbol, self.atom.ion)
         if self.exp_data_1 is None:  # 如果没有加载实验数据
-            QMessageBox.warning(self, "警告", "请先加载实验数据！")
+            QMessageBox.warning(self, '警告', '请先加载实验数据！')
             return
         coupling_mode = self.ui.coupling_mode.currentIndex() + 1
         # -------------------------- 运行 --------------------------
@@ -488,9 +488,9 @@ class Page1(MainWindow):
         right_menu = QMenu(self.ui.run_history_list)
 
         # 设置动作
-        item_1 = QAction("添加至库中", self.ui.run_history_list)
+        item_1 = QAction('添加至库中', self.ui.run_history_list)
         item_1.triggered.connect(functools.partial(Page1.add_to_selection, self))
-        item_2 = QAction("清空", self.ui.run_history_list)
+        item_2 = QAction('清空', self.ui.run_history_list)
         item_2.triggered.connect(functools.partial(Page1.clear_history, self))
 
         # 添加
@@ -530,7 +530,7 @@ class Page1(MainWindow):
         right_menu = QMenu(self.ui.selection_list)
 
         # 设置动作
-        item_1 = QAction("删除", self.ui.selection_list)
+        item_1 = QAction('删除', self.ui.selection_list)
         item_1.triggered.connect(functools.partial(Page1.del_selection, self))
 
         # 添加
@@ -593,15 +593,15 @@ class Page1(MainWindow):
         # ----- in36 -----
         # 更新in36控制卡输入区
         for i in range(23):
-            eval(f"self.ui.in36_{i + 1}").setText(self.in36.control_card[i].strip(" "))
+            eval(f'self.ui.in36_{i + 1}').setText(self.in36.control_card[i].strip(' '))
         # 更新in36组态输入区
         df = pd.DataFrame(
             list(zip(*self.in36.configuration_card))[0],
-            columns=["原子序数", "原子状态", "标识符", "空格", "组态"],
+            columns=['原子序数', '原子状态', '标识符', '空格', '组态'],
             index=list(range(1, len(self.in36.configuration_card) + 1)),
         )
-        df["宇称"] = list(zip(*self.in36.configuration_card))[1]
-        df = df[["宇称", "原子状态", "组态"]]
+        df['宇称'] = list(zip(*self.in36.configuration_card))[1]
+        df = df[['宇称', '原子状态', '组态']]
         # 更新表格
         self.ui.in36_configuration_view.clear()
         self.ui.in36_configuration_view.setRowCount(df.shape[0])
@@ -613,38 +613,38 @@ class Page1(MainWindow):
                 self.ui.in36_configuration_view.setItem(i, j, item)
         # ----- in2 -----
         in2_input_name = [
-            "in2_1",
-            "in2_2",
-            "in2_3",
-            "in2_4",
-            "in2_5",
-            "in2_6",
-            "in2_7",
-            "in2_8",
-            "in2_9_a",
-            "in2_9_b",
-            "in2_9_c",
-            "in2_9_d",
-            "in2_10",
-            "in2_11_a",
-            "in2_11_b",
-            "in2_11_c",
-            "in2_11_d",
-            "in2_11_e",
-            "in2_12",
-            "in2_13",
-            "in2_14",
-            "in2_15",
-            "in2_16",
-            "in2_17",
-            "in2_18",
-            "in2_19",
+            'in2_1',
+            'in2_2',
+            'in2_3',
+            'in2_4',
+            'in2_5',
+            'in2_6',
+            'in2_7',
+            'in2_8',
+            'in2_9_a',
+            'in2_9_b',
+            'in2_9_c',
+            'in2_9_d',
+            'in2_10',
+            'in2_11_a',
+            'in2_11_b',
+            'in2_11_c',
+            'in2_11_d',
+            'in2_11_e',
+            'in2_12',
+            'in2_13',
+            'in2_14',
+            'in2_15',
+            'in2_16',
+            'in2_17',
+            'in2_18',
+            'in2_19',
         ]
         for i, n in enumerate(in2_input_name):
-            if "11" in n:
-                eval(f"self.ui.{n}").setValue(int(self.in2.input_card[i].strip(" ")))
+            if '11' in n:
+                eval(f'self.ui.{n}').setValue(int(self.in2.input_card[i].strip(' ')))
             else:
-                eval(f"self.ui.{n}").setText(self.in2.input_card[i].strip(" "))
+                eval(f'self.ui.{n}').setText(self.in2.input_card[i].strip(' '))
         # ----- 实验数据 -----
         self.exp_data_1.plot_html()
         self.ui.exp_web.load(QUrl.fromLocalFile(self.exp_data_1.plot_path))
@@ -700,37 +700,32 @@ class Page1(MainWindow):
             )
 
     def get_in36_control_card(self, in36_obj: In36):
-        """
-        将数据存在 cowan.in36 对象中
-        Returns:
-
-        """
-        v0 = "{:>1}".format(self.ui.in36_1.text())
-        v1 = "{:>1}".format(self.ui.in36_2.text())
-        v2 = "{:>1}".format(self.ui.in36_3.text())
-        v3 = "{:>2}".format(self.ui.in36_4.text())
-        v4 = "{:>1}".format(self.ui.in36_5.text())
-        v5 = "{:>2}".format(self.ui.in36_6.text())
-        v6 = "{:>2}".format(self.ui.in36_7.text())
-        v7 = "{:>3}".format(self.ui.in36_8.text())
-        v8 = "{:>2}".format(self.ui.in36_9.text())
-        v9 = "{:>5}".format(self.ui.in36_10.text())
-        v10 = "{:>10}".format(self.ui.in36_11.text())
-        v11 = "{:>10}".format(self.ui.in36_12.text())
-        v12 = "{:>2}".format(self.ui.in36_13.text())
-        v13 = "{:>2}".format(self.ui.in36_14.text())
-        v14 = "{:>1}".format(self.ui.in36_15.text())
-        v15 = "{:>1}".format(self.ui.in36_16.text())
-        v16 = "{:>2}".format(self.ui.in36_17.text())
-        v17 = "{:>2}".format(self.ui.in36_18.text())
-        v18 = "{:>5}".format(self.ui.in36_19.text())
-        v19 = "{:>5}".format(self.ui.in36_20.text())
-        v20 = "{:>5}".format(self.ui.in36_21.text())
-        v21 = "{:>5}".format(self.ui.in36_22.text())
-        v22 = "{:>5}".format(self.ui.in36_23.text())
+        v0 = '{:>1}'.format(self.ui.in36_1.text())
+        v1 = '{:>1}'.format(self.ui.in36_2.text())
+        v2 = '{:>1}'.format(self.ui.in36_3.text())
+        v3 = '{:>2}'.format(self.ui.in36_4.text())
+        v4 = '{:>1}'.format(self.ui.in36_5.text())
+        v5 = '{:>2}'.format(self.ui.in36_6.text())
+        v6 = '{:>2}'.format(self.ui.in36_7.text())
+        v7 = '{:>3}'.format(self.ui.in36_8.text())
+        v8 = '{:>2}'.format(self.ui.in36_9.text())
+        v9 = '{:>5}'.format(self.ui.in36_10.text())
+        v10 = '{:>10}'.format(self.ui.in36_11.text())
+        v11 = '{:>10}'.format(self.ui.in36_12.text())
+        v12 = '{:>2}'.format(self.ui.in36_13.text())
+        v13 = '{:>2}'.format(self.ui.in36_14.text())
+        v14 = '{:>1}'.format(self.ui.in36_15.text())
+        v15 = '{:>1}'.format(self.ui.in36_16.text())
+        v16 = '{:>2}'.format(self.ui.in36_17.text())
+        v17 = '{:>2}'.format(self.ui.in36_18.text())
+        v18 = '{:>5}'.format(self.ui.in36_19.text())
+        v19 = '{:>5}'.format(self.ui.in36_20.text())
+        v20 = '{:>5}'.format(self.ui.in36_21.text())
+        v21 = '{:>5}'.format(self.ui.in36_22.text())
+        v22 = '{:>5}'.format(self.ui.in36_23.text())
         temp = []
         for i in range(23):
-            temp.append(eval(f"v{i}"))
+            temp.append(eval(f'v{i}'))
         in36_obj.control_card = temp
 
     def get_in2_control_card(self, in2_obj: In2):
@@ -739,39 +734,39 @@ class Page1(MainWindow):
         Returns:
 
         """
-        v0 = "{:>5}".format(self.ui.in2_1.text())
-        v1 = "{:>2}".format(self.ui.in2_2.text())
-        v2 = "{:>1}".format(self.ui.in2_3.text())
-        v3 = "{:>2}".format(self.ui.in2_4.text())
-        v4 = "{:>1}".format(self.ui.in2_5.text())
-        v5 = "{:>2}".format(self.ui.in2_6.text())
-        v6 = "{:>7}".format(self.ui.in2_7.text())
-        v7 = "{:>1}".format(self.ui.in2_8.text())
+        v0 = '{:>5}'.format(self.ui.in2_1.text())
+        v1 = '{:>2}'.format(self.ui.in2_2.text())
+        v2 = '{:>1}'.format(self.ui.in2_3.text())
+        v3 = '{:>2}'.format(self.ui.in2_4.text())
+        v4 = '{:>1}'.format(self.ui.in2_5.text())
+        v5 = '{:>2}'.format(self.ui.in2_6.text())
+        v6 = '{:>7}'.format(self.ui.in2_7.text())
+        v7 = '{:>1}'.format(self.ui.in2_8.text())
 
-        v8 = "{:>8}".format(self.ui.in2_9_a.text())
-        v9 = "{:>8}".format(self.ui.in2_9_b.text())
-        v10 = "{:>8}".format(self.ui.in2_9_c.text())
-        v11 = "{:>4}".format(self.ui.in2_9_d.text())
+        v8 = '{:>8}'.format(self.ui.in2_9_a.text())
+        v9 = '{:>8}'.format(self.ui.in2_9_b.text())
+        v10 = '{:>8}'.format(self.ui.in2_9_c.text())
+        v11 = '{:>4}'.format(self.ui.in2_9_d.text())
 
-        v12 = "{:>1}".format(self.ui.in2_10.text())
+        v12 = '{:>1}'.format(self.ui.in2_10.text())
 
-        v13 = "{:>2}".format(self.ui.in2_11_a.text())
-        v14 = "{:>2}".format(self.ui.in2_11_b.text())
-        v15 = "{:>2}".format(self.ui.in2_11_c.text())
-        v16 = "{:>2}".format(self.ui.in2_11_d.text())
-        v17 = "{:>2}".format(self.ui.in2_11_e.text())
+        v13 = '{:>2}'.format(self.ui.in2_11_a.text())
+        v14 = '{:>2}'.format(self.ui.in2_11_b.text())
+        v15 = '{:>2}'.format(self.ui.in2_11_c.text())
+        v16 = '{:>2}'.format(self.ui.in2_11_d.text())
+        v17 = '{:>2}'.format(self.ui.in2_11_e.text())
 
-        v18 = "{:>5}".format(self.ui.in2_12.text())
-        v19 = "{:>5}".format(self.ui.in2_13.text())
-        v20 = "{:>1}".format(self.ui.in2_14.text())
-        v21 = "{:>1}".format(self.ui.in2_15.text())
-        v22 = "{:>1}".format(self.ui.in2_16.text())
-        v23 = "{:>1}".format(self.ui.in2_17.text())
-        v24 = "{:>1}".format(self.ui.in2_18.text())
-        v25 = "{:>5}".format(self.ui.in2_19.text())
+        v18 = '{:>5}'.format(self.ui.in2_12.text())
+        v19 = '{:>5}'.format(self.ui.in2_13.text())
+        v20 = '{:>1}'.format(self.ui.in2_14.text())
+        v21 = '{:>1}'.format(self.ui.in2_15.text())
+        v22 = '{:>1}'.format(self.ui.in2_16.text())
+        v23 = '{:>1}'.format(self.ui.in2_17.text())
+        v24 = '{:>1}'.format(self.ui.in2_18.text())
+        v25 = '{:>5}'.format(self.ui.in2_19.text())
         temp = []
         for i in range(26):
-            temp.append(eval(f"v{i}"))
+            temp.append(eval(f'v{i}'))
         in2_obj.input_card = temp
 
 
@@ -787,7 +782,7 @@ class Page2(MainWindow):
 
     def plot_spectrum(self):
         if self.exp_data_2 is None:
-            QMessageBox.warning(self, "警告", "请先导入实验数据！")
+            QMessageBox.warning(self, '警告', '请先导入实验数据！')
             return
         else:
             self.simulate.exp_data = copy.deepcopy(self.exp_data_2)
@@ -803,7 +798,7 @@ class Page2(MainWindow):
 
     def load_exp_data(self):
         path, types = QFileDialog.getOpenFileName(
-            self, "请选择实验数据", PROJECT_PATH.as_posix(), "数据文件(*.txt *.csv)"
+            self, '请选择实验数据', PROJECT_PATH.as_posix(), '数据文件(*.txt *.csv)'
         )
         self.exp_data_2 = ExpData(Path(path))
         # 更新界面
@@ -826,7 +821,7 @@ class Page2(MainWindow):
             for t in self.sim_grid.t_list:
                 for ne in self.sim_grid.ne_list:
                     similarity = self.sim_grid.grid_data[(t, ne)].spectrum_similarity
-                    item = QTableWidgetItem("{:.4f}".format(similarity))
+                    item = QTableWidgetItem('{:.4f}'.format(similarity))
                     item.setBackground(
                         QBrush(QColor(*Page2.rainbow_color(similarity / sim_max)))
                     )
@@ -838,7 +833,7 @@ class Page2(MainWindow):
             self.ui.page2_cal_grid.setDisabled(False)
 
         if self.exp_data_2 is None:
-            QMessageBox.warning(self, "警告", "请先导入实验数据！")
+            QMessageBox.warning(self, '警告', '请先导入实验数据！')
             return
         else:
             self.simulate.exp_data = copy.deepcopy(self.exp_data_2)
@@ -857,7 +852,7 @@ class Page2(MainWindow):
         self.ui.page2_cal_grid.setDisabled(True)
         self.ui.page2_progressBar.setRange(0, t_range[2] * ne_range[4])
         self.sim_grid = SimulateGrid(t_range, ne_range, self.simulate)
-        self.sim_grid.change_task("cal")
+        self.sim_grid.change_task('cal')
         self.sim_grid.start()
         self.sim_grid.end.connect(update_ui)
         self.sim_grid.progress.connect(update_progress_bar)
@@ -870,7 +865,7 @@ class Page2(MainWindow):
         density = self.sim_grid.ne_list[item.row()]
         self.simulate = copy.deepcopy(self.sim_grid.grid_data[(temperature, density)])
 
-        temp = density.split("e+")
+        temp = density.split('e+')
         self.ui.page2_temperature.setValue(eval(temperature))
         self.ui.page2_density_base.setValue(eval(temp[0]))
         self.ui.page2_density_index.setValue(eval(temp[1]))
@@ -885,7 +880,7 @@ class Page2(MainWindow):
             self.ui.st_space_z.text(),
         )
         if self.exp_data_2 is None:
-            QMessageBox.warning(self, "警告", "请先确定温度和密度！")
+            QMessageBox.warning(self, '警告', '请先确定温度和密度！')
             return
         else:
             self.simulate.exp_data = copy.deepcopy(self.exp_data_2)
@@ -898,20 +893,20 @@ class Page2(MainWindow):
         )
         self.ui.st_resolution_table.setColumnCount(5)
         self.ui.st_resolution_table.setHorizontalHeaderLabels(
-            ["时间", "位置", "温度", "密度", "实验谱"]
+            ['时间', '位置', '温度', '密度', '实验谱']
         )
         for i, (key, value) in enumerate(
             self.space_time_resolution.simulate_spectral_dict.items()
         ):
             item1 = QTableWidgetItem(key[0])
-            item2 = QTableWidgetItem(f"({key[1][0]}, {key[1][1]}, {key[1][2]})")
+            item2 = QTableWidgetItem(f'({key[1][0]}, {key[1][1]}, {key[1][2]})')
             if value.temperature is not None and value.electron_density is not None:
-                item3 = QTableWidgetItem("{:.3f}".format(value.temperature))
-                item4 = QTableWidgetItem("{:.3e}".format(value.electron_density))
+                item3 = QTableWidgetItem('{:.3f}'.format(value.temperature))
+                item4 = QTableWidgetItem('{:.3e}'.format(value.electron_density))
             else:
-                item3 = QTableWidgetItem("None")
+                item3 = QTableWidgetItem('None')
                 item3.setBackground(QBrush(QColor(255, 0, 0)))
-                item4 = QTableWidgetItem("None")
+                item4 = QTableWidgetItem('None')
                 item4.setBackground(QBrush(QColor(255, 0, 0)))
             item5 = QTableWidgetItem(value.exp_data.filepath.name)
             self.ui.st_resolution_table.setItem(i, 0, item1)
@@ -929,7 +924,7 @@ class Page2(MainWindow):
             temp_locations.append(key[1])
         temp_times = set(temp_times)
         temp_locations = set(temp_locations)
-        temp_locations = [f"({key[0]}, {key[1]}, {key[2]})" for key in temp_locations]
+        temp_locations = [f'({key[0]}, {key[1]}, {key[2]})' for key in temp_locations]
         self.ui.location_select.addItems(temp_locations)
         self.ui.time_select.addItems(temp_times)
 
@@ -938,7 +933,7 @@ class Page2(MainWindow):
         temp_list = []
         for key in self.space_time_resolution.simulate_spectral_dict:
             temp_list.append(
-                "时间：{}       位置：{}, {}, {}".format(
+                '时间：{}       位置：{}, {}, {}'.format(
                     key[0], key[1][0], key[1][1], key[1][2]
                 )
             )
@@ -946,7 +941,7 @@ class Page2(MainWindow):
 
     def plot_exp(self):
         if self.exp_data_2 is None:
-            QMessageBox.warning(self, "警告", "请先加载实验数据！")
+            QMessageBox.warning(self, '警告', '请先加载实验数据！')
             return
         self.exp_data_2.plot_html()
         self.ui.page2_add_spectrum_web.load(
@@ -955,18 +950,18 @@ class Page2(MainWindow):
 
     def load_space_time(self):
         path = QFileDialog.getExistingDirectory(
-            self, "请选择实验数据所在的文件夹", PROJECT_PATH.as_posix()
+            self, '请选择实验数据所在的文件夹', PROJECT_PATH.as_posix()
         )
         path = Path(path)
         for file_name in path.iterdir():
-            loc, tim = file_name.stem.split("_")
-            loc = loc.strip("mm")
-            tim = tim.strip("ns")
+            loc, tim = file_name.stem.split('_')
+            loc = loc.strip('mm')
+            tim = tim.strip('ns')
             self.exp_data_2 = ExpData(file_name)
             self.simulate.temperature = None
             self.simulate.electron_density = None
             self.simulate.exp_data = copy.deepcopy(self.exp_data_2)
-            self.space_time_resolution.add_st((tim, (loc, "0", "0")), self.simulate)
+            self.space_time_resolution.add_st((tim, (loc, '0', '0')), self.simulate)
 
         # -------------------------- 更新页面 --------------------------
         self.ui.st_resolution_table.clear()
@@ -975,20 +970,20 @@ class Page2(MainWindow):
         )
         self.ui.st_resolution_table.setColumnCount(5)
         self.ui.st_resolution_table.setHorizontalHeaderLabels(
-            ["时间", "位置", "温度", "密度", "实验谱"]
+            ['时间', '位置', '温度', '密度', '实验谱']
         )
         for i, (key, value) in enumerate(
             self.space_time_resolution.simulate_spectral_dict.items()
         ):
             item1 = QTableWidgetItem(key[0])
-            item2 = QTableWidgetItem(f"({key[1][0]}, {key[1][1]}, {key[1][2]})")
+            item2 = QTableWidgetItem(f'({key[1][0]}, {key[1][1]}, {key[1][2]})')
             if value.temperature is not None and value.electron_density is not None:
-                item3 = QTableWidgetItem("{:.3f}".format(value.temperature))
-                item4 = QTableWidgetItem("{:.3e}".format(value.electron_density))
+                item3 = QTableWidgetItem('{:.3f}'.format(value.temperature))
+                item4 = QTableWidgetItem('{:.3e}'.format(value.electron_density))
             else:
-                item3 = QTableWidgetItem("None")
+                item3 = QTableWidgetItem('None')
                 item3.setBackground(QBrush(QColor(255, 0, 0)))
-                item4 = QTableWidgetItem("None")
+                item4 = QTableWidgetItem('None')
                 item4.setBackground(QBrush(QColor(255, 0, 0)))
             item5 = QTableWidgetItem(value.exp_data.filepath.name)
             self.ui.st_resolution_table.setItem(i, 0, item1)
@@ -1014,7 +1009,7 @@ class Page2(MainWindow):
                 temp_locations.append(key[1])
         temp_times = set(temp_times)
         temp_locations = set(temp_locations)
-        temp_locations = [f"({key[0]}, {key[1]}, {key[2]})" for key in temp_locations]
+        temp_locations = [f'({key[0]}, {key[1]}, {key[2]})' for key in temp_locations]
         self.ui.location_select.addItems(temp_locations)
         self.ui.time_select.addItems(temp_times)
 
@@ -1031,7 +1026,7 @@ class Page2(MainWindow):
                 is not None
             ):
                 temp_list.append(
-                    "时间：{}       位置：{}, {}, {}".format(
+                    '时间：{}       位置：{}, {}, {}'.format(
                         key[0], key[1][0], key[1][1], key[1][2]
                     )
                 )
@@ -1051,7 +1046,7 @@ class Page2(MainWindow):
             for t in self.sim_grid.t_list:
                 for ne in self.sim_grid.ne_list:
                     similarity = self.sim_grid.grid_data[(t, ne)].spectrum_similarity
-                    item = QTableWidgetItem("{:.4f}".format(similarity))
+                    item = QTableWidgetItem('{:.4f}'.format(similarity))
                     item.setBackground(
                         QBrush(QColor(*Page2.rainbow_color(similarity / sim_max)))
                     )
@@ -1070,7 +1065,7 @@ class Page2(MainWindow):
         self.exp_data_2 = copy.deepcopy(self.simulate.exp_data)
         if self.sim_grid is not None:
             # QMetaObject.invokeMethod(self.sim_grid, 'update_similarity')
-            self.sim_grid.change_task("update", self.exp_data_2)
+            self.sim_grid.change_task('update', self.exp_data_2)
             self.sim_grid.start()
             self.sim_grid.up_end.connect(update_grid)
 
@@ -1103,7 +1098,7 @@ class Page2(MainWindow):
         Returns:
             返回一个元组 (r,g,b,a)
         """
-        camp = matplotlib.colormaps["rainbow"]
+        camp = matplotlib.colormaps['rainbow']
         rgba = camp(x)
         return (
             int(rgba[0] * 255),
@@ -1115,8 +1110,8 @@ class Page2(MainWindow):
 
 class Page3(MainWindow):
     def plot_by_times(self):
-        temp = self.ui.location_select.currentText().strip("(").strip(")")
-        x, y, z = temp.split(",")
+        temp = self.ui.location_select.currentText().strip('(').strip(')')
+        x, y, z = temp.split(',')
         x, y, z = x.strip(), y.strip(), z.strip()
         self.space_time_resolution.plot_change_by_time((x, y, z))
 
@@ -1153,14 +1148,14 @@ class Page4(MainWindow):
             c.cal_data.widen_part.widen_by_group()
 
             parents = QTreeWidgetItem()
-            parents.setText(0, c.name.replace("_", "+"))
+            parents.setText(0, c.name.replace('_', '+'))
             parents.setCheckState(0, Qt.Checked)
             self.ui.treeWidget.addTopLevelItem(parents)
 
             for example in c.cal_data.widen_part.grouped_widen_data:
                 child = QTreeWidgetItem()
                 child.setCheckState(0, Qt.Checked)
-                index_low, index_high = map(int, example.split("_"))
+                index_low, index_high = map(int, example.split('_'))
                 child.setText(0, c.in36.get_configuration_name(index_low, index_high))
                 parents.addChild(child)
         # 画实验谱线

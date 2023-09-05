@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 
 # data = np.loadtxt(r'F:\Project\Python\PyCharm\NewCowan\temp_file\Merge0_0001.Raw8.txt', delimiter=';', skiprows=2)
-data = np.loadtxt('f:/Cowan/Al/exp_data.csv', delimiter=',', skiprows=0)
+data = np.loadtxt("f:/Cowan/Al/exp_data.csv", delimiter=",", skiprows=0)
 # -----数据读取-----#
 x = np.array(data[:, 0])  # 波数
 y = np.array(data[:, 1])  # 幅值
@@ -33,20 +33,31 @@ while judge:
         judge = abs(dev[i] - dev0) / dev[i] > 0.05
     else:
         judge = abs((dev[i] - dev[i - 1]) / dev[i]) > 0.05  # 残差判断条件
-    y_remove0[np.where(y_remove0 <= y_fit1)] = y_fit1[np.where(y_remove0 <= y_fit1)]  # 光谱重建
+    y_remove0[np.where(y_remove0 <= y_fit1)] = y_fit1[
+        np.where(y_remove0 <= y_fit1)
+    ]  # 光谱重建
     i = i + 1
 y_baseline = np.polyval(p1, x)  # 基线
 y_baseline_correction = y_uniform - y_baseline  # 基线校正后
 
 # -----显示-----#
 plt.figure(1)
-plt.plot(x, y_uniform, color="black", linewidth=2.0, linestyle="solid", label="Raw_data")
+plt.plot(
+    x, y_uniform, color="black", linewidth=2.0, linestyle="solid", label="Raw_data"
+)
 plt.plot(x, y_baseline, color="red", linewidth=2.0, linestyle="solid", label="Baseline")
-plt.plot(x, y_baseline_correction, color="blue", linewidth=2.0, linestyle="solid", label="After_correction")
-plt.title('spetrum', fontsize=30)  # 设置图的标题
+plt.plot(
+    x,
+    y_baseline_correction,
+    color="blue",
+    linewidth=2.0,
+    linestyle="solid",
+    label="After_correction",
+)
+plt.title("spetrum", fontsize=30)  # 设置图的标题
 plt.legend(loc="best")  # 图例放到图中的最佳位置
-plt.xlabel('wavenumber(cm^-1)', fontsize=14)  # 设置横轴名称以及字体大小
-plt.ylabel('amplitude', fontsize=14)  # 设置纵轴
+plt.xlabel("wavenumber(cm^-1)", fontsize=14)  # 设置横轴名称以及字体大小
+plt.ylabel("amplitude", fontsize=14)  # 设置纵轴
 
-plt.savefig('a_myplot.jpg', dpi=700)  # 保存图片，矢量图
+plt.savefig("a_myplot.jpg", dpi=700)  # 保存图片，矢量图
 plt.show()

@@ -1,3 +1,7 @@
+# ================================================
+# Cowan原子结构计算程序的自动化实现
+# ================================================
+
 import copy
 import functools
 import os
@@ -26,6 +30,16 @@ from .atom_info import *
 
 class Atom:
     def __init__(self, num: int, ion: int):
+        """
+        原子类，附属于 in36 对象
+
+        Args:
+            num: 原子序数
+            ion: 离化度（剥离的电子数目）
+
+        Notes:
+
+        """
         self.num = num  # 原子序数
         self.symbol = ATOM[self.num][0]  # 元素符号
         self.name = ATOM[self.num][1]  # 元素名称
@@ -36,7 +50,7 @@ class Atom:
 
     def get_base_electron_arrangement(self):
         """
-            获取电子基组态的核外排布情况
+        获取原子处于基态时，核外电子的排布情况
 
         Returns:
             返回一个字典，键为子壳层，值为子壳层的电子数
@@ -47,19 +61,21 @@ class Atom:
                 '3s': 2,
                 '3p': 4,
             }
-
         """
         electron_arrangement = {}
         for key, value in map(
             lambda x: [str(x[:2]), int(x[2:])],
-            BASE_CONFIGURATION[self.electron_num].split(" "),
+            BASE_CONFIGURATION[self.electron_num].split(' '),
         ):
             electron_arrangement[key] = value
         return electron_arrangement
 
     def revert_to_ground_state(self):
         """
-        将电子排布状态重置为基态基态
+        将原子的状态重置为基态
+
+        Returns:
+
         """
         self.electron_arrangement = self.get_base_electron_arrangement()
 
@@ -69,14 +85,11 @@ class Atom:
 
     def get_configuration(self) -> str:
         """
-            根据当前的电子排布情况，获取当前的电子组态
+        根据该原子当前的电子排布情况，获取当前的电子组态
 
         Returns:
-            返回一个字符串
-            例如 1. 基态：3s02 3p04
-                2. 激发态： 3s02 3p03 4s01
+            返回一个字符串，例如 3s02 3p03 4s01
         """
-
         configuration = {}  # 按照子壳层的顺序排列的电子组态
         for i, subshell_name in enumerate(SUBSHELL_NAME):
             if subshell_name in self.electron_arrangement.keys():
@@ -99,28 +112,28 @@ class Atom:
 
         configuration_list = []
         for name, num in configuration.items():
-            configuration_list.append("{}{:0>2}".format(name, num))
-        return " ".join(configuration_list)
+            configuration_list.append('{}{:0>2}'.format(name, num))
+        return ' '.join(configuration_list)
 
     def arouse_electron(self, low_name, high_name):
         """
-            激发电子，改变电子排布情况
+        激发电子，改变原子内电子的排布情况
 
         Args:
             low_name: 下态的支壳层名称
             high_name: 上态的支壳层名称
         """
         if low_name not in SUBSHELL_SEQUENCE:
-            raise Exception(f"没有名为{low_name}的支壳层！")
+            raise Exception(f'没有名为{low_name}的支壳层！')
         elif high_name not in SUBSHELL_SEQUENCE:
-            raise Exception(f"没有名为{high_name}的支壳层!")
+            raise Exception(f'没有名为{high_name}的支壳层!')
         elif low_name not in self.electron_arrangement.keys():
-            raise Exception(f"没有处于{low_name}的电子！")
+            raise Exception(f'没有处于{low_name}的电子！')
         elif (
             self.electron_arrangement.get(high_name, 0)
             == 4 * ANGULAR_QUANTUM_NUM_NAME.index(high_name[1]) + 2
         ):
-            raise Exception(f"{high_name}的电子已经排满！")
+            raise Exception(f'{high_name}的电子已经排满！')
 
         self.electron_arrangement[low_name] -= 1
         self.electron_arrangement[high_name] = (
@@ -132,7 +145,13 @@ class Atom:
 
 class ExpData:
     def __init__(self, filepath: Path):
-        self.plot_path = (PROJECT_PATH / "figure/exp.html").as_posix()
+        """
+        实验数据对象，一般附属于 Cowan、SimulateSpectral 等对象
+
+        Args:
+            filepath: 实验数据的路径
+        """
+        self.plot_path = (PROJECT_PATH / 'figure/exp.html').as_posix()
         self.filepath: Path = filepath
 
         self.data: Optional[pd.DataFrame] = None
@@ -142,42 +161,52 @@ class ExpData:
 
     def set_range(self, x_range: List[float]):
         """
-        设置x轴范围
+        设置实验数据的波长范围
+
         Args:
-            x_range: x轴范围，单位是nm
+            x_range: 波长范围，单位为 nm
+
         """
         self.x_range = x_range
         self.data = self.data[
-            (self.data["wavelength"] < self.x_range[1])
-            & (self.data["wavelength"] > self.x_range[0])
+            (self.data['wavelength'] < self.x_range[1])
+            & (self.data['wavelength'] > self.x_range[0])
         ]
 
     def __read_file(self):
         """
-        读取实验数据
-        设置最小值和最大值
+        根据路径读入实验数据
+
+        Returns:
+
         """
         filetype = self.filepath.suffix[1:]
-        if filetype == "csv":
+        if filetype == 'csv':
             temp_data = pd.read_csv(
-                self.filepath, sep=",", skiprows=1, names=["wavelength", "intensity"]
+                self.filepath, sep=',', skiprows=1, names=['wavelength', 'intensity']
             )
-        elif filetype == "txt":
+        elif filetype == 'txt':
             temp_data = pd.read_csv(
-                self.filepath, sep="\s+", skiprows=1, names=["wavelength", "intensity"]
+                self.filepath, sep='\s+', skiprows=1, names=['wavelength', 'intensity']
             )
         else:
-            raise ValueError(f"filetype {filetype} is not supported")
-        temp_data["intensity_normalization"] = (
-            temp_data["intensity"] / temp_data["intensity"].max()
+            raise ValueError(f'filetype {filetype} is not supported')
+        temp_data['intensity_normalization'] = (
+            temp_data['intensity'] / temp_data['intensity'].max()
         )
 
         self.data = temp_data
-        self.x_range = [self.data["wavelength"].min(), self.data["wavelength"].max()]
+        self.x_range = [self.data['wavelength'].min(), self.data['wavelength'].max()]
 
     def plot_html(self):
+        """
+        绘制实验谱线
+
+        Returns:
+
+        """
         trace1 = go.Scatter(
-            x=self.data["wavelength"], y=self.data["intensity"], mode="lines"
+            x=self.data['wavelength'], y=self.data['intensity'], mode='lines'
         )
         data = [trace1]
         layout = go.Layout(
@@ -191,49 +220,56 @@ class ExpData:
 
 
 class In36:
-    def __init__(self, atom):
+    def __init__(self, atom: Atom):
+        """
+        in36 对象，一般附属于 Cowan 对象
+
+        Args:
+            atom: Atom 对象
+        """
         self.atom: Atom = copy.deepcopy(atom)
 
         self.control_card = [
-            "2",
-            " ",
-            " ",
-            "-9",
-            " ",
-            "  ",
-            " 2",
-            "   ",
-            "10",
-            "  1.0",
-            "    5.e-08",
-            "    1.e-11",
-            "-2",
-            "  ",
-            " ",
-            "1",
-            "90",
-            "  ",
-            "  1.0",
-            " 0.65",
-            "  0.0",
-            "  0.0",
-            "     ",
+            '2',
+            ' ',
+            ' ',
+            '-9',
+            ' ',
+            '  ',
+            ' 2',
+            '   ',
+            '10',
+            '  1.0',
+            '    5.e-08',
+            '    1.e-11',
+            '-2',
+            '  ',
+            ' ',
+            '1',
+            '90',
+            '  ',
+            '  1.0',
+            ' 0.65',
+            '  0.0',
+            '  0.0',
+            '     ',
         ]
         self.configuration_card = []
 
     def read_from_file(self, path: Path):
         """
-        读取in36文件
+        读取已经编写号的in36文件
+
         Args:
             path (Path): in36文件的路径
         """
-        with open(path, "r") as f:
+        with open(path, 'r') as f:
             lines = f.readlines()
         # 控制卡读入
         control_card_text = lines[0]
         control_card_list = []
         if len(control_card_text) != 80:
-            control_card_text += " " * (80 - len(control_card_text))
+            control_card_text += ' ' * (80 - len(control_card_text))
         rules = [1, 1, 1, 2, 1, 2, 2, 3, 2, 5, 10, 10, 2, 2, 1, 1, 2, 2, 5, 5, 5, 5, 5]
         for rule in rules:
             control_card_list.append(control_card_text[:rule])
@@ -242,24 +278,25 @@ class In36:
         input_card_list = []
         for line in lines[1:]:
             value = line.split()
-            if value == ["-1"]:
+            if value == ['-1']:
                 break
-            v0 = "{:>5}".format(value[0])
-            v1 = "{:>9}".format(value[1])
-            v2 = "{:>7}".format(value[2])
-            v3 = "             "
-            v4 = " ".join(value[3:])
+            v0 = '{:>5}'.format(value[0])
+            v1 = '{:>9}'.format(value[1])
+            v2 = '{:>7}'.format(value[2])
+            v3 = '             '
+            v4 = ' '.join(value[3:])
             input_card_list.append([[v0, v1, v2, v3, v4], self.__judge_parity(v4)])
         self.control_card, self.configuration_card = control_card_list, input_card_list
 
         # 更新原子信息
-        num = int(self.configuration_card[0][0][0].split(" ")[-1])
-        ion = int(self.configuration_card[0][0][1].split("+")[-1])
+        num = int(self.configuration_card[0][0][0].split(' ')[-1])
+        ion = int(self.configuration_card[0][0][1].split('+')[-1])
         self.atom = Atom(num=num, ion=ion)
 
     def add_configuration(self, configuration: str):
         """
-        添加组态（会自动剔除重复数据）
+        向 in36 文件的组态卡添加组态（会自动剔除重复的组态）
+
         Args:
             configuration(str): 要添加的组态
         """
@@ -268,25 +305,35 @@ class In36:
         else:  # 如果组态卡为空
             temp_list = []
         if configuration not in temp_list:
-            v0 = "{:>5}".format(self.atom.num)
-            v1 = "{:>9}".format(
-                f"{self.atom.ion + 1}{ATOM[self.atom.num][0]}+{self.atom.ion}"
+            v0 = '{:>5}'.format(self.atom.num)
+            v1 = '{:>9}'.format(
+                f'{self.atom.ion + 1}{ATOM[self.atom.num][0]}+{self.atom.ion}'
             )
-            v2 = "{:>7}".format("11111")
-            v3 = "             "
+            v2 = '{:>7}'.format('11111')
+            v3 = '             '
             v4 = configuration
             self.configuration_card.append(
                 [[v0, v1, v2, v3, v4], self.__judge_parity(v4)]
             )
 
     def configuration_move(self, index, opt: str):
-        if opt == "up":
+        """
+        移动组态的先后顺序
+
+        Args:
+            index: 要移动的组态的索引
+            opt: 操作名称 up 或 down
+
+        Returns:
+
+        """
+        if opt == 'up':
             if 1 <= index <= len(self.configuration_card):
                 self.configuration_card[index], self.configuration_card[index - 1] = (
                     self.configuration_card[index - 1],
                     self.configuration_card[index],
                 )
-        elif opt == "down":
+        elif opt == 'down':
             if 0 <= index <= len(self.configuration_card) - 2:
                 self.configuration_card[index], self.configuration_card[index + 1] = (
                     self.configuration_card[index + 1],
@@ -296,9 +343,28 @@ class In36:
             raise ValueError('opt must be "up" or "down"')
 
     def del_configuration(self, index):
+        """
+        删除 in36 组态卡中的组态
+
+        Args:
+            index: 要删除的组态的索引
+
+        Returns:
+
+        """
         self.configuration_card.pop(index)
 
     def get_configuration_name(self, low_index, high_index):
+        """
+        根据组态索引获取电子跃迁的支壳层名称
+
+        Args:
+            low_index: 下态的索引
+            high_index: 上态的索引
+
+        Returns:
+            返回一个字符串，如 '2p --> 3s'
+        """
         first_parity = self.configuration_card[0][1]
         first_configuration = []
         second_configuration = []
@@ -311,8 +377,8 @@ class In36:
         low_configuration = first_configuration[low_index]
         high_configuration = second_configuration[high_index]
 
-        low_configuration = low_configuration.split(" ")
-        high_configuration = high_configuration.split(" ")
+        low_configuration = low_configuration.split(' ')
+        high_configuration = high_configuration.split(' ')
 
         low_dict = {}
         high_dict = {}
@@ -334,35 +400,51 @@ class In36:
             elif value > 0:
                 for i in range(value):
                     low_name.append(key)
-        return "{} --> {}".format(",".join(low_name), ",".join(high_name))
+        return '{} --> {}'.format(','.join(low_name), ','.join(high_name))
 
     def get_text(self):
-        in36 = ""
-        in36 += "".join(self.control_card)
-        in36 += "\n"
+        """
+        生成 in36 文件所包含的字符串
+
+        Returns:
+            in36 文件的字符串
+        """
+        in36 = ''
+        in36 += ''.join(self.control_card)
+        in36 += '\n'
         for v in self.configuration_card:
-            in36 += "".join(v[0])
-            in36 += "\n"
-        in36 += "   -1\n"
+            in36 += ''.join(v[0])
+            in36 += '\n'
+        in36 += '   -1\n'
         return in36
 
     def save(self, path: Path):
-        with open(path, "w", encoding="utf-8") as f:
+        """
+        生成 in36 文件
+
+        Args:
+            path: 生成 in36 文件的路径
+
+        Returns:
+
+        """
+        with open(path, 'w', encoding='utf-8') as f:
             f.write(self.get_text())
 
     @staticmethod
     def __judge_parity(configuration: str) -> int:
         """
         判断指定组态的宇称
-            Args:
-                configuration: 要判断的电子组态
 
-            Returns:
-                0: 偶宇称
-                1: 奇宇称
+        Args:
+            configuration: 要判断宇称的电子组态，字符串形式，如 '2p06 3s01'
+
+        Returns:
+            返回一个整数，其中
+            0: 偶宇称
+            1: 奇宇称
         """
-
-        configuration = list(configuration.split(" "))
+        configuration = list(configuration.split(' '))
         sum_ = 0
         for v in configuration:
             sum_ += ANGULAR_QUANTUM_NUM_NAME.index(v[1]) * eval(v[3:])
@@ -375,41 +457,56 @@ class In36:
 
 class In2:
     def __init__(self):
+        """
+        in2 对象，一般附属于 Cowan 对象
+
+        Args:
+
+        """
         self.input_card: List[str] = [
-            "g5inp",
-            "  ",
-            "0",
-            " 0",
-            "0",
-            "00",
-            "  0.000",
-            " ",
-            "00000000",
-            " 0000000",
-            "   00000",
-            " 000",
-            "0",
-            "90",
-            "99",
-            "90",
-            "90",
-            "90",
-            ".0000",
-            "     ",
-            "0",
-            "7",
-            "2",
-            "2",
-            "9",
-            "     ",
+            'g5inp',
+            '  ',
+            '0',
+            ' 0',
+            '0',
+            '00',
+            '  0.000',
+            ' ',
+            '00000000',
+            ' 0000000',
+            '   00000',
+            ' 000',
+            '0',
+            '90',
+            '99',
+            '90',
+            '90',
+            '90',
+            '.0000',
+            '     ',
+            '0',
+            '7',
+            '2',
+            '2',
+            '9',
+            '     ',
         ]
 
-    def read_from_file(self, path):
-        with open(path, "r") as f:
+    def read_from_file(self, path: Path):
+        """
+        读取 in2 文件
+
+        Args:
+            path: in2文件的路径
+
+        Returns:
+
+        """
+        with open(path, 'r') as f:
             line = f.readline()
-        line = line.strip("\n")
+        line = line.strip('\n')
         if len(line) != 80:
-            line += " " * (80 - len(line) - 1)
+            line += ' ' * (80 - len(line) - 1)
         rules = [
             5,
             2,
@@ -445,14 +542,29 @@ class In2:
         self.input_card = input_card_list
 
     def get_text(self):
-        in2 = ""
-        in2 += "".join(self.input_card)
-        in2 += "\n"
-        in2 += "        -1\n"
+        """
+        获取 in2 文件所包含的字符串
+
+        Returns:
+            in2 字符串
+        """
+        in2 = ''
+        in2 += ''.join(self.input_card)
+        in2 += '\n'
+        in2 += '        -1\n'
         return in2
 
     def save(self, path: Path):
-        with open(path, "w", encoding="utf-8") as f:
+        """
+        保存为 in2 文件
+
+        Args:
+            path: 要保存的文件夹
+
+        Returns:
+
+        """
+        with open(path, 'w', encoding='utf-8') as f:
             f.write(self.get_text())
 
 
@@ -465,7 +577,7 @@ class Cowan:
         self.coupling_mode = coupling_mode  # 1是L-S耦合 2是j-j耦合
 
         self.cal_data: Optional[CalData] = None
-        self.run_path = PROJECT_PATH / f"cal_result/{self.name}"
+        self.run_path = PROJECT_PATH / f'cal_result/{self.name}'
 
     def run(self, delta_lambda=0.0):
         """
@@ -479,10 +591,10 @@ class Cowan:
 
         # 运行文件
         os.chdir(self.run_path)
-        rcn = subprocess.run("./RCN.exe")
-        rcn2 = subprocess.run("./RCN2.exe")
+        rcn = subprocess.run('./RCN.exe')
+        rcn2 = subprocess.run('./RCN2.exe')
         self.__edit_ing11()
-        rcg = subprocess.run("./RCG.exe")
+        rcg = subprocess.run('./RCG.exe')
         os.chdir(original_path)
 
         # 更新 cal_data 对象
@@ -491,17 +603,17 @@ class Cowan:
     def __get_ready(self):
         if self.run_path.exists():
             shutil.rmtree(self.run_path)
-        shutil.copytree(PROJECT_PATH / "bin", self.run_path)
-        self.in36.save(self.run_path / "in36")
-        self.in2.save(self.run_path / "in2")
+        shutil.copytree(PROJECT_PATH / 'bin', self.run_path)
+        self.in36.save(self.run_path / 'in36')
+        self.in2.save(self.run_path / 'in2')
 
     def __edit_ing11(self):
-        with open("./out2ing", "r", encoding="utf-8") as f:
+        with open('./out2ing', 'r', encoding='utf-8') as f:
             text = f.read()
-        text = f"    {self.coupling_mode}{text[5:]}"
-        with open("./ing11", "w", encoding="utf-8") as f:
+        text = f'    {self.coupling_mode}{text[5:]}'
+        with open('./ing11', 'w', encoding='utf-8') as f:
             f.write(text)
-        with open("./out2ing", "w", encoding="utf-8") as f:
+        with open('./out2ing', 'w', encoding='utf-8') as f:
             f.write(text)
 
 
@@ -509,8 +621,8 @@ class CalData:
     def __init__(self, name, exp_data: ExpData):
         self.name = name
         self.exp_data = exp_data
-        self.filepath = (PROJECT_PATH / f"cal_result/{name}/spectra.dat").as_posix()
-        self.plot_path = (PROJECT_PATH / f"figure/line/{name}.html").as_posix()
+        self.filepath = (PROJECT_PATH / f'cal_result/{name}/spectra.dat').as_posix()
+        self.plot_path = (PROJECT_PATH / f'figure/line/{name}.html').as_posix()
         self.init_data: pd.DataFrame | None = None
 
         self.widen_all: Optional[WidenAll] = None
@@ -521,25 +633,25 @@ class CalData:
     def read_file(self):
         self.init_data = pd.read_csv(
             self.filepath,
-            sep="\s+",
+            sep='\s+',
             names=[
-                "energy_l",
-                "energy_h",
-                "wavelength_ev",
-                "intensity",
-                "index_l",
-                "index_h",
-                "J_l",
-                "J_h",
+                'energy_l',
+                'energy_h',
+                'wavelength_ev',
+                'intensity',
+                'index_l',
+                'index_h',
+                'J_l',
+                'J_h',
             ],
         )
         self.widen_all = WidenAll(self.name, self.init_data, self.exp_data)
         self.widen_part = WidenPart(self.name, self.init_data, self.exp_data)
 
     def plot_line(self):
-        temp_data = self.__get_line_data(self.init_data[["wavelength_ev", "intensity"]])
+        temp_data = self.__get_line_data(self.init_data[['wavelength_ev', 'intensity']])
         trace1 = go.Scatter(
-            x=temp_data["wavelength"], y=temp_data["intensity"], mode="lines"
+            x=temp_data['wavelength'], y=temp_data['intensity'], mode='lines'
         )
         data = [trace1]
         layout = go.Layout(
@@ -552,23 +664,23 @@ class CalData:
 
     def __get_line_data(self, origin_data):
         temp_data = origin_data.copy()
-        temp_data["wavelength"] = 1239.85 / temp_data["wavelength_ev"]
+        temp_data['wavelength'] = 1239.85 / temp_data['wavelength_ev']
         temp_data = temp_data[
-            (temp_data["wavelength"] < self.exp_data.x_range[1])
-            & (temp_data["wavelength"] > self.exp_data.x_range[0])
+            (temp_data['wavelength'] < self.exp_data.x_range[1])
+            & (temp_data['wavelength'] > self.exp_data.x_range[0])
         ]
         lambda_ = []
         strength = []
-        if temp_data["wavelength"].min() > self.exp_data.x_range[0]:
+        if temp_data['wavelength'].min() > self.exp_data.x_range[0]:
             lambda_ += [self.exp_data.x_range[0]]
             strength += [0]
-        for x, y in zip(temp_data["wavelength"], temp_data["intensity"]):
+        for x, y in zip(temp_data['wavelength'], temp_data['intensity']):
             lambda_ += [x, x, x]
             strength += [0, y, 0]
-        if temp_data["wavelength"].max() < self.exp_data.x_range[1]:
+        if temp_data['wavelength'].max() < self.exp_data.x_range[1]:
             lambda_ += [self.exp_data.x_range[1]]
             strength += [0]
-        temp = pd.DataFrame({"wavelength": lambda_, "intensity": strength})
+        temp = pd.DataFrame({'wavelength': lambda_, 'intensity': strength})
         return temp
 
 
@@ -589,13 +701,13 @@ class WidenAll:
         self.only_p = None
 
         self.plot_path_gauss = (
-            PROJECT_PATH / f"figure/gauss/{self.name}.html"
+            PROJECT_PATH / f'figure/gauss/{self.name}.html'
         ).as_posix()
         self.plot_path_cross_NP = (
-            PROJECT_PATH / f"figure/cross_NP/{self.name}.html"
+            PROJECT_PATH / f'figure/cross_NP/{self.name}.html'
         ).as_posix()
         self.plot_path_cross_P = (
-            PROJECT_PATH / f"figure/cross_P/{self.name}.html"
+            PROJECT_PATH / f'figure/cross_P/{self.name}.html'
         ).as_posix()
 
         self.widen_data: pd.DataFrame | None = None
@@ -619,46 +731,46 @@ class WidenAll:
 
         new_data = data.copy()
         # 找到下态最小能量和最小能量对应的J值
-        min_energy = new_data["energy_l"].min()
-        min_J = new_data[new_data["energy_l"] == min_energy]["J_l"].min()
+        min_energy = new_data['energy_l'].min()
+        min_J = new_data[new_data['energy_l'] == min_energy]['J_l'].min()
         # 筛选波长范围在实验数据范围内的跃迁正例个数
         min_wavelength_nm = lambda_range[0]
         max_wavelength_nm = lambda_range[1]
         min_wavelength_ev = 1239.85 / max_wavelength_nm
         max_wavelength_ev = 1239.85 / min_wavelength_nm
         new_data = new_data[
-            (new_data["wavelength_ev"] > min_wavelength_ev)
-            & (new_data["wavelength_ev"] < max_wavelength_ev)
+            (new_data['wavelength_ev'] > min_wavelength_ev)
+            & (new_data['wavelength_ev'] < max_wavelength_ev)
         ]
         if self.n is None:
-            wave = 1239.85 / np.array(self.exp_data.data["wavelength"].values)
+            wave = 1239.85 / np.array(self.exp_data.data['wavelength'].values)
         else:
             wave = np.linspace(min_wavelength_ev, max_wavelength_ev, self.n)
         result = pd.DataFrame()
-        result["wavelength"] = 1239.85 / wave
+        result['wavelength'] = 1239.85 / wave
 
         if new_data.empty:
-            result["gauss"] = 0
-            result["cross_NP"] = 0
-            result["cross_P"] = 0
+            result['gauss'] = 0
+            result['cross_NP'] = 0
+            result['cross_P'] = 0
             self.widen_data = result
             return -1
         new_data = new_data.reindex()
         # 获取展宽所需要的数据
         new_wavelength = abs(
-            1239.85 / (1239.85 / new_data["wavelength_ev"] + self.delta_lambda)
+            1239.85 / (1239.85 / new_data['wavelength_ev'] + self.delta_lambda)
         )  # 单位时ev
         new_wavelength = new_wavelength.values
-        new_intensity = abs(new_data["intensity"])
+        new_intensity = abs(new_data['intensity'])
         new_intensity = new_intensity.values
-        flag = new_data["energy_l"] > new_data["energy_h"]
+        flag = new_data['energy_l'] > new_data['energy_h']
         not_flag = np.bitwise_not(flag)
-        temp_1 = new_data["energy_l"][flag]
-        temp_2 = new_data["energy_h"][not_flag]
+        temp_1 = new_data['energy_l'][flag]
+        temp_2 = new_data['energy_h'][not_flag]
         new_energy = temp_1.combine_first(temp_2)
         new_energy = new_energy.values
-        temp_1 = new_data["J_l"][flag]
-        temp_2 = new_data["J_h"][not_flag]
+        temp_1 = new_data['J_l'][flag]
+        temp_2 = new_data['J_h'][not_flag]
         new_J = temp_1.combine_first(temp_2)
         new_J = new_J.values
         # 计算布居
@@ -676,25 +788,25 @@ class WidenAll:
         ]
         res = list(zip(*res))
         if not self.only_p:
-            result["gauss"] = res[0]
-            result["cross_NP"] = res[1]
-        result["cross_P"] = res[2]
+            result['gauss'] = res[0]
+            result['cross_NP'] = res[1]
+        result['cross_P'] = res[2]
         self.widen_data = result
 
     def plot_widen(self):
         if not self.only_p:
             self.__plot_html(
-                self.widen_data, self.plot_path_gauss, "wavelength", "gauss"
+                self.widen_data, self.plot_path_gauss, 'wavelength', 'gauss'
             )
             self.__plot_html(
-                self.widen_data, self.plot_path_cross_NP, "wavelength", "cross_NP"
+                self.widen_data, self.plot_path_cross_NP, 'wavelength', 'cross_NP'
             )
         self.__plot_html(
-            self.widen_data, self.plot_path_cross_P, "wavelength", "cross_P"
+            self.widen_data, self.plot_path_cross_P, 'wavelength', 'cross_P'
         )
 
     def __plot_html(self, data, path, x_name, y_name):
-        trace1 = go.Scatter(x=data[x_name], y=data[y_name], mode="lines")
+        trace1 = go.Scatter(x=data[x_name], y=data[y_name], mode='lines')
         data = [trace1]
         layout = go.Layout(
             margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
@@ -786,18 +898,18 @@ class WidenPart:
         """
         temp_data = {}
         # 按照跃迁正例展宽
-        data_grouped = self.init_data.groupby(by=["index_l", "index_h"])
+        data_grouped = self.init_data.groupby(by=['index_l', 'index_h'])
         for index in data_grouped.groups.keys():
             temp_group = pd.DataFrame(data_grouped.get_group(index))
             temp_result = self.__widen(temperature, temp_group)
             # 如果这个波段没有跃迁正例
             if type(temp_result) == int:
                 continue
-            temp_data[f"{index[0]}_{index[1]}"] = temp_result
+            temp_data[f'{index[0]}_{index[1]}'] = temp_result
         self.plot_path_list = {}
         for key, value in temp_data.items():
             self.plot_path_list[key] = (
-                PROJECT_PATH / f"figure/part/{self.name}_{key}.html"
+                PROJECT_PATH / f'figure/part/{self.name}_{key}.html'
             ).as_posix()
         self.grouped_widen_data = temp_data
 
@@ -821,40 +933,40 @@ class WidenPart:
 
         new_data = data.copy()
         # 找到下态最小能量和最小能量对应的J值
-        min_energy = new_data["energy_l"].min()
-        min_J = new_data[new_data["energy_l"] == min_energy]["J_l"].min()
+        min_energy = new_data['energy_l'].min()
+        min_J = new_data[new_data['energy_l'] == min_energy]['J_l'].min()
         # 筛选波长范围在实验数据范围内的跃迁正例个数
         min_wavelength_nm = lambda_range[0]
         max_wavelength_nm = lambda_range[1]
         min_wavelength_ev = 1239.85 / max_wavelength_nm
         max_wavelength_ev = 1239.85 / min_wavelength_nm
         new_data = new_data[
-            (new_data["wavelength_ev"] > min_wavelength_ev)
-            & (new_data["wavelength_ev"] < max_wavelength_ev)
+            (new_data['wavelength_ev'] > min_wavelength_ev)
+            & (new_data['wavelength_ev'] < max_wavelength_ev)
         ]
         if new_data.empty:
             result = pd.DataFrame()
-            result["wavelength"] = self.exp_data.data["wavelength"].values
-            result["gauss"] = np.zeros(self.exp_data.data["wavelength"].values.shape)
-            result["cross_NP"] = np.zeros(self.exp_data.data["wavelength"].values.shape)
-            result["cross_P"] = np.zeros(self.exp_data.data["wavelength"].values.shape)
+            result['wavelength'] = self.exp_data.data['wavelength'].values
+            result['gauss'] = np.zeros(self.exp_data.data['wavelength'].values.shape)
+            result['cross_NP'] = np.zeros(self.exp_data.data['wavelength'].values.shape)
+            result['cross_P'] = np.zeros(self.exp_data.data['wavelength'].values.shape)
             return result
         new_data = new_data.reindex()
         # 获取展宽所需要的数据
         new_wavelength = abs(
-            1239.85 / (1239.85 / new_data["wavelength_ev"] + self.delta_lambda)
+            1239.85 / (1239.85 / new_data['wavelength_ev'] + self.delta_lambda)
         )  # 单位时ev
         new_wavelength = new_wavelength.values
-        new_intensity = abs(new_data["intensity"])
+        new_intensity = abs(new_data['intensity'])
         new_intensity = new_intensity.values
-        flag = new_data["energy_l"] > new_data["energy_h"]
+        flag = new_data['energy_l'] > new_data['energy_h']
         not_flag = np.bitwise_not(flag)
-        temp_1 = new_data["energy_l"][flag]
-        temp_2 = new_data["energy_h"][not_flag]
+        temp_1 = new_data['energy_l'][flag]
+        temp_2 = new_data['energy_h'][not_flag]
         new_energy = temp_1.combine_first(temp_2)
         new_energy = new_energy.values
-        temp_1 = new_data["J_l"][flag]
-        temp_2 = new_data["J_h"][not_flag]
+        temp_1 = new_data['J_l'][flag]
+        temp_2 = new_data['J_h'][not_flag]
         new_J = temp_1.combine_first(temp_2)
         new_J = new_J.values
         # 计算布居
@@ -864,11 +976,11 @@ class WidenPart:
             / (2 * min_J + 1)
         )
         if self.n is None:
-            wave = 1239.85 / self.exp_data.data["wavelength"].values
+            wave = 1239.85 / self.exp_data.data['wavelength'].values
         else:
             wave = np.linspace(min_wavelength_ev, max_wavelength_ev, self.n)
         result = pd.DataFrame()
-        result["wavelength"] = 1239.85 / wave
+        result['wavelength'] = 1239.85 / wave
 
         res = [
             self.__complex_cal(
@@ -878,17 +990,17 @@ class WidenPart:
         ]
         res = list(zip(*res))
         if not self.only_p:
-            result["gauss"] = res[0]
-            result["cross_NP"] = res[1]
-        result["cross_P"] = res[2]
+            result['gauss'] = res[0]
+            result['cross_NP'] = res[1]
+        result['cross_P'] = res[2]
         return result
 
     def plot_widen_by_group(self):
         for key, value in self.grouped_widen_data.items():
-            self.__plot_html(value, self.plot_path_list[key], "wavelength", "cross_P")
+            self.__plot_html(value, self.plot_path_list[key], 'wavelength', 'cross_P')
 
     def __plot_html(self, data, path, x_name, y_name):
-        trace1 = go.Scatter(x=data[x_name], y=data[y_name], mode="lines")
+        trace1 = go.Scatter(x=data[x_name], y=data[y_name], mode='lines')
         data = [trace1]
         layout = go.Layout(
             margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
@@ -958,8 +1070,8 @@ class SimulateSpectral:
         self.abundance = []
         self.sim_data = None
 
-        self.plot_path = PROJECT_PATH.joinpath("figure/add.html").as_posix()
-        self.example_path = PROJECT_PATH.joinpath("figure/part/example.html").as_posix()
+        self.plot_path = PROJECT_PATH.joinpath('figure/add.html').as_posix()
+        self.example_path = PROJECT_PATH.joinpath('figure/part/example.html').as_posix()
 
     def load_exp_data(self, path: Path):
         self.exp_data = ExpData(path)
@@ -990,8 +1102,8 @@ class SimulateSpectral:
             if flag:
                 cowan.cal_data.widen_all.widen(temperature)
         res = pd.DataFrame()
-        res["wavelength"] = self.cowan_list[0].cal_data.widen_all.widen_data[
-            "wavelength"
+        res['wavelength'] = self.cowan_list[0].cal_data.widen_all.widen_data[
+            'wavelength'
         ]
         temp = np.zeros(res.shape[0])
         # print(res.shape)
@@ -1000,20 +1112,20 @@ class SimulateSpectral:
             if flag:
                 # print(cowan.cal_data.widen_all.widen_data['cross_P'].values)
                 # print(abu)
-                temp += cowan.cal_data.widen_all.widen_data["cross_P"].values * abu
+                temp += cowan.cal_data.widen_all.widen_data['cross_P'].values * abu
                 # exit()
-        res["intensity"] = temp
+        res['intensity'] = temp
         self.sim_data = res
         self.get_spectrum_similarity()
         return copy.deepcopy(self)
 
     def plot_html(self):
-        x1 = self.exp_data.data["wavelength"]
-        y1 = self.exp_data.data["intensity"] / self.exp_data.data["intensity"].max()
-        x2 = self.sim_data["wavelength"]
-        y2 = self.sim_data["intensity"] / self.sim_data["intensity"].max()
-        trace1 = go.Scatter(x=x1, y=y1, mode="lines")
-        trace2 = go.Scatter(x=x2, y=y2, mode="lines")
+        x1 = self.exp_data.data['wavelength']
+        y1 = self.exp_data.data['intensity'] / self.exp_data.data['intensity'].max()
+        x2 = self.sim_data['wavelength']
+        y2 = self.sim_data['intensity'] / self.sim_data['intensity'].max()
+        trace1 = go.Scatter(x=x1, y=y1, mode='lines')
+        trace2 = go.Scatter(x=x2, y=y2, mode='lines')
         data = [trace1, trace2]
         layout = go.Layout(
             margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
@@ -1032,27 +1144,27 @@ class SimulateSpectral:
                     c.cal_data.widen_part.grouped_widen_data.items()
                 ):
                     if add_list[i][1][j]:
-                        index_low, index_high = map(int, key.split("_"))
-                        name = "{}<br />{}".format(
-                            c.name.replace("_", "+"),
+                        index_low, index_high = map(int, key.split('_'))
+                        name = '{}<br />{}'.format(
+                            c.name.replace('_', '+'),
                             c.in36.get_configuration_name(index_low, index_high),
                         )
-                        if value["cross_P"].max() == 0:
+                        if value['cross_P'].max() == 0:
                             trace.append(
                                 go.Scatter(
-                                    x=value["wavelength"],
-                                    y=value["cross_P"] + height,
-                                    mode="lines",
+                                    x=value['wavelength'],
+                                    y=value['cross_P'] + height,
+                                    mode='lines',
                                     name=name,
                                 )
                             )
                         else:
                             trace.append(
                                 go.Scatter(
-                                    x=value["wavelength"],
-                                    y=value["cross_P"] / value["cross_P"].max()
+                                    x=value['wavelength'],
+                                    y=value['cross_P'] / value['cross_P'].max()
                                     + height,
-                                    mode="lines",
+                                    mode='lines',
                                     name=name,
                                 )
                             )
@@ -1080,7 +1192,7 @@ class SimulateSpectral:
         # print(all_abundance)
         temp_abundance = []
         for c in self.cowan_list:
-            ion = int(c.name.split("_")[1]) - 1
+            ion = int(c.name.split('_')[1]) - 1
             temp_abundance.append(all_abundance[ion])
         self.abundance = temp_abundance
 
@@ -1241,8 +1353,8 @@ class SimulateSpectral:
     # 计算光谱相似度
     def get_spectrum_similarity(self):
         self.spectrum_similarity = self.spectrum_similarity10(
-            self.exp_data.data[["wavelength", "intensity"]],
-            self.sim_data[["wavelength", "intensity"]],
+            self.exp_data.data[['wavelength', 'intensity']],
+            self.sim_data[['wavelength', 'intensity']],
         )
 
     @staticmethod
@@ -1388,7 +1500,7 @@ class SimulateSpectral:
         fax_new = fax[(fax[col_names_a[0]] <= max_x) & (min_x <= fax[col_names_a[0]])]
         fbx_new = fbx[(fbx[col_names_b[0]] <= max_x) & (min_x <= fbx[col_names_b[0]])]
         f2 = interp1d(
-            fbx_new[col_names_b[0]], fbx_new[col_names_b[1]], fill_value="extrapolate"
+            fbx_new[col_names_b[0]], fbx_new[col_names_b[1]], fill_value='extrapolate'
         )
         x = fax_new[col_names_a[0]].values
         y1 = fax_new[col_names_a[1]].values
@@ -1405,7 +1517,7 @@ class SimulateGrid(QtCore.QThread):
 
     def __init__(self, temperature, density, simulate):
         super().__init__()
-        self.task = "cal"
+        self.task = 'cal'
         self.update_exp = None
 
         self.simulate = copy.deepcopy(simulate)
@@ -1422,21 +1534,21 @@ class SimulateGrid(QtCore.QThread):
                 self.ne_num,
             ),
         )
-        self.t_list = ["{:.3f}".format(v) for v in t_list]
-        self.ne_list = ["{:.3e}".format(v) for v in ne_list]
+        self.t_list = ['{:.3f}'.format(v) for v in t_list]
+        self.ne_list = ['{:.3e}'.format(v) for v in ne_list]
 
         self.grid_data = {}
 
     def change_task(self, task, *args):
-        if task in ["cal", "update"]:
+        if task in ['cal', 'update']:
             self.task = task
-        if task == "update":
+        if task == 'update':
             self.update_exp = args[0]
 
     def run(self):
-        if self.task == "cal":
+        if self.task == 'cal':
             self.cal_grid()
-        elif self.task == "update":
+        elif self.task == 'update':
             self.update_similarity(self.update_exp)
 
     def cal_grid(self):
@@ -1483,13 +1595,13 @@ class SpaceTimeResolution:
         self.simulate_spectral_dict = {}
 
         self.change_by_time_path = PROJECT_PATH.joinpath(
-            "figure/change/by_time.html"
+            'figure/change/by_time.html'
         ).as_posix()
         self.change_by_location_path = PROJECT_PATH.joinpath(
-            "figure/change/by_location.html"
+            'figure/change/by_location.html'
         ).as_posix()
         self.change_by_space_time_path = PROJECT_PATH.joinpath(
-            "figure/change/by_space_time.html"
+            'figure/change/by_space_time.html'
         ).as_posix()
 
     # 添加一个位置时间
@@ -1519,12 +1631,12 @@ class SpaceTimeResolution:
                 self.simulate_spectral_dict[(str(time), location)].electron_density
             )
 
-        trace1 = go.Scatter(x=times, y=temperature, mode="lines")
-        trace2 = go.Scatter(x=times, y=electron_density, mode="lines", yaxis="y2")
+        trace1 = go.Scatter(x=times, y=temperature, mode='lines')
+        trace2 = go.Scatter(x=times, y=electron_density, mode='lines', yaxis='y2')
         data = [trace1, trace2]
         layout = go.Layout(
             margin=go.layout.Margin(autoexpand=True, b=15, l=30, r=0, t=0),
-            yaxis2=dict(anchor="x", overlaying="y", side="right"),  # 设置坐标轴的格式，一般次坐标轴在右侧
+            yaxis2=dict(anchor='x', overlaying='y', side='right'),  # 设置坐标轴的格式，一般次坐标轴在右侧
             # xaxis=go.layout.XAxis(range=self.exp_data.x_range),
         )
         fig = go.Figure(data=data, layout=layout)
@@ -1542,21 +1654,21 @@ class SpaceTimeResolution:
 
         for x in x_s:
             temperature[(x, 0, 0)] = self.simulate_spectral_dict[
-                (time, (str(x), "0", "0"))
+                (time, (str(x), '0', '0'))
             ].temperature
             electron_density[(x, 0, 0)] = self.simulate_spectral_dict[
-                (time, (str(x), "0", "0"))
+                (time, (str(x), '0', '0'))
             ].electron_density
 
         def fun(xx, yy=0, zz=0):
             return temperature[(xx, yy, zz)], electron_density[(xx, yy, zz)]
 
-        trace1 = go.Scatter(x=x_s, y=[fun(v)[0] for v in x_s], mode="lines")
-        trace2 = go.Scatter(x=x_s, y=[fun(v)[1] for v in x_s], mode="lines", yaxis="y2")
+        trace1 = go.Scatter(x=x_s, y=[fun(v)[0] for v in x_s], mode='lines')
+        trace2 = go.Scatter(x=x_s, y=[fun(v)[1] for v in x_s], mode='lines', yaxis='y2')
         data = [trace1, trace2]
         layout = go.Layout(
             margin=go.layout.Margin(autoexpand=True, b=15, l=30, r=0, t=0),
-            yaxis2=dict(anchor="x", overlaying="y", side="right"),  # 设置坐标轴的格式，一般次坐标轴在右侧
+            yaxis2=dict(anchor='x', overlaying='y', side='right'),  # 设置坐标轴的格式，一般次坐标轴在右侧
             # xaxis=go.layout.XAxis(range=self.exp_data.x_range),
         )
         fig = go.Figure(data=data, layout=layout)
@@ -1579,11 +1691,11 @@ class SpaceTimeResolution:
             temp_d_res = []
             for space in spaces:
                 temp_t_res.append(
-                    self.simulate_spectral_dict[(time, (space, "0", "0"))].temperature
+                    self.simulate_spectral_dict[(time, (space, '0', '0'))].temperature
                 )
                 temp_d_res.append(
                     self.simulate_spectral_dict[
-                        (time, (space, "0", "0"))
+                        (time, (space, '0', '0'))
                     ].electron_density
                 )
             t_res.append(temp_t_res)
