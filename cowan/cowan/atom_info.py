@@ -45,8 +45,8 @@ SUBSHELL_NAME = ['1s',
                  '7s', '7p', '7d', '7f', '7g', '7h', '7i']
 # 角量子数名称
 ANGULAR_QUANTUM_NUM_NAME = ['s', 'p', 'd', 'f', 'g', 'h', 'i']
-path = Path(__file__)
-ATOM_INFO = json.load(open(path.parent / 'ions_info.json', 'r'))
+_path_ = Path(__file__)
+ATOM_INFO = json.load(open(_path_.parent / 'ions_info.json', 'r'))
 
 # 电离能
 IONIZATION_ENERGY = {}
@@ -56,9 +56,9 @@ for key_, value_ in ATOM_INFO['energy'].items():
 # 基组态
 BASE_CONFIGURATION = {}
 
-for num, config in ATOM_INFO['config'].items():
+for num_, config in ATOM_INFO['config'].items():
     temp_dict = {}
     for key_, value_ in config.items():
         temp_dict[int(key_)] = value_
-    BASE_CONFIGURATION[int(num)] = temp_dict
+    BASE_CONFIGURATION[int(num_)] = temp_dict
 

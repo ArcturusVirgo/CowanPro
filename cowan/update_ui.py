@@ -1,13 +1,14 @@
 import functools
 
 import matplotlib
+import numpy as np
 import pandas as pd
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import QTableWidgetItem, QListWidgetItem, QTreeWidgetItem
 
-from cowan.cowan import SUBSHELL_SEQUENCE, ANGULAR_QUANTUM_NUM_NAME
-from cowan.tools import rainbow_color
+from .cowan import SUBSHELL_SEQUENCE, ANGULAR_QUANTUM_NUM_NAME
+from .tools import rainbow_color
 from main import MainWindow
 
 
@@ -156,7 +157,7 @@ class UpdatePage2(MainWindow):
     def update_exp_figure(self):
         # 更新界面
         self.expdata_2.plot_html()
-        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
+        self.ui.page2_add_spectrum_web.load(QUrl.fromLocalFile(self.expdata_2.plot_path))
 
     def update_grid(self):
         self.ui.page2_grid_list.clear()
@@ -206,6 +207,14 @@ class UpdatePage2(MainWindow):
             self.ui.st_resolution_table.setItem(i, 2, item3)
             self.ui.st_resolution_table.setItem(i, 3, item4)
             self.ui.st_resolution_table.setItem(i, 4, item5)
+
+    def update_temperature_density(self):
+        self.ui.page2_temperature.setValue(self.simulate.temperature)
+        temp = '{:.2e}'.format(self.simulate.electron_density)
+        base = eval(temp.split('e+')[0])
+        index = eval(temp.split('e+')[1])
+        self.ui.page2_density_base.setValue(base)
+        self.ui.page2_density_index.setValue(index)
 
 
 class UpdatePage3(MainWindow):

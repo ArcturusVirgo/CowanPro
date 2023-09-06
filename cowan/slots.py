@@ -19,34 +19,23 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QTreeWidgetItem,
 )
-
-from cowan import PROJECT_PATH
-from cowan.update_ui import *
-from cowan.cowan import (
-    ExpData,
-    Atom,
-    SUBSHELL_SEQUENCE,
-    ANGULAR_QUANTUM_NUM_NAME,
-    In36,
-    In2,
-    Cowan,
-    SimulateGrid,
-    SimulateSpectral,
-)
+from .cowan import *
+from .global_var import *
 from main import MainWindow, VerticalLine
+from .update_ui import *
 
 
 class Menu(MainWindow):
     def load_exp_data(self):
         path, types = QFileDialog.getOpenFileName(
-            self, '请选择实验数据', PROJECT_PATH.as_posix(), '数据文件(*.txt *.csv)'
+            self, '请选择实验数据', PROJECT_PATH().as_posix(), '数据文件(*.txt *.csv)'
         )
         path = Path(path)
         # 将实验数据复制到项目路径下
         if 'csv' in path.name:
-            new_path = PROJECT_PATH / f'exp_data.csv'
+            new_path = PROJECT_PATH() / f'exp_data.csv'
         elif 'txt' in path.name:
-            new_path = PROJECT_PATH / f'exp_data.txt'
+            new_path = PROJECT_PATH() / f'exp_data.txt'
         else:
             raise Exception('文件格式错误')
         try:
@@ -55,10 +44,10 @@ class Menu(MainWindow):
             pass
 
         # 更新实验数据
-        self.exp_data_1 = ExpData(new_path)
-        self.exp_data_1.plot_html()
+        self.expdata_1 = ExpData(new_path)
+        self.expdata_1.plot_html()
         # 更新页面
-        self.ui.exp_web.load(QUrl.fromLocalFile(self.exp_data_1.plot_path))
+        self.ui.exp_web.load(QUrl.fromLocalFile(self.expdata_1.plot_path))
 
     def show_guides(self):
         if self.v_line is None:
@@ -112,7 +101,7 @@ class Page1(MainWindow):
 
     def load_in36(self):
         path, types = QFileDialog.getOpenFileName(
-            self, '请选择in36文件', PROJECT_PATH.as_posix(), ''
+            self, '请选择in36文件', PROJECT_PATH().as_posix(), ''
         )
         if path == '':
             return
@@ -127,7 +116,7 @@ class Page1(MainWindow):
 
     def load_in2(self):
         path, types = QFileDialog.getOpenFileName(
-            self, '请选择in2文件', PROJECT_PATH.as_posix(), ''
+            self, '请选择in2文件', PROJECT_PATH().as_posix(), ''
         )
         if path == '':
             return
@@ -265,7 +254,7 @@ class Page1(MainWindow):
         self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
         self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
         self.cowan.cal_data.widen_all.widen(temperature=25.6, only_p=False)
-        # self.cowan.cal_data.widen_part.widen_by_group(temperature=25.6)
+        self.cowan.cal_data.widen_part.widen_by_group(temperature=25.6)
         # -------------------------- 画图 --------------------------
         self.cowan.cal_data.plot_line()
         self.cowan.cal_data.widen_all.plot_widen()
@@ -273,16 +262,16 @@ class Page1(MainWindow):
         # -------------------------- 添加到运行历史 --------------------------
         # 如果已经存在，先删除
         index = -1
-        for i, cowan in enumerate(self.run_history):
-            if cowan.name == self.cowan.name:
+        for i, cowan_ in enumerate(self.run_history):
+            if cowan_.name == self.cowan.name:
                 index = i
                 break
         if index != -1:
             self.run_history.pop(index)
         self.run_history.append(copy.deepcopy(self.cowan))
         # 如果存在于叠加列表中，就更新它
-        for i, cowan in enumerate(self.simulate.cowan_list):
-            if cowan.name == self.cowan.name:
+        for i, cowan_ in enumerate(self.simulate.cowan_list):
+            if cowan_.name == self.cowan.name:
                 self.simulate.cowan_list[i] = copy.deepcopy(self.cowan)
                 break
 
@@ -321,7 +310,7 @@ class Page1(MainWindow):
         functools.partial(UpdatePage1.update_history_list, self)()
 
     def add_to_selection(self):
-        index = self.ui.run_history.currentIndex().row()
+        index = self.ui.run_history_list.currentIndex().row()
         self.simulate.add_cowan(self.run_history[index])
 
         # -------------------------- 更新页面 --------------------------
@@ -375,13 +364,13 @@ class Page1(MainWindow):
         self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
         self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
         self.cowan.cal_data.widen_all.widen(25.6, False)
-        for i, cowan in enumerate(self.run_history):
-            if cowan.name == self.cowan.name:
+        for i, cowan_ in enumerate(self.run_history):
+            if cowan_.name == self.cowan.name:
                 self.run_history[i] = copy.deepcopy(self.cowan)
                 break
         # 如果存在于叠加列表中，就更新它
-        for i, cowan in enumerate(self.simulate.cowan_list):
-            if cowan.name == self.cowan.name:
+        for i, cowan_ in enumerate(self.simulate.cowan_list):
+            if cowan_.name == self.cowan.name:
                 self.simulate.cowan_list[i] = copy.deepcopy(self.cowan)
                 break
 
@@ -487,7 +476,7 @@ class Page2(MainWindow):
 
     def load_exp_data(self):
         path, types = QFileDialog.getOpenFileName(
-            self, '请选择实验数据', PROJECT_PATH.as_posix(), '数据文件(*.txt *.csv)'
+            self, '请选择实验数据', PROJECT_PATH().as_posix(), '数据文件(*.txt *.csv)'
         )
         self.expdata_2 = ExpData(Path(path))
 
@@ -580,7 +569,7 @@ class Page2(MainWindow):
 
     def load_space_time(self):
         path = QFileDialog.getExistingDirectory(
-            self, '请选择实验数据所在的文件夹', PROJECT_PATH.as_posix()
+            self, '请选择实验数据所在的文件夹', PROJECT_PATH().as_posix()
         )
         path = Path(path)
         for file_name in path.iterdir():
@@ -626,10 +615,7 @@ class Page2(MainWindow):
         self.ui.st_space_x.setText(key[1][0])
         self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
         if self.simulate.temperature and self.simulate.electron_density:
-            self.ui.page2_temperature.setValue(self.simulate.temperature)
-            self.ui.page2_density_base.setValue(1)
-            self.ui.page2_density_index.setValue(np.log(self.simulate.electron_density))
-
+            functools.partial(UpdatePage2.update_temperature_density, self)()
             functools.partial(UpdatePage2.update_exp_sim_figure, self)()
         else:
             functools.partial(UpdatePage2.update_exp_figure, self)()

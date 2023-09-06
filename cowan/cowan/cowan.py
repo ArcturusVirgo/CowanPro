@@ -24,8 +24,8 @@ from plotly.offline import plot
 from scipy.interpolate import interp1d
 from scipy.signal import find_peaks
 
-from cowan.constant import *
 from .atom_info import *
+from ..global_var import *
 
 
 class Atom:
@@ -151,7 +151,7 @@ class ExpData:
         Args:
             filepath: 实验数据的路径
         """
-        self.plot_path = (PROJECT_PATH / 'figure/exp.html').as_posix()
+        self.plot_path = (PROJECT_PATH() / 'figure/exp.html').as_posix()
         self.filepath: Path = filepath
 
         self.data: Optional[pd.DataFrame] = None
@@ -577,7 +577,7 @@ class Cowan:
         self.coupling_mode = coupling_mode  # 1是L-S耦合 2是j-j耦合
 
         self.cal_data: Optional[CalData] = None
-        self.run_path = PROJECT_PATH / f'cal_result/{self.name}'
+        self.run_path = PROJECT_PATH() / f'cal_result/{self.name}'
 
     def run(self, delta_lambda=0.0):
         """
@@ -603,7 +603,7 @@ class Cowan:
     def __get_ready(self):
         if self.run_path.exists():
             shutil.rmtree(self.run_path)
-        shutil.copytree(PROJECT_PATH / 'bin', self.run_path)
+        shutil.copytree(PROJECT_PATH() / 'bin', self.run_path)
         self.in36.save(self.run_path / 'in36')
         self.in2.save(self.run_path / 'in2')
 
@@ -621,8 +621,8 @@ class CalData:
     def __init__(self, name, exp_data: ExpData):
         self.name = name
         self.exp_data = exp_data
-        self.filepath = (PROJECT_PATH / f'cal_result/{name}/spectra.dat').as_posix()
-        self.plot_path = (PROJECT_PATH / f'figure/line/{name}.html').as_posix()
+        self.filepath = (PROJECT_PATH() / f'cal_result/{name}/spectra.dat').as_posix()
+        self.plot_path = (PROJECT_PATH() / f'figure/line/{name}.html').as_posix()
         self.init_data: pd.DataFrame | None = None
 
         self.widen_all: Optional[WidenAll] = None
@@ -701,13 +701,13 @@ class WidenAll:
         self.only_p = None
 
         self.plot_path_gauss = (
-            PROJECT_PATH / f'figure/gauss/{self.name}.html'
+            PROJECT_PATH() / f'figure/gauss/{self.name}.html'
         ).as_posix()
         self.plot_path_cross_NP = (
-            PROJECT_PATH / f'figure/cross_NP/{self.name}.html'
+            PROJECT_PATH() / f'figure/cross_NP/{self.name}.html'
         ).as_posix()
         self.plot_path_cross_P = (
-            PROJECT_PATH / f'figure/cross_P/{self.name}.html'
+            PROJECT_PATH() / f'figure/cross_P/{self.name}.html'
         ).as_posix()
 
         self.widen_data: pd.DataFrame | None = None
@@ -909,7 +909,7 @@ class WidenPart:
         self.plot_path_list = {}
         for key, value in temp_data.items():
             self.plot_path_list[key] = (
-                PROJECT_PATH / f'figure/part/{self.name}_{key}.html'
+                PROJECT_PATH() / f'figure/part/{self.name}_{key}.html'
             ).as_posix()
         self.grouped_widen_data = temp_data
 
@@ -1070,8 +1070,8 @@ class SimulateSpectral:
         self.abundance = []
         self.sim_data = None
 
-        self.plot_path = PROJECT_PATH.joinpath('figure/add.html').as_posix()
-        self.example_path = PROJECT_PATH.joinpath('figure/part/example.html').as_posix()
+        self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()
+        self.example_path = PROJECT_PATH().joinpath('figure/part/example.html').as_posix()
 
     def load_exp_data(self, path: Path):
         self.exp_data = ExpData(path)
@@ -1594,13 +1594,13 @@ class SpaceTimeResolution:
         # 模拟光谱数据对象 列表
         self.simulate_spectral_dict = {}
 
-        self.change_by_time_path = PROJECT_PATH.joinpath(
+        self.change_by_time_path = PROJECT_PATH().joinpath(
             'figure/change/by_time.html'
         ).as_posix()
-        self.change_by_location_path = PROJECT_PATH.joinpath(
+        self.change_by_location_path = PROJECT_PATH().joinpath(
             'figure/change/by_location.html'
         ).as_posix()
-        self.change_by_space_time_path = PROJECT_PATH.joinpath(
+        self.change_by_space_time_path = PROJECT_PATH().joinpath(
             'figure/change/by_space_time.html'
         ).as_posix()
 

@@ -1,8 +1,10 @@
+import functools
+import shelve
+
 from PySide6.QtWidgets import QAbstractItemView
 
-from cowan.cowan import *
-from cowan.slots import *
-from cowan.ui import *
+
+from cowan import *
 
 
 class VerticalLine(QWidget):
@@ -30,7 +32,7 @@ class VerticalLine(QWidget):
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, project_path, load=True):
         super().__init__()
         self.ui = Ui_main_window()
         self.ui.setupUi(self)
@@ -54,24 +56,27 @@ class MainWindow(QMainWindow):
 
         # 测试
         # self.test()
-        # self.load_Ge()
 
         # 初始化
         self.init()
         self.bind_slot()
 
-        self.ui.navigation.setCurrentRow(2)
+        self.ui.navigation.setCurrentRow(0)
+
+        SET_PROJECT_PATH(project_path)
+        if load:
+            self.load_project()
 
     def test(self):
-        PROJECT_PATH = Path('F:/Cowan/Al')
+        SET_PROJECT_PATH(Path('F:/Cowan/Al'))
         delta = {3: 0.05, 4: -0.04, 5: 0.0, 6: 0.05}
 
         for i in range(3, 7):
             self.atom = Atom(1, 0)
             self.in36 = In36(self.atom)
-            self.in36.read_from_file(PROJECT_PATH / f'in36_{i}')
+            self.in36.read_from_file(PROJECT_PATH() / f'in36_{i}')
             self.in2 = In2()
-            self.expdata_1 = ExpData(PROJECT_PATH / './exp_data.csv')
+            self.expdata_1 = ExpData(PROJECT_PATH() / './exp_data.csv')
             self.cowan = Cowan(self.in36, self.in2, f'Al_{i}', self.expdata_1, 1)
             self.cowan.run()
             self.cowan.cal_data.widen_all.delta_lambda = delta[i]
@@ -80,14 +85,14 @@ class MainWindow(QMainWindow):
             self.simulate.add_cowan(self.cowan)
         self.simulate.exp_data = copy.deepcopy(self.expdata_1)
         for x in range(5):
-            for time in range(5):
+            for time_ in range(5):
                 temp = 20 + np.random.random() * 30
                 dishu = np.random.random() * 10
                 zhishu = 17 + np.random.random() * 4
                 den = dishu * 10**zhishu
                 self.simulate.get_simulate_data(temp, den)
                 self.space_time_resolution.add_st(
-                    (str(time), (str(x), '0', '0')), self.simulate
+                    (str(time_), (str(x), '0', '0')), self.simulate
                 )
 
         # -------------------------- 更新页面 --------------------------
@@ -112,53 +117,17 @@ class MainWindow(QMainWindow):
         functools.partial(UpdatePage1.update_selection_list, self)()
 
         # --------------- 第二页
-        self.expdata_2 = ExpData(PROJECT_PATH / 'exp_data.csv')
+        self.expdata_2 = ExpData(PROJECT_PATH() / 'exp_data.csv')
         # 更新界面
         self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
         # 时空分辨表格
-        self.ui.st_resolution_table.clear()
-        self.ui.st_resolution_table.setRowCount(
-            len(self.space_time_resolution.simulate_spectral_dict)
-        )
-        self.ui.st_resolution_table.setColumnCount(5)
-        self.ui.st_resolution_table.setHorizontalHeaderLabels(
-            ['时间', '位置', '温度', '密度', '实验谱']
-        )
-        for i, (key, value) in enumerate(
-            self.space_time_resolution.simulate_spectral_dict.items()
-        ):
-            item1 = QTableWidgetItem(key[0])
-            item2 = QTableWidgetItem(f'({key[1][0]}, {key[1][1]}, {key[1][2]})')
-            item3 = QTableWidgetItem('{:.3f}'.format(value.temperature))
-            item4 = QTableWidgetItem('{:.3e}'.format(value.electron_density))
-            item5 = QTableWidgetItem(value.exp_data.filepath.name)
-            self.ui.st_resolution_table.setItem(i, 0, item1)
-            self.ui.st_resolution_table.setItem(i, 1, item2)
-            self.ui.st_resolution_table.setItem(i, 2, item3)
-            self.ui.st_resolution_table.setItem(i, 3, item4)
-            self.ui.st_resolution_table.setItem(i, 4, item5)
+        functools.partial(UpdatePage2.update_space_time_table, self)()
 
         # --------------- 第三页
-        # 更新第三页元素
-        self.ui.location_select.clear()
-        temp_times = []
-        temp_locations = []
-        for key in self.space_time_resolution.simulate_spectral_dict:
-            temp_times.append(key[0])
-            temp_locations.append(key[1])
-        temp_times = set(temp_times)
-        temp_locations = set(temp_locations)
-        temp_locations = [f'({key[0]}, {key[1]}, {key[2]})' for key in temp_locations]
-        self.ui.location_select.addItems(temp_locations)
-        self.ui.time_select.addItems(temp_times)
+        functools.partial(UpdatePage3.update_space_time_combobox, self)()
 
         # --------------- 第四页
-        self.ui.comboBox.clear()
-        temp_list = []
-        for key in self.space_time_resolution.simulate_spectral_dict:
-            temp_list.append(f'时间：{key[0]}    位置：{key[1][0]}, {key[1][1]}, {key[1][2]}')
-        self.ui.comboBox.addItems(temp_list)
-        Page4.comboBox_changed(self, 0)
+        functools.partial(UpdatePage4.update_space_time_combobox, self)()
 
     def load_Ge(self):
         PROJECT_PATH = Path('F:/Cowan/Ge')
@@ -359,7 +328,82 @@ class MainWindow(QMainWindow):
             temp_list.append(f'时间：{key[0]}    位置：{key[1][0]}, {key[1][1]}, {key[1][2]}')
         self.ui.comboBox.addItems(temp_list)
         if temp_list:
-            Page4.comboBox_changed(self, 0)
+            functools.partial(Page4.comboBox_changed, self, 0)()
+
+    def load_project(self):
+        obj_info = shelve.open(PROJECT_PATH().joinpath('.cowan/obj_info').as_posix())
+        # 第一页
+        self.atom = obj_info['atom']
+        self.in36 = obj_info['in36']
+        self.in2 = obj_info['in2']
+        self.expdata_1 = obj_info['expdata_1']
+        self.run_history = obj_info['run_history']
+        self.cowan = obj_info['cowan']
+        # 第二页
+        self.expdata_2 = obj_info['expdata_2']
+        self.simulate = obj_info['simulate']
+        self.simulated_grid = obj_info['simulated_grid']
+        self.space_time_resolution = obj_info['space_time_resolution']
+        # 第四页
+        self.simulate_page4 = obj_info['simulate_page4']
+        obj_info.close()
+
+        # 更新界面
+        # 第一页 =================================================
+        # ----- 原子信息 -----
+        if self.atom.num == 1 and self.atom.ion == 0:
+            return
+        functools.partial(UpdatePage1.update_atom, self)()
+        # ----- in36 -------
+        functools.partial(UpdatePage1.update_in36, self)()
+        # ----- in2 -----
+        functools.partial(UpdatePage1.update_in2, self)()
+        # ----- 偏移量 -----
+        self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
+        # ----- 实验数据 -----
+        functools.partial(UpdatePage1.update_exp_figure, self)()
+        # ----- 线状谱和展宽 -----
+        functools.partial(UpdatePage1.update_line_figure, self)()
+        functools.partial(UpdatePage1.update_widen_figure, self)()
+        self.ui.gauss.setEnabled(True)  # 将展宽的选择框设为可用
+        self.ui.crossP.setEnabled(True)
+        self.ui.crossNP.setEnabled(True)
+        # ----- 历史数据 -----
+        # 更新历史记录列表
+        functools.partial(UpdatePage1.update_history_list, self)()
+        # 更新选择列表
+        functools.partial(UpdatePage1.update_selection_list, self)()
+
+        # 第二页 =================================================
+        functools.partial(UpdatePage2.update_exp_figure, self)()
+        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.as_posix())
+        if not self.simulate.exp_data:
+            return
+        functools.partial(UpdatePage2.update_temperature_density, self)()
+        functools.partial(UpdatePage2.update_exp_sim_figure, self)()
+        if self.simulated_grid:
+            functools.partial(UpdatePage2.update_grid, self)()
+
+
+
+    def save_project(self):
+        obj_info = shelve.open(PROJECT_PATH().joinpath('.cowan/obj_info').as_posix())
+        # 第一页
+        obj_info['atom'] = self.atom
+        obj_info['in36'] = self.in36
+        obj_info['in2'] = self.in2
+        obj_info['expdata_1'] = self.expdata_1
+        obj_info['run_history'] = self.run_history
+        obj_info['cowan'] = self.cowan
+        # 第二页
+        obj_info['expdata_2'] = self.expdata_2
+        obj_info['simulate'] = self.simulate
+        obj_info['simulated_grid'] = self.simulated_grid
+        obj_info['space_time_resolution'] = self.space_time_resolution
+        # 第四页
+        obj_info['simulate_page4'] = self.simulate_page4
+        obj_info.close()
+        self.ui.statusbar.showMessage('项目保存成功！')
 
     def init(self):
         # 给元素选择器设置初始值
@@ -409,7 +453,7 @@ class MainWindow(QMainWindow):
         )
 
         # ------------------------------- 菜单栏 -------------------------------
-        # self.ui.save_project.triggered.connect(self.slot_save_project)
+        self.ui.save_project.triggered.connect(self.save_project)
         # self.ui.exit_project.triggered.connect(self.slot_exit_project)
         self.ui.load_exp_data.triggered.connect(
             functools.partial(Menu.load_exp_data, self)
@@ -563,9 +607,105 @@ class MainWindow(QMainWindow):
         )  # 选择列表
 
 
+class LoginWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_login_window()
+        self.ui.setupUi(self)
+        self.WORKING_PATH = Path.cwd()
+
+        self.project_data: dict = {}
+        self.temp_path: str = ''
+        self.main_window: Optional[MainWindow] = None
+
+        self.init_UI()
+
+    def init_UI(self):
+        # 打开并读取文件
+        file_path = self.WORKING_PATH / 'projects.json'
+        self.project_data = json.loads(file_path.read_text())
+
+        # 设置列表
+        self.update_project_list()
+        self.bind_slot()
+
+    def bind_slot(self):
+        self.ui.create_project.clicked.connect(self.slot_create_project)
+        self.ui.delete_project.clicked.connect(self.slot_delete_project)
+        self.ui.back.clicked.connect(self.slot_back)
+        self.ui.new_project.clicked.connect(self.slot_new_project)
+        self.ui.select_path.clicked.connect(self.slot_select_path)
+        self.ui.project_path.textChanged.connect(self.slot_project_path_changed)
+        self.ui.project_list.itemDoubleClicked.connect(
+            self.slot_project_path_item_double_clicked
+        )
+
+    def slot_create_project(self):
+        name = self.ui.project_name.text()
+        path_ = self.ui.project_path.text()
+        if name == '' or path_ == '':
+            QMessageBox.critical(self, '错误', '项目名称和路径不能为空！')
+            return
+        if name in self.project_data.keys():
+            QMessageBox.critical(self, '错误', '项目名称已存在！')
+            return
+        # 获取项目名称和路径
+        path_ = path_.replace('/', '\\')
+        self.project_data[name] = {'path': path_}
+        self.update_project_list()
+
+        # 如果目录不存在，就创建
+        path_ = Path(path_)
+        old_path = self.WORKING_PATH / 'init_file'
+        shutil.copytree(old_path, path_)
+
+        self.hide()
+        self.main_window = MainWindow(path_)
+        self.main_window.show()
+
+    def slot_delete_project(self):
+        key = self.ui.project_list.currentIndex().data()
+        path_ = Path(self.project_data[key]['path'])
+        shutil.rmtree(path_)
+        self.project_data.pop(key)
+        self.update_project_list()
+
+    def slot_back(self):
+        self.ui.stackedWidget.setCurrentIndex(0)
+
+    def slot_new_project(self):
+        self.ui.stackedWidget.setCurrentIndex(1)
+
+    def slot_select_path(self):
+        self.temp_path = QFileDialog.getExistingDirectory(self, '选择项目路径', './')
+        self.ui.project_path.setText(self.temp_path)
+
+    def slot_project_path_changed(self):
+        name = self.ui.project_path.text().split('/')[-1]
+        if name == '':
+            name = self.ui.project_path.text().split('/')[-2]
+        self.ui.project_name.setText(name)
+
+    def slot_project_path_item_double_clicked(self, index):
+        name = index.text()
+        path_ = self.project_data[name]['path']
+        path_ = Path(path_)
+        self.hide()
+        self.main_window = MainWindow(path_, True)
+        self.main_window.show()
+
+    def update_project_list(self):
+        self.ui.project_list.clear()
+        self.ui.project_list.addItems(self.project_data.keys())
+
+        # 写入json文件
+        file_path = self.WORKING_PATH / 'projects.json'
+        file_path.write_text(json.dumps(self.project_data), encoding='utf-8')
+
+
 if __name__ == '__main__':
     app = QApplication([])
-    # window = LoginWindow()  # 启动登陆页面
-    window = MainWindow()  # 启动主界面
+    window = LoginWindow()  # 启动登陆页面
+    # window = MainWindow(Path('F:/Cowan/Al'), False)  # 启动主界面
     window.show()
     app.exec()
