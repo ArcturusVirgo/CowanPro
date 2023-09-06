@@ -53,7 +53,7 @@ class MainWindow(QMainWindow):
         self.space_time_resolution = SpaceTimeResolution()
 
         # 测试
-        self.test()
+        # self.test()
         # self.load_Ge()
 
         # 初始化

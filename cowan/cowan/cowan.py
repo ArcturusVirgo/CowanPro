@@ -65,7 +65,7 @@ class Atom:
         electron_arrangement = {}
         for key, value in map(
             lambda x: [str(x[:2]), int(x[2:])],
-            BASE_CONFIGURATION[self.electron_num].split(' '),
+            BASE_CONFIGURATION[self.num][self.ion].split(' '),
         ):
             electron_arrangement[key] = value
         return electron_arrangement
@@ -1211,7 +1211,7 @@ class SimulateSpectral:
         """
         atomic_num = self.cowan_list[0].in36.atom.num
         ion_num = np.array([i for i in range(atomic_num - 1)])
-        ion_energy = np.array(IONIZATION_ENERGY[atomic_num][1:])
+        ion_energy = np.array(list(IONIZATION_ENERGY[atomic_num].values())[1:])
         electron_num = np.array(
             [self.__get_outermost_num(i) for i in range(1, atomic_num)]
         )
@@ -1260,7 +1260,7 @@ class SimulateSpectral:
         """
         atomic_num = self.cowan_list[0].in36.atom.num
         ion_num = np.array([i for i in range(atomic_num)])
-        ion_energy = np.array(IONIZATION_ENERGY[atomic_num])
+        ion_energy = np.array(list(IONIZATION_ENERGY[atomic_num].values()))
         electron_num = np.array(
             [self.__get_outermost_num(i) for i in range(atomic_num)]
         )
