@@ -1,0 +1,878 @@
+<!doctype html>
+<html class="no-js" lang="ZH-CN" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜索" href="search.html" /><link rel="prev" title="Cowan package" href="Cowan.html" />
+
+    <!-- Generated with Sphinx 7.2.2 and Furo 2023.08.19 -->
+        <title>cowan package - CowanPro 0.0.0 文档</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">CowanPro 0.0.0 文档</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  
+  <span class="sidebar-brand-text">CowanPro 0.0.0 文档</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜索" name="q" aria-label="搜索">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">CONTENTS:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">CowanPro</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of CowanPro</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="main.html">main program</a></li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="Cowan.html">Cowan package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Cowan package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">cowan package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="cowan-package">
+<h1>cowan package<a class="headerlink" href="#cowan-package" title="Link to this heading">#</a></h1>
+<section id="cowan-module">
+<h2>cowan module<a class="headerlink" href="#cowan-module" title="Link to this heading">#</a></h2>
+<dl class="py class" id="module-Cowan.cowan.cowan">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.Atom">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Cowan.cowan.cowan.</span></span><span class="sig-name descname"><span class="pre">Atom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.Atom" title="Link to this definition">#</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.Atom.arouse_electron">
+<span class="sig-name descname"><span class="pre">arouse_electron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.Atom.arouse_electron" title="Link to this definition">#</a></dt>
+<dd><p>激发电子，改变原子内电子的排布情况</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>low_name</strong> – 下态的支壳层名称</p></li>
+<li><p><strong>high_name</strong> – 上态的支壳层名称</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.Atom.get_base_configuration">
+<span class="sig-name descname"><span class="pre">get_base_configuration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.Atom.get_base_configuration" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.Atom.get_base_electron_arrangement">
+<span class="sig-name descname"><span class="pre">get_base_electron_arrangement</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.Atom.get_base_electron_arrangement" title="Link to this definition">#</a></dt>
+<dd><p>获取原子处于基态时，核外电子的排布情况</p>
+<dl class="field-list simple">
+<dt class="field-odd">返回<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>返回一个字典，键为子壳层，值为子壳层的电子数, 例如 {</dt><dd><p>‘1s’: 2,
+‘2s’: 2,
+‘2p’: 6,
+‘3s’: 2,
+‘3p’: 4,}</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.Atom.get_configuration">
+<span class="sig-name descname"><span class="pre">get_configuration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#Cowan.cowan.cowan.Atom.get_configuration" title="Link to this definition">#</a></dt>
+<dd><p>根据该原子当前的电子排布情况，获取当前的电子组态</p>
+<dl class="field-list simple">
+<dt class="field-odd">返回<span class="colon">:</span></dt>
+<dd class="field-odd"><p>返回一个字符串，例如 3s02 3p03 4s01</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.Atom.revert_to_ground_state">
+<span class="sig-name descname"><span class="pre">revert_to_ground_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.Atom.revert_to_ground_state" title="Link to this definition">#</a></dt>
+<dd><p>将原子的状态重置为基态</p>
+<p>Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.CalData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Cowan.cowan.cowan.</span></span><span class="sig-name descname"><span class="pre">CalData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#Cowan.cowan.cowan.ExpData" title="Cowan.cowan.cowan.ExpData"><span class="pre">ExpData</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.CalData" title="Link to this definition">#</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.CalData.plot_line">
+<span class="sig-name descname"><span class="pre">plot_line</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.CalData.plot_line" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.CalData.read_file">
+<span class="sig-name descname"><span class="pre">read_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.CalData.read_file" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.Cowan">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Cowan.cowan.cowan.</span></span><span class="sig-name descname"><span class="pre">Cowan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in36</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coupling_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.Cowan" title="Link to this definition">#</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.Cowan.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delta_lambda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.Cowan.run" title="Link to this definition">#</a></dt>
+<dd><p>运行 Cowan 程序，创建 cal_data 对象
+Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.ExpData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Cowan.cowan.cowan.</span></span><span class="sig-name descname"><span class="pre">ExpData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.ExpData" title="Link to this definition">#</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.ExpData.plot_html">
+<span class="sig-name descname"><span class="pre">plot_html</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.ExpData.plot_html" title="Link to this definition">#</a></dt>
+<dd><p>绘制实验谱线</p>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.ExpData.set_range">
+<span class="sig-name descname"><span class="pre">set_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.ExpData.set_range" title="Link to this definition">#</a></dt>
+<dd><p>设置实验数据的波长范围</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x_range</strong> – 波长范围，单位为 nm</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.In2">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Cowan.cowan.cowan.</span></span><span class="sig-name descname"><span class="pre">In2</span></span><a class="headerlink" href="#Cowan.cowan.cowan.In2" title="Link to this definition">#</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.In2.get_text">
+<span class="sig-name descname"><span class="pre">get_text</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.In2.get_text" title="Link to this definition">#</a></dt>
+<dd><p>获取 in2 文件所包含的字符串</p>
+<dl class="field-list simple">
+<dt class="field-odd">返回<span class="colon">:</span></dt>
+<dd class="field-odd"><p>in2 字符串</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.In2.read_from_file">
+<span class="sig-name descname"><span class="pre">read_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.In2.read_from_file" title="Link to this definition">#</a></dt>
+<dd><p>读取 in2 文件</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> – in2文件的路径</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.In2.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.In2.save" title="Link to this definition">#</a></dt>
+<dd><p>保存为 in2 文件</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> – 要保存的文件夹</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.In36">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Cowan.cowan.cowan.</span></span><span class="sig-name descname"><span class="pre">In36</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#Cowan.cowan.cowan.Atom" title="Cowan.cowan.cowan.Atom"><span class="pre">Atom</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.In36" title="Link to this definition">#</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.In36.add_configuration">
+<span class="sig-name descname"><span class="pre">add_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.In36.add_configuration" title="Link to this definition">#</a></dt>
+<dd><p>向 in36 文件的组态卡添加组态（会自动剔除重复的组态）</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>configuration</strong> (<em>str</em>) – 要添加的组态</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.In36.configuration_move">
+<span class="sig-name descname"><span class="pre">configuration_move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.In36.configuration_move" title="Link to this definition">#</a></dt>
+<dd><p>移动组态的先后顺序</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index</strong> – 要移动的组态的索引</p></li>
+<li><p><strong>opt</strong> – 操作名称 up 或 down</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.In36.del_configuration">
+<span class="sig-name descname"><span class="pre">del_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.In36.del_configuration" title="Link to this definition">#</a></dt>
+<dd><p>删除 in36 组态卡中的组态</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> – 要删除的组态的索引</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.In36.get_configuration_name">
+<span class="sig-name descname"><span class="pre">get_configuration_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.In36.get_configuration_name" title="Link to this definition">#</a></dt>
+<dd><p>根据组态索引获取电子跃迁的支壳层名称</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>low_index</strong> – 下态的索引</p></li>
+<li><p><strong>high_index</strong> – 上态的索引</p></li>
+</ul>
+</dd>
+<dt class="field-even">返回<span class="colon">:</span></dt>
+<dd class="field-even"><p>返回一个字符串，如 ‘2p –&gt; 3s’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.In36.get_text">
+<span class="sig-name descname"><span class="pre">get_text</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.In36.get_text" title="Link to this definition">#</a></dt>
+<dd><p>生成 in36 文件所包含的字符串</p>
+<dl class="field-list simple">
+<dt class="field-odd">返回<span class="colon">:</span></dt>
+<dd class="field-odd"><p>in36 文件的字符串</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.In36.read_from_file">
+<span class="sig-name descname"><span class="pre">read_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.In36.read_from_file" title="Link to this definition">#</a></dt>
+<dd><p>读取已经编写号的in36文件</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – in36文件的路径</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.In36.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.In36.save" title="Link to this definition">#</a></dt>
+<dd><p>生成 in36 文件</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> – 生成 in36 文件的路径</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Cowan.cowan.cowan.</span></span><span class="sig-name descname"><span class="pre">SimulateGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">density</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateGrid" title="Link to this definition">#</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">QThread</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateGrid.cal_grid">
+<span class="sig-name descname"><span class="pre">cal_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateGrid.cal_grid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateGrid.change_task">
+<span class="sig-name descname"><span class="pre">change_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateGrid.change_task" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateGrid.end">
+<span class="sig-name descname"><span class="pre">end</span></span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateGrid.end" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateGrid.progress">
+<span class="sig-name descname"><span class="pre">progress</span></span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateGrid.progress" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateGrid.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateGrid.run" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateGrid.staticMetaObject">
+<span class="sig-name descname"><span class="pre">staticMetaObject</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">PySide6.QtCore.QMetaObject(&quot;SimulateGrid&quot;</span> <span class="pre">inherits</span> <span class="pre">&quot;QThread&quot;:</span> <span class="pre">Methods:</span>&#160;&#160; <span class="pre">#13</span> <span class="pre">type=Signal,</span> <span class="pre">signature=progress(QString),</span> <span class="pre">parameters=QString</span>&#160;&#160; <span class="pre">#14</span> <span class="pre">type=Signal,</span> <span class="pre">signature=end(QString),</span> <span class="pre">parameters=QString</span>&#160;&#160; <span class="pre">#15</span> <span class="pre">type=Signal,</span> <span class="pre">signature=up_end(QString),</span> <span class="pre">parameters=QString</span> <span class="pre">)</span></em><a class="headerlink" href="#Cowan.cowan.cowan.SimulateGrid.staticMetaObject" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateGrid.up_end">
+<span class="sig-name descname"><span class="pre">up_end</span></span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateGrid.up_end" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateGrid.update_similarity">
+<span class="sig-name descname"><span class="pre">update_similarity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exp_obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateGrid.update_similarity" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Cowan.cowan.cowan.</span></span><span class="sig-name descname"><span class="pre">SimulateSpectral</span></span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral" title="Link to this definition">#</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.add_cowan">
+<span class="sig-name descname"><span class="pre">add_cowan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.add_cowan" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.del_cowan">
+<span class="sig-name descname"><span class="pre">del_cowan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.del_cowan" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.get_abu">
+<span class="sig-name descname"><span class="pre">get_abu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.get_abu" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.get_simulate_data">
+<span class="sig-name descname"><span class="pre">get_simulate_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">electron_density</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.get_simulate_data" title="Link to this definition">#</a></dt>
+<dd><p>获取模拟光谱
+:param temperature:
+:param electron_density:</p>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.get_spectrum_similarity">
+<span class="sig-name descname"><span class="pre">get_spectrum_similarity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.get_spectrum_similarity" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.get_y1y2">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_y1y2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.get_y1y2" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.load_exp_data">
+<span class="sig-name descname"><span class="pre">load_exp_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.load_exp_data" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.plot_example_html">
+<span class="sig-name descname"><span class="pre">plot_example_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.plot_example_html" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.plot_html">
+<span class="sig-name descname"><span class="pre">plot_html</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.plot_html" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity1">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spectrum_similarity1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity1" title="Link to this definition">#</a></dt>
+<dd><p>计算两个光谱的相似度
+遍历实验光谱的每个点，找到模拟光谱中最近的点，计算距离，并求和
+:param fax: 实验光谱
+:param fbx: 模拟光谱</p>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity10">
+<span class="sig-name descname"><span class="pre">spectrum_similarity10</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity10" title="Link to this definition">#</a></dt>
+<dd><p>峰值匹配法
+:param fax:
+:param fbx:
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity2">
+<span class="sig-name descname"><span class="pre">spectrum_similarity2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity2" title="Link to this definition">#</a></dt>
+<dd><p>计算两个光谱的相似度，根据R2进行判断
+:param fax: 实验光谱
+:param fbx: 模拟光谱</p>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity3">
+<span class="sig-name descname"><span class="pre">spectrum_similarity3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity3" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity4">
+<span class="sig-name descname"><span class="pre">spectrum_similarity4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity4" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity5">
+<span class="sig-name descname"><span class="pre">spectrum_similarity5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity5" title="Link to this definition">#</a></dt>
+<dd><p>峰值匹配法
+:param fax:
+:param fbx:
+:return:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity6">
+<span class="sig-name descname"><span class="pre">spectrum_similarity6</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity6" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity7">
+<span class="sig-name descname"><span class="pre">spectrum_similarity7</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity7" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity8">
+<span class="sig-name descname"><span class="pre">spectrum_similarity8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity8" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity9">
+<span class="sig-name descname"><span class="pre">spectrum_similarity9</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity9" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SpaceTimeResolution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Cowan.cowan.cowan.</span></span><span class="sig-name descname"><span class="pre">SpaceTimeResolution</span></span><a class="headerlink" href="#Cowan.cowan.cowan.SpaceTimeResolution" title="Link to this definition">#</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SpaceTimeResolution.add_st">
+<span class="sig-name descname"><span class="pre">add_st</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">st</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulate_spectral</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SpaceTimeResolution.add_st" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SpaceTimeResolution.del_st">
+<span class="sig-name descname"><span class="pre">del_st</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">st</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SpaceTimeResolution.del_st" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SpaceTimeResolution.plot_change_by_location">
+<span class="sig-name descname"><span class="pre">plot_change_by_location</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SpaceTimeResolution.plot_change_by_location" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SpaceTimeResolution.plot_change_by_space_time">
+<span class="sig-name descname"><span class="pre">plot_change_by_space_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SpaceTimeResolution.plot_change_by_space_time" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SpaceTimeResolution.plot_change_by_time">
+<span class="sig-name descname"><span class="pre">plot_change_by_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SpaceTimeResolution.plot_change_by_time" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.SpaceTimeResolution.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.SpaceTimeResolution.run" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.WidenAll">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Cowan.cowan.cowan.</span></span><span class="sig-name descname"><span class="pre">WidenAll</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#Cowan.cowan.cowan.ExpData" title="Cowan.cowan.cowan.ExpData"><span class="pre">ExpData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_lambda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.WidenAll" title="Link to this definition">#</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.WidenAll.plot_widen">
+<span class="sig-name descname"><span class="pre">plot_widen</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.WidenAll.plot_widen" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.WidenAll.widen">
+<span class="sig-name descname"><span class="pre">widen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.WidenAll.widen" title="Link to this definition">#</a></dt>
+<dd><blockquote>
+<div><p>列标题依次为：energy_l, energy_h, wavelength_ev, intensity, index_l, index_h, J_l, J_h
+分别代表：下态能量，上态能量，波长，强度，下态序号，上态序号，下态J值，上态J值</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>only_p</strong> – 只计算含有布局的</p></li>
+<li><p><strong>temperature</strong> (<em>float</em>) – 等离子体温度</p></li>
+</ul>
+</dd>
+<dt class="field-even">返回<span class="colon">:</span></dt>
+<dd class="field-even"><p>返回一个DataFrame，包含了展宽后的数据
+列标题为：wavelength, gaussian, cross-NP, cross-P</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.WidenPart">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Cowan.cowan.cowan.</span></span><span class="sig-name descname"><span class="pre">WidenPart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#Cowan.cowan.cowan.ExpData" title="Cowan.cowan.cowan.ExpData"><span class="pre">ExpData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_lambda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.WidenPart" title="Link to this definition">#</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.WidenPart.plot_widen_by_group">
+<span class="sig-name descname"><span class="pre">plot_widen_by_group</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.WidenPart.plot_widen_by_group" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Cowan.cowan.cowan.WidenPart.widen_by_group">
+<span class="sig-name descname"><span class="pre">widen_by_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25.6</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Cowan.cowan.cowan.WidenPart.widen_by_group" title="Link to this definition">#</a></dt>
+<dd><p>返回一个字典，包含了按跃迁正例分组后的展宽数据，例如
+{‘1-2’: pd.DataFrame, ‘1-3’: pd.DataFrame, …}
+pd.DataFrame的列标题为：wavelength, gaussian, cross-NP, cross-P
+:param temperature: 展宽时的温度</p>
+<p>Returns:</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="atom-info-module">
+<h2>atom_info module<a class="headerlink" href="#atom-info-module" title="Link to this heading">#</a></h2>
+<span class="target" id="module-Cowan.cowan.atom_info"></span></section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          <a class="prev-page" href="Cowan.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Cowan package</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2023, XJCCNXH
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">cowan package</a><ul>
+<li><a class="reference internal" href="#cowan-module">cowan module</a><ul>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.Atom"><code class="docutils literal notranslate"><span class="pre">Atom</span></code></a><ul>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.Atom.arouse_electron"><code class="docutils literal notranslate"><span class="pre">Atom.arouse_electron()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.Atom.get_base_configuration"><code class="docutils literal notranslate"><span class="pre">Atom.get_base_configuration()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.Atom.get_base_electron_arrangement"><code class="docutils literal notranslate"><span class="pre">Atom.get_base_electron_arrangement()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.Atom.get_configuration"><code class="docutils literal notranslate"><span class="pre">Atom.get_configuration()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.Atom.revert_to_ground_state"><code class="docutils literal notranslate"><span class="pre">Atom.revert_to_ground_state()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.CalData"><code class="docutils literal notranslate"><span class="pre">CalData</span></code></a><ul>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.CalData.plot_line"><code class="docutils literal notranslate"><span class="pre">CalData.plot_line()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.CalData.read_file"><code class="docutils literal notranslate"><span class="pre">CalData.read_file()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.Cowan"><code class="docutils literal notranslate"><span class="pre">Cowan</span></code></a><ul>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.Cowan.run"><code class="docutils literal notranslate"><span class="pre">Cowan.run()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.ExpData"><code class="docutils literal notranslate"><span class="pre">ExpData</span></code></a><ul>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.ExpData.plot_html"><code class="docutils literal notranslate"><span class="pre">ExpData.plot_html()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.ExpData.set_range"><code class="docutils literal notranslate"><span class="pre">ExpData.set_range()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.In2"><code class="docutils literal notranslate"><span class="pre">In2</span></code></a><ul>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.In2.get_text"><code class="docutils literal notranslate"><span class="pre">In2.get_text()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.In2.read_from_file"><code class="docutils literal notranslate"><span class="pre">In2.read_from_file()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.In2.save"><code class="docutils literal notranslate"><span class="pre">In2.save()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.In36"><code class="docutils literal notranslate"><span class="pre">In36</span></code></a><ul>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.In36.add_configuration"><code class="docutils literal notranslate"><span class="pre">In36.add_configuration()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.In36.configuration_move"><code class="docutils literal notranslate"><span class="pre">In36.configuration_move()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.In36.del_configuration"><code class="docutils literal notranslate"><span class="pre">In36.del_configuration()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.In36.get_configuration_name"><code class="docutils literal notranslate"><span class="pre">In36.get_configuration_name()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.In36.get_text"><code class="docutils literal notranslate"><span class="pre">In36.get_text()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.In36.read_from_file"><code class="docutils literal notranslate"><span class="pre">In36.read_from_file()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.In36.save"><code class="docutils literal notranslate"><span class="pre">In36.save()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateGrid"><code class="docutils literal notranslate"><span class="pre">SimulateGrid</span></code></a><ul>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateGrid.cal_grid"><code class="docutils literal notranslate"><span class="pre">SimulateGrid.cal_grid()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateGrid.change_task"><code class="docutils literal notranslate"><span class="pre">SimulateGrid.change_task()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateGrid.end"><code class="docutils literal notranslate"><span class="pre">SimulateGrid.end</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateGrid.progress"><code class="docutils literal notranslate"><span class="pre">SimulateGrid.progress</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateGrid.run"><code class="docutils literal notranslate"><span class="pre">SimulateGrid.run()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateGrid.staticMetaObject"><code class="docutils literal notranslate"><span class="pre">SimulateGrid.staticMetaObject</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateGrid.up_end"><code class="docutils literal notranslate"><span class="pre">SimulateGrid.up_end</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateGrid.update_similarity"><code class="docutils literal notranslate"><span class="pre">SimulateGrid.update_similarity()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral</span></code></a><ul>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.add_cowan"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.add_cowan()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.del_cowan"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.del_cowan()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.get_abu"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.get_abu()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.get_simulate_data"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.get_simulate_data()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.get_spectrum_similarity"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.get_spectrum_similarity()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.get_y1y2"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.get_y1y2()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.load_exp_data"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.load_exp_data()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.plot_example_html"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.plot_example_html()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.plot_html"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.plot_html()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity1"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.spectrum_similarity1()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity10"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.spectrum_similarity10()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity2"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.spectrum_similarity2()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity3"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.spectrum_similarity3()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity4"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.spectrum_similarity4()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity5"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.spectrum_similarity5()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity6"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.spectrum_similarity6()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity7"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.spectrum_similarity7()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity8"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.spectrum_similarity8()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SimulateSpectral.spectrum_similarity9"><code class="docutils literal notranslate"><span class="pre">SimulateSpectral.spectrum_similarity9()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SpaceTimeResolution"><code class="docutils literal notranslate"><span class="pre">SpaceTimeResolution</span></code></a><ul>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SpaceTimeResolution.add_st"><code class="docutils literal notranslate"><span class="pre">SpaceTimeResolution.add_st()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SpaceTimeResolution.del_st"><code class="docutils literal notranslate"><span class="pre">SpaceTimeResolution.del_st()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SpaceTimeResolution.plot_change_by_location"><code class="docutils literal notranslate"><span class="pre">SpaceTimeResolution.plot_change_by_location()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SpaceTimeResolution.plot_change_by_space_time"><code class="docutils literal notranslate"><span class="pre">SpaceTimeResolution.plot_change_by_space_time()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SpaceTimeResolution.plot_change_by_time"><code class="docutils literal notranslate"><span class="pre">SpaceTimeResolution.plot_change_by_time()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.SpaceTimeResolution.run"><code class="docutils literal notranslate"><span class="pre">SpaceTimeResolution.run()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.WidenAll"><code class="docutils literal notranslate"><span class="pre">WidenAll</span></code></a><ul>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.WidenAll.plot_widen"><code class="docutils literal notranslate"><span class="pre">WidenAll.plot_widen()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.WidenAll.widen"><code class="docutils literal notranslate"><span class="pre">WidenAll.widen()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.WidenPart"><code class="docutils literal notranslate"><span class="pre">WidenPart</span></code></a><ul>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.WidenPart.plot_widen_by_group"><code class="docutils literal notranslate"><span class="pre">WidenPart.plot_widen_by_group()</span></code></a></li>
+<li><a class="reference internal" href="#Cowan.cowan.cowan.WidenPart.widen_by_group"><code class="docutils literal notranslate"><span class="pre">WidenPart.widen_by_group()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#atom-info-module">atom_info module</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=9649c7f5"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=beaddf03"></script>
+    </body>
+</html>

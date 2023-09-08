@@ -1,5 +1,5 @@
 import unittest
-from cowan import *
+from Cowan import *
 
 
 class MyTestCase(unittest.TestCase):

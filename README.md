@@ -9,3 +9,12 @@
 组态贡献
 - page5
 数据统计
+
+
+# git
+~~~git
+// 覆盖本地仓库
+git fetch --all
+git reset --hard origin/master
+git pull
+~~~

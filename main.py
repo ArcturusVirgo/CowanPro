@@ -4,7 +4,7 @@ import shelve
 from PySide6.QtWidgets import QAbstractItemView
 
 
-from cowan import *
+from Cowan import *
 
 
 class VerticalLine(QWidget):
