@@ -5,4 +5,4 @@ CowanPro
    :maxdepth: 2
 
    main
-   Cowan
+   cowan

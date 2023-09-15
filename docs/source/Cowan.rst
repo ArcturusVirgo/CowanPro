@@ -1,4 +1,4 @@
-Cowan package
+cowan package
 =============
 
 cowan package
@@ -7,12 +7,12 @@ cowan package
 .. toctree::
    :maxdepth: 2
 
-   Cowan.cowan
+   cowan.cowan
 
 constant module
 ---------------------
 
-.. automodule:: Cowan.constant
+.. automodule:: cowan.constant
    :members:
    :undoc-members:
    :show-inheritance:
@@ -20,7 +20,7 @@ constant module
 global\_var module
 ------------------------
 
-.. automodule:: Cowan.global_var
+.. automodule:: cowan.global_var
    :members:
    :undoc-members:
    :show-inheritance:
@@ -28,7 +28,7 @@ global\_var module
 slots module
 ------------------
 
-.. automodule:: Cowan.slots
+.. automodule:: cowan.slots
    :members:
    :undoc-members:
    :show-inheritance:
@@ -36,7 +36,7 @@ slots module
 tools module
 ------------------
 
-.. automodule:: Cowan.tools
+.. automodule:: cowan.tools
    :members:
    :undoc-members:
    :show-inheritance:
@@ -44,7 +44,7 @@ tools module
 update\_ui module
 -----------------------
 
-.. automodule:: Cowan.update_ui
+.. automodule:: cowan.update_ui
    :members:
    :undoc-members:
    :show-inheritance:

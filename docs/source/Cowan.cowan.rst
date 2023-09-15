@@ -5,7 +5,7 @@ cowan package
 cowan module
 ------------------------
 
-.. automodule:: Cowan.cowan.cowan
+.. automodule:: cowan.cowan.cowan
    :members:
    :undoc-members:
    :show-inheritance:
@@ -14,7 +14,7 @@ cowan module
 atom\_info module
 -----------------------------
 
-.. automodule:: Cowan.cowan.atom_info
+.. automodule:: cowan.cowan.atom_info
    :members:
    :undoc-members:
    :show-inheritance:

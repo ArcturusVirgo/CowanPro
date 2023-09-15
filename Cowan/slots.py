@@ -1,23 +1,15 @@
-import copy
-import functools
-import shutil
-from pathlib import Path
-
-import matplotlib
-import numpy as np
-import pandas as pd
-from PySide6.QtCore import Qt, QUrl, QMetaObject, QThread, Signal
-from PySide6.QtGui import QAction, QCursor, QBrush, QColor
+from PySide6.QtGui import QAction, QCursor
 from PySide6.QtWidgets import (
     QFileDialog,
-    QTableWidgetItem,
     QDialog,
     QTextBrowser,
     QVBoxLayout,
     QMenu,
-    QListWidgetItem,
     QMessageBox,
-    QTreeWidgetItem,
+    QListWidget,
+    QPushButton,
+    QInputDialog,
+    QHBoxLayout,
 )
 from .cowan import *
 from .global_var import *
@@ -619,6 +611,66 @@ class Page2(MainWindow):
             functools.partial(UpdatePage2.update_exp_sim_figure, self)()
         else:
             functools.partial(UpdatePage2.update_exp_figure, self)()
+
+    def choose_peaks(self):
+        def add_data():
+            if self.simulate is None or self.simulate.exp_data is None:
+                minValue = 0
+                maxValue = 10
+            else:
+                minValue = self.simulate.exp_data.x_range[0]
+                maxValue = self.simulate.exp_data.x_range[1]
+            input_value, okPressed = QInputDialog.getDouble(
+                self,
+                "请输入",
+                "特征波长",
+                decimals=3,
+                step=0.002,
+                maxValue=maxValue,
+                minValue=minValue,
+            )
+            if not okPressed:
+                return
+            for wave in self.simulate.characteristic_peaks:
+                if abs(wave - input_value) < 0.0001:
+                    QMessageBox.warning(self, '警告', '该特征波长已存在！')
+                    return
+            self.simulate.characteristic_peaks.append(input_value)
+            self.simulate.characteristic_peaks.sort()
+
+            update_ui()
+
+        def del_data():
+            self.simulate.characteristic_peaks.pop(peaks_browser.currentRow())
+            update_ui()
+
+        def update_ui():
+            peaks_browser.clear()
+            peaks_browser.addItems(
+                ['{:.4f}'.format(i) for i in self.simulate.characteristic_peaks]
+            )
+
+        dialog = QDialog()
+        dialog.resize(200, 300)
+        peaks_browser = QListWidget(dialog)
+        add_button = QPushButton('添加', dialog)
+        del_button = QPushButton('删除', dialog)
+        add_button.clicked.connect(add_data)
+        del_button.clicked.connect(del_data)
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(add_button)
+        button_layout.addWidget(del_button)
+
+        dialog_layout = QVBoxLayout(dialog)
+        dialog_layout.addWidget(peaks_browser)
+        dialog_layout.addLayout(button_layout)
+        dialog.setLayout(dialog_layout)
+
+        update_ui()
+        dialog.setWindowModality(Qt.ApplicationModal)
+
+        dialog.exec()
+        functools.partial(UpdatePage2.update_characteristic_peaks, self)()
 
 
 class Page3(MainWindow):

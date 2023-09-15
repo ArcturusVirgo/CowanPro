@@ -1,10 +1,9 @@
-import functools
 import shelve
 
 from PySide6.QtWidgets import QAbstractItemView
 
 
-from Cowan import *
+from cowan import *
 
 
 class VerticalLine(QWidget):
@@ -55,7 +54,7 @@ class MainWindow(QMainWindow):
         self.space_time_resolution = SpaceTimeResolution()
 
         # 测试
-        # self.test()
+        self.test()
 
         # 初始化
         self.init()
@@ -84,6 +83,7 @@ class MainWindow(QMainWindow):
             self.run_history.append(copy.deepcopy(self.cowan))
             self.simulate.add_cowan(self.cowan)
         self.simulate.exp_data = copy.deepcopy(self.expdata_1)
+        self.simulate.characteristic_peaks = [8.8200, 10.4010, 10.7980, 10.9590, 12.5860, 13.11]
         for x in range(5):
             for time_ in range(5):
                 temp = 20 + np.random.random() * 30
@@ -566,7 +566,11 @@ class MainWindow(QMainWindow):
         self.ui.load_space_time.clicked.connect(
             functools.partial(Page2.load_space_time, self)
         )  # 批量加载时空分辨光谱
-        # 单机操作
+        self.ui.choose_peaks.clicked.connect(
+            functools.partial(Page2.choose_peaks, self)
+        )  # 选择峰位置
+
+        # 单击操作
         self.ui.page2_grid_list.itemSelectionChanged.connect(
             functools.partial(Page2.grid_list_clicked, self)
         )  # 网格列表
@@ -705,7 +709,7 @@ class LoginWindow(QWidget):
 
 if __name__ == '__main__':
     app = QApplication([])
-    window = LoginWindow()  # 启动登陆页面
-    # window = MainWindow(Path('F:/Cowan/Al'), False)  # 启动主界面
+    # window = LoginWindow()  # 启动登陆页面
+    window = MainWindow(Path('F:/Cowan/Al'), False)  # 启动主界面
     window.show()
     app.exec()

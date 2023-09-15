@@ -216,6 +216,11 @@ class UpdatePage2(MainWindow):
         self.ui.page2_density_base.setValue(base)
         self.ui.page2_density_index.setValue(index)
 
+    def update_characteristic_peaks(self):
+        if self.simulate.characteristic_peaks is None:
+            self.ui.peaks_label.setText('未指定')
+        self.ui.peaks_label.setText(f'{len(self.simulate.characteristic_peaks)}个')
+
 
 class UpdatePage3(MainWindow):
     def update_space_time_combobox(self):

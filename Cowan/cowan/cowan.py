@@ -1060,18 +1060,21 @@ class WidenPart:
 
 class SimulateSpectral:
     def __init__(self):
-        self.cowan_list: List[Cowan] = []
-        self.add_or_not: List[bool] = []
-        self.exp_data: Optional[ExpData] = None
-        self.spectrum_similarity = None
-        self.temperature = None
-        self.electron_density = None
+        self.cowan_list: List[Cowan] = []  # 用于存储 cowan 对象
+        self.add_or_not: List[bool] = []  # cowan 对象是否被添加
+        self.exp_data: Optional[ExpData] = None  # 实验光谱数据
+        self.spectrum_similarity = None  # 光谱相似度
+        self.temperature = None  # 模拟的等离子体温度
+        self.electron_density = None  # 模拟的等离子体电子密度
+        self.characteristic_peaks = []  # 特征峰波长
 
-        self.abundance = []
-        self.sim_data = None
+        self.abundance = []  # 离子丰度
+        self.sim_data = None  # 模拟光谱数据
 
         self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()
-        self.example_path = PROJECT_PATH().joinpath('figure/part/example.html').as_posix()
+        self.example_path = (
+            PROJECT_PATH().joinpath('figure/part/example.html').as_posix()
+        )
 
     def load_exp_data(self, path: Path):
         self.exp_data = ExpData(path)
@@ -1352,10 +1355,16 @@ class SimulateSpectral:
 
     # 计算光谱相似度
     def get_spectrum_similarity(self):
-        self.spectrum_similarity = self.spectrum_similarity10(
-            self.exp_data.data[['wavelength', 'intensity']],
-            self.sim_data[['wavelength', 'intensity']],
-        )
+        if self.characteristic_peaks:
+            self.spectrum_similarity = self.spectrum_similarity11(
+                self.exp_data.data[['wavelength', 'intensity']],
+                self.sim_data[['wavelength', 'intensity']],
+            )
+        else:
+            self.spectrum_similarity = self.spectrum_similarity10(
+                self.exp_data.data[['wavelength', 'intensity']],
+                self.sim_data[['wavelength', 'intensity']],
+            )
 
     @staticmethod
     def spectrum_similarity1(fax: pd.DataFrame, fbx: pd.DataFrame):
@@ -1458,10 +1467,14 @@ class SimulateSpectral:
 
     def spectrum_similarity10(self, fax: pd.DataFrame, fbx: pd.DataFrame):
         """
-        峰值匹配法
-        :param fax:
-        :param fbx:
-        :return:
+        自动峰值匹配法
+
+        Args:
+            fax:
+            fbx:
+
+        Returns:
+
         """
         x, y1, y2 = self.get_y1y2(fax, fbx)
         peaks1, _ = find_peaks(y1)
@@ -1488,6 +1501,47 @@ class SimulateSpectral:
                 )
         if similarity > len(peaks1):
             similarity = len(peaks1)
+        return similarity
+
+    def spectrum_similarity11(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+        """
+        指定峰值匹配法
+        Args:
+            fax:
+            fbx:
+
+        Returns:
+
+        """
+        x, y1, y2 = self.get_y1y2(fax, fbx)
+        peaks2, _ = find_peaks(y2)  # 找出模拟光谱的峰值位
+        peaks2_wavelength = np.array([x[index] for index in peaks2])
+        exp_wavelength_indexes = []
+        cal_wavelength_indexes = []
+        # 将给定的特征峰的强度与模拟光谱特征峰的强度进行比较
+        for wavelength in self.characteristic_peaks:
+            exp_index = np.argmin(abs(x - wavelength))
+            # min_index: wavelength 所对应的峰在 peaks2 中的索引
+            # temp: wavelength 所对应的峰与 peaks2 中最近的峰的距离
+            min_index, temp = 0, abs(wavelength - peaks2_wavelength[0])
+            for i, index_1 in enumerate(peaks2_wavelength[1:]):
+                if temp > abs(wavelength - index_1):
+                    temp = abs(wavelength - index_1)
+                    min_index = i + 1
+            exp_wavelength_indexes.append(exp_index)
+            cal_wavelength_indexes.append(peaks2[min_index])
+
+        # 计算两个光谱数据峰值位置以及强度的相似性
+        similarity = 0
+        for i in range(len(exp_wavelength_indexes) - 1):
+            for j in range(i + 1, len(exp_wavelength_indexes)):
+                similarity += abs(
+                    y1[exp_wavelength_indexes[i]] / y1[exp_wavelength_indexes[j]] - y2[cal_wavelength_indexes[i]] / y2[cal_wavelength_indexes[j]]
+                )
+        # TODO
+        # 画图测试
+        if similarity > len(exp_wavelength_indexes):
+            similarity = len(exp_wavelength_indexes)
         return similarity
 
     @staticmethod
@@ -1594,15 +1648,15 @@ class SpaceTimeResolution:
         # 模拟光谱数据对象 列表
         self.simulate_spectral_dict = {}
 
-        self.change_by_time_path = PROJECT_PATH().joinpath(
-            'figure/change/by_time.html'
-        ).as_posix()
-        self.change_by_location_path = PROJECT_PATH().joinpath(
-            'figure/change/by_location.html'
-        ).as_posix()
-        self.change_by_space_time_path = PROJECT_PATH().joinpath(
-            'figure/change/by_space_time.html'
-        ).as_posix()
+        self.change_by_time_path = (
+            PROJECT_PATH().joinpath('figure/change/by_time.html').as_posix()
+        )
+        self.change_by_location_path = (
+            PROJECT_PATH().joinpath('figure/change/by_location.html').as_posix()
+        )
+        self.change_by_space_time_path = (
+            PROJECT_PATH().joinpath('figure/change/by_space_time.html').as_posix()
+        )
 
     # 添加一个位置时间
     def add_st(self, st: tuple, simulate_spectral):

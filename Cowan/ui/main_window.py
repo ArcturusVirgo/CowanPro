@@ -1460,10 +1460,15 @@ class Ui_main_window(object):
 
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.pushButton_2 = QPushButton(self.groupBox_3)
-        self.pushButton_2.setObjectName(u"pushButton_2")
+        self.choose_peaks = QPushButton(self.groupBox_3)
+        self.choose_peaks.setObjectName(u"choose_peaks")
 
-        self.horizontalLayout_8.addWidget(self.pushButton_2)
+        self.horizontalLayout_8.addWidget(self.choose_peaks)
+
+        self.peaks_label = QLabel(self.groupBox_3)
+        self.peaks_label.setObjectName(u"peaks_label")
+
+        self.horizontalLayout_8.addWidget(self.peaks_label)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
@@ -1954,7 +1959,7 @@ class Ui_main_window(object):
         main_window.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(main_window)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1334, 21))
+        self.menubar.setGeometry(QRect(0, 0, 1334, 22))
         self.menubar.setNativeMenuBar(True)
         self.menu = QMenu(self.menubar)
         self.menu.setObjectName(u"menu")
@@ -1977,7 +1982,7 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(3)
+        self.stackedWidget.setCurrentIndex(1)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -2205,7 +2210,8 @@ class Ui_main_window(object):
         self.crossNP.setText(QCoreApplication.translate("main_window", u"cross-NP", None))
         self.label_2.setText(QCoreApplication.translate("main_window", u"\u8ba1\u7b97\u8c31", None))
         self.groupBox_3.setTitle(QCoreApplication.translate("main_window", u"\u6a21\u62df\u8c31\u7ebf", None))
-        self.pushButton_2.setText(QCoreApplication.translate("main_window", u"\u8c31\u7ebf\u76f8\u4f3c\u5ea6\u5224\u65ad\u914d\u7f6e", None))
+        self.choose_peaks.setText(QCoreApplication.translate("main_window", u"\u7279\u5f81\u5cf0\u6311\u9009", None))
+        self.peaks_label.setText(QCoreApplication.translate("main_window", u"\u672a\u6307\u5b9a", None))
         self.label_18.setText(QCoreApplication.translate("main_window", u"\u6e29\u5ea6", None))
         self.label_19.setText(QCoreApplication.translate("main_window", u"\u5bc6\u5ea6", None))
         self.page2_plot_spectrum.setText(QCoreApplication.translate("main_window", u"\u7ed8\u5236", None))
