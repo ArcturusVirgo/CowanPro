@@ -1118,6 +1118,7 @@ class SimulateSpectral:
         for cowan, abu, flag in zip(self.cowan_list, self.abundance, self.add_or_not):
             if flag:
                 temp += cowan.cal_data.widen_all.widen_data['cross_P'].values * abu
+                print(cowan.name, abu)
                 # temp_np += cowan.cal_data.widen_all.widen_data['cross_P'].values
         res['intensity'] = temp
         # plt.plot(res['wavelength'].values, temp_np, label='np')
@@ -1235,10 +1236,10 @@ class SimulateSpectral:
 
         """
         all_abundance = self.__cal_abundance2(temperature, electron_density)
-        # print(all_abundance)
+        # print(len(all_abundance))
         temp_abundance = []
         for c in self.cowan_list:
-            ion = int(c.name.split('_')[1]) - 1
+            ion = int(c.name.split('_')[1])
             temp_abundance.append(all_abundance[ion])
         self.abundance = temp_abundance
 
