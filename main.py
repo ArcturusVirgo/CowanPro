@@ -317,6 +317,10 @@ class MainWindow(QMainWindow):
 
     def load_project(self):
         obj_info = shelve.open(PROJECT_PATH().joinpath('.cowan/obj_info').as_posix())
+        try:
+            obj_info['atom']
+        except KeyError:
+            return
         # 第一页
         self.atom = obj_info['atom']
         self.in36 = obj_info['in36']
