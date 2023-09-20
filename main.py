@@ -68,7 +68,6 @@ class MainWindow(QMainWindow):
             self.test()
             # self.load_Ge()
 
-
     def test(self):
         SET_PROJECT_PATH(Path('F:/Cowan/Al'))
         delta = {3: 0.05, 4: -0.04, 5: 0.0, 6: 0.05}
@@ -372,6 +371,8 @@ class MainWindow(QMainWindow):
         functools.partial(UpdatePage2.update_exp_sim_figure, self)()
         # ----- 时空分辨表格 -----
         functools.partial(UpdatePage2.update_space_time_table, self)()
+        # ----- 更新谱峰个数 -----
+        functools.partial(UpdatePage2.update_characteristic_peaks, self)()
 
     def save_project(self):
         self.ui.statusbar.showMessage('正在保存项目，请稍后...')

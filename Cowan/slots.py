@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QPushButton,
     QInputDialog,
-    QHBoxLayout,
+    QHBoxLayout, QWidget,
 )
 from .cowan import *
 from .global_var import *
@@ -458,8 +458,8 @@ class Page2(MainWindow):
             self.simulate.exp_data = copy.deepcopy(self.expdata_2)
         temperature = self.ui.page2_temperature.value()
         density = (
-            self.ui.page2_density_base.value()
-            * 10 ** self.ui.page2_density_index.value()
+                self.ui.page2_density_base.value()
+                * 10 ** self.ui.page2_density_index.value()
         )
         self.simulate.get_simulate_data(temperature, density)
 
@@ -639,38 +639,50 @@ class Page2(MainWindow):
                     return
             self.simulate.characteristic_peaks.append(input_value)
             self.simulate.characteristic_peaks.sort()
-
             update_ui()
 
         def del_data():
             self.simulate.characteristic_peaks.pop(peaks_browser.currentRow())
             update_ui()
 
+        def close_window():
+            dialog.close()
+
         def update_ui():
             peaks_browser.clear()
-            peaks_browser.addItems(
-                ['{:.4f}'.format(i) for i in self.simulate.characteristic_peaks]
-            )
+            peaks_browser.addItems(['{:.4f}'.format(i) for i in self.simulate.characteristic_peaks])
 
+        def show_right_menu():
+            right_menu.popup(QCursor.pos())  # 显示右键菜单
+
+        # 创建窗口元素
         dialog = QDialog()
         dialog.resize(200, 300)
+        dialog.setWindowModality(Qt.ApplicationModal)
         peaks_browser = QListWidget(dialog)
+        peaks_browser.setContextMenuPolicy(Qt.CustomContextMenu)  # 允许使用右键菜单
         add_button = QPushButton('添加', dialog)
-        del_button = QPushButton('删除', dialog)
+        close_button = QPushButton('关闭', dialog)
         add_button.clicked.connect(add_data)
-        del_button.clicked.connect(del_data)
+        close_button.clicked.connect(close_window)
         button_layout = QHBoxLayout()
         button_layout.addWidget(add_button)
-        button_layout.addWidget(del_button)
+        button_layout.addWidget(close_button)
 
+        # 设置布局
         dialog_layout = QVBoxLayout(dialog)
         dialog_layout.addWidget(peaks_browser)
         dialog_layout.addLayout(button_layout)
         dialog.setLayout(dialog_layout)
 
-        update_ui()
-        dialog.setWindowModality(Qt.ApplicationModal)
+        # 创建右键菜单
+        right_menu = QMenu(peaks_browser)
+        item_1 = QAction('删除', peaks_browser)
+        item_1.triggered.connect(del_data)
+        right_menu.addAction(item_1)
+        peaks_browser.customContextMenuRequested.connect(show_right_menu)
 
+        update_ui()
         dialog.exec()
         functools.partial(UpdatePage2.update_characteristic_peaks, self)()
 
