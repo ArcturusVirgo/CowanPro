@@ -54,7 +54,6 @@ class MainWindow(QMainWindow):
         self.space_time_resolution = SpaceTimeResolution()
 
         # 测试
-        self.test()
 
         # 初始化
         self.init()
@@ -65,6 +64,10 @@ class MainWindow(QMainWindow):
         SET_PROJECT_PATH(project_path)
         if load:
             self.load_project()
+        else:
+            self.test()
+            # self.load_Ge()
+
 
     def test(self):
         SET_PROJECT_PATH(Path('F:/Cowan/Al'))
@@ -74,6 +77,7 @@ class MainWindow(QMainWindow):
             self.atom = Atom(1, 0)
             self.in36 = In36(self.atom)
             self.in36.read_from_file(PROJECT_PATH() / f'in36_{i}')
+            self.atom = copy.deepcopy(self.in36.atom)
             self.in2 = In2()
             self.expdata_1 = ExpData(PROJECT_PATH() / './exp_data.csv')
             self.cowan = Cowan(self.in36, self.in2, f'Al_{i}', self.expdata_1, 1)
@@ -86,10 +90,8 @@ class MainWindow(QMainWindow):
         self.simulate.characteristic_peaks = [8.8200, 10.4010, 10.7980, 10.9590, 12.5860, 13.11]
         for x in range(5):
             for time_ in range(5):
-                temp = 20 + np.random.random() * 30
-                dishu = np.random.random() * 10
-                zhishu = 17 + np.random.random() * 4
-                den = dishu * 10**zhishu
+                temp = 20
+                den = 5.13e20
                 self.simulate.get_simulate_data(temp, den)
                 self.space_time_resolution.add_st(
                     (str(time_), (str(x), '0', '0')), self.simulate
@@ -120,6 +122,9 @@ class MainWindow(QMainWindow):
         self.expdata_2 = ExpData(PROJECT_PATH() / 'exp_data.csv')
         # 更新界面
         self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
+        # 更新谱峰个数
+        functools.partial(UpdatePage2.update_characteristic_peaks, self)()
+
         # 时空分辨表格
         functools.partial(UpdatePage2.update_space_time_table, self)()
 
@@ -130,13 +135,14 @@ class MainWindow(QMainWindow):
         functools.partial(UpdatePage4.update_space_time_combobox, self)()
 
     def load_Ge(self):
-        PROJECT_PATH = Path('F:/Cowan/Ge')
+        SET_PROJECT_PATH(Path('F:/Cowan/Ge'))
         folder_path = Path(r'E:\研究生工作\科研工作\2023_08_08_Ge等离子体光谱\计算数据')
         self.expdata_1 = ExpData(Path(r'F:\Cowan\Ge\0.4mm.csv'))
         for path in folder_path.iterdir():
             self.atom = Atom(1, 0)
             self.in36 = In36(self.atom)
             self.in36.read_from_file(path / f'in36')
+            self.atom = copy.deepcopy(self.in36.atom)
             self.in2 = In2()
             self.in2.read_from_file(path / f'in2')
             name = path.name.split('Ge')[-1].strip('+')
@@ -285,27 +291,7 @@ class MainWindow(QMainWindow):
         # 更新界面
         self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
         # 时空分辨表格
-        self.ui.st_resolution_table.clear()
-        self.ui.st_resolution_table.setRowCount(
-            len(self.space_time_resolution.simulate_spectral_dict)
-        )
-        self.ui.st_resolution_table.setColumnCount(5)
-        self.ui.st_resolution_table.setHorizontalHeaderLabels(
-            ['时间', '位置', '温度', '密度', '实验谱']
-        )
-        for i, (key, value) in enumerate(
-            self.space_time_resolution.simulate_spectral_dict.items()
-        ):
-            item1 = QTableWidgetItem(key[0])
-            item2 = QTableWidgetItem(f'({key[1][0]}, {key[1][1]}, {key[1][2]})')
-            item3 = QTableWidgetItem('{:.3f}'.format(value.temperature))
-            item4 = QTableWidgetItem('{:.3e}'.format(value.electron_density))
-            item5 = QTableWidgetItem(value.exp_data.filepath.name)
-            self.ui.st_resolution_table.setItem(i, 0, item1)
-            self.ui.st_resolution_table.setItem(i, 1, item2)
-            self.ui.st_resolution_table.setItem(i, 2, item3)
-            self.ui.st_resolution_table.setItem(i, 3, item4)
-            self.ui.st_resolution_table.setItem(i, 4, item5)
+        functools.partial(UpdatePage2.update_space_time_table, self)()
 
         # --------------- 第三页
         # 更新第三页元素
@@ -342,7 +328,7 @@ class MainWindow(QMainWindow):
         # 第二页
         self.expdata_2 = obj_info['expdata_2']
         self.simulate = obj_info['simulate']
-        self.simulated_grid = obj_info['simulated_grid']
+        # self.simulated_grid = obj_info['simulated_grid']
         self.space_time_resolution = obj_info['space_time_resolution']
         # 第四页
         self.simulate_page4 = obj_info['simulate_page4']
@@ -352,7 +338,7 @@ class MainWindow(QMainWindow):
         # 第一页 =================================================
         # ----- 原子信息 -----
         if self.atom.num == 1 and self.atom.ion == 0:
-            return
+            raise Exception('原子信息未初始化！')
         functools.partial(UpdatePage1.update_atom, self)()
         # ----- in36 -------
         functools.partial(UpdatePage1.update_in36, self)()
@@ -375,18 +361,20 @@ class MainWindow(QMainWindow):
         functools.partial(UpdatePage1.update_selection_list, self)()
 
         # 第二页 =================================================
+        # ----- 实验数据 -----
         functools.partial(UpdatePage2.update_exp_figure, self)()
+        # ----- 实验数据的文件名 -----
         self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.as_posix())
         if not self.simulate.exp_data:
-            return
+            raise Exception('实验数据未初始化！')
+        # ----- 第二页的密度温度 -----
         functools.partial(UpdatePage2.update_temperature_density, self)()
         functools.partial(UpdatePage2.update_exp_sim_figure, self)()
-        if self.simulated_grid:
-            functools.partial(UpdatePage2.update_grid, self)()
-
-
+        # ----- 时空分辨表格 -----
+        functools.partial(UpdatePage2.update_space_time_table, self)()
 
     def save_project(self):
+        self.ui.statusbar.showMessage('正在保存项目，请稍后...')
         obj_info = shelve.open(PROJECT_PATH().joinpath('.cowan/obj_info').as_posix())
         # 第一页
         obj_info['atom'] = self.atom
@@ -398,7 +386,7 @@ class MainWindow(QMainWindow):
         # 第二页
         obj_info['expdata_2'] = self.expdata_2
         obj_info['simulate'] = self.simulate
-        obj_info['simulated_grid'] = self.simulated_grid
+        # obj_info['simulated_grid'] = self.simulated_grid
         obj_info['space_time_resolution'] = self.space_time_resolution
         # 第四页
         obj_info['simulate_page4'] = self.simulate_page4
@@ -569,7 +557,10 @@ class MainWindow(QMainWindow):
         self.ui.choose_peaks.clicked.connect(
             functools.partial(Page2.choose_peaks, self)
         )  # 选择峰位置
-
+        # 复选框
+        self.ui.show_peaks.toggled.connect(
+            functools.partial(Page2.plot_spectrum, self)
+        )
         # 单击操作
         self.ui.page2_grid_list.itemSelectionChanged.connect(
             functools.partial(Page2.grid_list_clicked, self)
@@ -709,7 +700,8 @@ class LoginWindow(QWidget):
 
 if __name__ == '__main__':
     app = QApplication([])
-    # window = LoginWindow()  # 启动登陆页面
-    window = MainWindow(Path('F:/Cowan/Al'), False)  # 启动主界面
+    window = LoginWindow()  # 启动登陆页面
+    # window = MainWindow(Path('F:/Cowan/Al'), False)  # 启动主界面
+    # window = MainWindow(Path('F:/Cowan/Ge'), True)  # 启动主界面
     window.show()
     app.exec()

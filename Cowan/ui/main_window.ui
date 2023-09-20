@@ -3449,7 +3449,7 @@
                 <string>cross-P</string>
                </property>
                <property name="checked">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -3462,7 +3462,7 @@
                 <string>cross-NP</string>
                </property>
                <property name="checked">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -3542,6 +3542,13 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_8">
              <item>
+              <widget class="QRadioButton" name="show_peaks">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="choose_peaks">
                <property name="text">
                 <string>特征峰挑选</string>
@@ -3606,12 +3613,18 @@
               </widget>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="page2_density_index">
-               <property name="singleStep">
-                <double>0.100000000000000</double>
+              <widget class="QSpinBox" name="page2_density_index">
+               <property name="minimumSize">
+                <size>
+                 <width>50</width>
+                 <height>0</height>
+                </size>
                </property>
-               <property name="value">
-                <double>19.000000000000000</double>
+               <property name="maximumSize">
+                <size>
+                 <width>50</width>
+                 <height>16777215</height>
+                </size>
                </property>
               </widget>
              </item>
@@ -3704,7 +3717,7 @@
                <item>
                 <widget class="QSpinBox" name="temperature_num">
                  <property name="value">
-                  <number>20</number>
+                  <number>10</number>
                  </property>
                 </widget>
                </item>
@@ -3753,7 +3766,7 @@
                <item>
                 <widget class="QSpinBox" name="density_num">
                  <property name="value">
-                  <number>20</number>
+                  <number>10</number>
                  </property>
                  <property name="displayIntegerBase">
                   <number>10</number>
@@ -3772,9 +3785,21 @@
                 </widget>
                </item>
                <item>
-                <widget class="QDoubleSpinBox" name="density_min_index">
+                <widget class="QSpinBox" name="density_min_index">
+                 <property name="minimumSize">
+                  <size>
+                   <width>50</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>50</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
                  <property name="value">
-                  <double>17.000000000000000</double>
+                  <number>17</number>
                  </property>
                 </widget>
                </item>
@@ -3785,14 +3810,29 @@
                <item>
                 <widget class="QDoubleSpinBox" name="density_max_base">
                  <property name="value">
-                  <double>5.000000000000000</double>
+                  <double>1.000000000000000</double>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QDoubleSpinBox" name="density_max_index">
+                <widget class="QSpinBox" name="density_max_index">
+                 <property name="minimumSize">
+                  <size>
+                   <width>50</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>50</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
                  <property name="value">
-                  <double>21.000000000000000</double>
+                  <number>23</number>
+                 </property>
+                 <property name="displayIntegerBase">
+                  <number>10</number>
                  </property>
                 </widget>
                </item>

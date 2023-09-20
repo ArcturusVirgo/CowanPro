@@ -20,6 +20,7 @@ import scipy
 from PySide6 import QtCore
 from PySide6.QtCore import Signal
 from fastdtw import fastdtw
+from matplotlib import pyplot as plt
 from plotly.offline import plot
 from scipy.interpolate import interp1d
 from scipy.signal import find_peaks
@@ -63,8 +64,8 @@ class Atom:
         """
         electron_arrangement = {}
         for key, value in map(
-            lambda x: [str(x[:2]), int(x[2:])],
-            BASE_CONFIGURATION[self.num][self.ion].split(' '),
+                lambda x: [str(x[:2]), int(x[2:])],
+                BASE_CONFIGURATION[self.num][self.ion].split(' '),
         ):
             electron_arrangement[key] = value
         return electron_arrangement
@@ -129,14 +130,14 @@ class Atom:
         elif low_name not in self.electron_arrangement.keys():
             raise Exception(f'没有处于{low_name}的电子！')
         elif (
-            self.electron_arrangement.get(high_name, 0)
-            == 4 * ANGULAR_QUANTUM_NUM_NAME.index(high_name[1]) + 2
+                self.electron_arrangement.get(high_name, 0)
+                == 4 * ANGULAR_QUANTUM_NUM_NAME.index(high_name[1]) + 2
         ):
             raise Exception(f'{high_name}的电子已经排满！')
 
         self.electron_arrangement[low_name] -= 1
         self.electron_arrangement[high_name] = (
-            self.electron_arrangement.get(high_name, 0) + 1
+                self.electron_arrangement.get(high_name, 0) + 1
         )
         if self.electron_arrangement[low_name] == 0:
             self.electron_arrangement.pop(low_name)
@@ -170,7 +171,7 @@ class ExpData:
         self.data = self.data[
             (self.data['wavelength'] < self.x_range[1])
             & (self.data['wavelength'] > self.x_range[0])
-        ]
+            ]
 
     def __read_file(self):
         """
@@ -191,7 +192,7 @@ class ExpData:
         else:
             raise ValueError(f'filetype {filetype} is not supported')
         temp_data['intensity_normalization'] = (
-            temp_data['intensity'] / temp_data['intensity'].max()
+                temp_data['intensity'] / temp_data['intensity'].max()
         )
 
         self.data = temp_data
@@ -667,7 +668,7 @@ class CalData:
         temp_data = temp_data[
             (temp_data['wavelength'] < self.exp_data.x_range[1])
             & (temp_data['wavelength'] > self.exp_data.x_range[0])
-        ]
+            ]
         lambda_ = []
         strength = []
         if temp_data['wavelength'].min() > self.exp_data.x_range[0]:
@@ -685,12 +686,12 @@ class CalData:
 
 class WidenAll:
     def __init__(
-        self,
-        name,
-        init_data,
-        exp_data: ExpData,
-        delta_lambda=0.0,  # 单位是nm
-        n=None,
+            self,
+            name,
+            init_data,
+            exp_data: ExpData,
+            delta_lambda=0.0,  # 单位是nm
+            n=None,
     ):
         self.name = name
         self.init_data = init_data.copy()
@@ -700,13 +701,13 @@ class WidenAll:
         self.only_p = None
 
         self.plot_path_gauss = (
-            PROJECT_PATH() / f'figure/gauss/{self.name}.html'
+                PROJECT_PATH() / f'figure/gauss/{self.name}.html'
         ).as_posix()
         self.plot_path_cross_NP = (
-            PROJECT_PATH() / f'figure/cross_NP/{self.name}.html'
+                PROJECT_PATH() / f'figure/cross_NP/{self.name}.html'
         ).as_posix()
         self.plot_path_cross_P = (
-            PROJECT_PATH() / f'figure/cross_P/{self.name}.html'
+                PROJECT_PATH() / f'figure/cross_P/{self.name}.html'
         ).as_posix()
 
         self.widen_data: pd.DataFrame | None = None
@@ -741,7 +742,7 @@ class WidenAll:
         new_data = new_data[
             (new_data['wavelength_ev'] > min_wavelength_ev)
             & (new_data['wavelength_ev'] < max_wavelength_ev)
-        ]
+            ]
         if self.n is None:
             wave = 1239.85 / np.array(self.exp_data.data['wavelength'].values)
         else:
@@ -775,9 +776,9 @@ class WidenAll:
         new_J = new_J.values
         # 计算布居
         population = (
-            (2 * new_J + 1)
-            * np.exp(-abs(new_energy - min_energy) * 0.124 / temperature)
-            / (2 * min_J + 1)
+                (2 * new_J + 1)
+                * np.exp(-abs(new_energy - min_energy) * 0.124 / temperature)
+                / (2 * min_J + 1)
         )
 
         res = [
@@ -817,45 +818,45 @@ class WidenAll:
         plot(fig, filename=path, auto_open=False)
 
     def __complex_cal(
-        self,
-        wave: float,
-        new_intensity: np.array,
-        fwhmgauss: float,
-        new_wavelength: np.array,
-        population: np.array,
-        new_J: np.array,
+            self,
+            wave: float,
+            new_intensity: np.array,
+            fwhmgauss: float,
+            new_wavelength: np.array,
+            population: np.array,
+            new_J: np.array,
     ):
         uu = (
-            (new_intensity * population / (2 * new_J + 1))
-            * 2
-            * fwhmgauss
-            / (
-                2
-                * np.pi
-                * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)
-            )
+                (new_intensity * population / (2 * new_J + 1))
+                * 2
+                * fwhmgauss
+                / (
+                        2
+                        * np.pi
+                        * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)
+                )
         )
         if self.only_p:
             return -1, -1, uu.sum()
         else:
             tt = (
-                new_intensity
-                / np.sqrt(2 * np.pi)
-                / fwhmgauss
-                * 2.355
-                * np.exp(
-                    -(2.355**2) * (new_wavelength - wave) ** 2 / fwhmgauss**2 / 2
-                )
+                    new_intensity
+                    / np.sqrt(2 * np.pi)
+                    / fwhmgauss
+                    * 2.355
+                    * np.exp(
+                -(2.355 ** 2) * (new_wavelength - wave) ** 2 / fwhmgauss ** 2 / 2
+            )
             )
             ss = (
-                (new_intensity / (2 * new_J + 1))
-                * 2
-                * fwhmgauss
-                / (
-                    2
-                    * np.pi
-                    * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)
-                )
+                    (new_intensity / (2 * new_J + 1))
+                    * 2
+                    * fwhmgauss
+                    / (
+                            2
+                            * np.pi
+                            * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)
+                    )
             )
             return tt.sum(), ss.sum(), uu.sum()
 
@@ -866,12 +867,12 @@ class WidenAll:
 
 class WidenPart:
     def __init__(
-        self,
-        name,
-        init_data,
-        exp_data: ExpData,
-        delta_lambda=0.0,  # 单位是nm
-        n=None,
+            self,
+            name,
+            init_data,
+            exp_data: ExpData,
+            delta_lambda=0.0,  # 单位是nm
+            n=None,
     ):
         self.name = name
         self.init_data = init_data.copy()
@@ -909,7 +910,7 @@ class WidenPart:
         self.plot_path_list = {}
         for key, value in temp_data.items():
             self.plot_path_list[key] = (
-                PROJECT_PATH() / f'figure/part/{self.name}_{key}.html'
+                    PROJECT_PATH() / f'figure/part/{self.name}_{key}.html'
             ).as_posix()
         self.grouped_widen_data = temp_data
 
@@ -943,7 +944,7 @@ class WidenPart:
         new_data = new_data[
             (new_data['wavelength_ev'] > min_wavelength_ev)
             & (new_data['wavelength_ev'] < max_wavelength_ev)
-        ]
+            ]
         if new_data.empty:
             result = pd.DataFrame()
             result['wavelength'] = self.exp_data.data['wavelength'].values
@@ -971,9 +972,9 @@ class WidenPart:
         new_J = new_J.values
         # 计算布居
         population = (
-            (2 * new_J + 1)
-            * np.exp(-abs(new_energy - min_energy) * 0.124 / temperature)
-            / (2 * min_J + 1)
+                (2 * new_J + 1)
+                * np.exp(-abs(new_energy - min_energy) * 0.124 / temperature)
+                / (2 * min_J + 1)
         )
         if self.n is None:
             wave = 1239.85 / self.exp_data.data['wavelength'].values
@@ -1011,45 +1012,45 @@ class WidenPart:
         plot(fig, filename=path, auto_open=False)
 
     def __complex_cal(
-        self,
-        wave: float,
-        new_intensity: np.array,
-        fwhmgauss: float,
-        new_wavelength: np.array,
-        population: np.array,
-        new_J: np.array,
+            self,
+            wave: float,
+            new_intensity: np.array,
+            fwhmgauss: float,
+            new_wavelength: np.array,
+            population: np.array,
+            new_J: np.array,
     ):
         uu = (
-            (new_intensity * population / (2 * new_J + 1))
-            * 2
-            * fwhmgauss
-            / (
-                2
-                * np.pi
-                * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)
-            )
+                (new_intensity * population / (2 * new_J + 1))
+                * 2
+                * fwhmgauss
+                / (
+                        2
+                        * np.pi
+                        * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)
+                )
         )
         if self.only_p:
             return -1, -1, uu.sum()
         else:
             tt = (
-                new_intensity
-                / np.sqrt(2 * np.pi)
-                / fwhmgauss
-                * 2.355
-                * np.exp(
-                    -(2.355**2) * (new_wavelength - wave) ** 2 / fwhmgauss**2 / 2
-                )
+                    new_intensity
+                    / np.sqrt(2 * np.pi)
+                    / fwhmgauss
+                    * 2.355
+                    * np.exp(
+                -(2.355 ** 2) * (new_wavelength - wave) ** 2 / fwhmgauss ** 2 / 2
+            )
             )
             ss = (
-                (new_intensity / (2 * new_J + 1))
-                * 2
-                * fwhmgauss
-                / (
-                    2
-                    * np.pi
-                    * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)
-                )
+                    (new_intensity / (2 * new_J + 1))
+                    * 2
+                    * fwhmgauss
+                    / (
+                            2
+                            * np.pi
+                            * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)
+                    )
             )
             return tt.sum(), ss.sum(), uu.sum()
 
@@ -1066,7 +1067,9 @@ class SimulateSpectral:
         self.spectrum_similarity = None  # 光谱相似度
         self.temperature = None  # 模拟的等离子体温度
         self.electron_density = None  # 模拟的等离子体电子密度
+
         self.characteristic_peaks = []  # 特征峰波长
+        self.peaks_index = []
 
         self.abundance = []  # 离子丰度
         self.sim_data = None  # 模拟光谱数据
@@ -1098,8 +1101,10 @@ class SimulateSpectral:
         Returns:
 
         """
+        # 将温度和密度赋值给当前对象
         self.temperature = temperature
         self.electron_density = electron_density
+        # 获取各种离子的丰度
         self.__update_abundance(temperature, electron_density)
         for cowan, flag in zip(self.cowan_list, self.add_or_not):
             if flag:
@@ -1109,27 +1114,57 @@ class SimulateSpectral:
             'wavelength'
         ]
         temp = np.zeros(res.shape[0])
-        # print(res.shape)
-        # print(res)
+        # temp_np = np.zeros(res.shape[0])
         for cowan, abu, flag in zip(self.cowan_list, self.abundance, self.add_or_not):
             if flag:
-                # print(cowan.cal_data.widen_all.widen_data['cross_P'].values)
-                # print(abu)
                 temp += cowan.cal_data.widen_all.widen_data['cross_P'].values * abu
-                # exit()
+                # temp_np += cowan.cal_data.widen_all.widen_data['cross_P'].values
         res['intensity'] = temp
+        # plt.plot(res['wavelength'].values, temp_np, label='np')
+        # plt.plot(res['wavelength'].values, temp, label='p')
+        # plt.legend()
+        # plt.show()
+
         self.sim_data = res
         self.get_spectrum_similarity()
         return copy.deepcopy(self)
 
-    def plot_html(self):
+    def plot_html(self, show_point=False):
+        """
+        绘制叠加光谱
+        Returns:
+
+        """
         x1 = self.exp_data.data['wavelength']
         y1 = self.exp_data.data['intensity'] / self.exp_data.data['intensity'].max()
         x2 = self.sim_data['wavelength']
         y2 = self.sim_data['intensity'] / self.sim_data['intensity'].max()
-        trace1 = go.Scatter(x=x1, y=y1, mode='lines')
-        trace2 = go.Scatter(x=x2, y=y2, mode='lines')
-        data = [trace1, trace2]
+        trace1 = go.Scatter(
+            x=x1, y=y1, mode='lines', line={'color': 'rgb(98, 115, 244)'}
+        )
+        trace2 = go.Scatter(
+            x=x2, y=y2, mode='lines', line={'color': 'rgb(237, 78, 64)'}
+        )
+        if show_point:
+            exp_points_x = [x1.tolist()[index_] for index_ in self.peaks_index[0]]
+            exp_points_y = [y1.tolist()[index_] for index_ in self.peaks_index[0]]
+            cal_points_x = [x2.tolist()[index_] for index_ in self.peaks_index[1]]
+            cal_points_y = [y2.tolist()[index_] for index_ in self.peaks_index[1]]
+            trace3 = go.Scatter(
+                x=exp_points_x,
+                y=exp_points_y,
+                mode='markers',
+                line={'color': 'rgb(98, 115, 244)'},
+            )
+            trace4 = go.Scatter(
+                x=cal_points_x,
+                y=cal_points_y,
+                mode='markers',
+                line={'color': 'rgb(237, 78, 64)'},
+            )
+            data = [trace1, trace2, trace3, trace4]
+        else:
+            data = [trace1, trace2]
         layout = go.Layout(
             margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
             xaxis=go.layout.XAxis(range=self.exp_data.x_range),
@@ -1139,12 +1174,20 @@ class SimulateSpectral:
         plot(fig, filename=self.plot_path, auto_open=False)
 
     def plot_example_html(self, add_list):
+        """
+        绘制各个组态的贡献
+        Args:
+            add_list:
+
+        Returns:
+
+        """
         height = 0
         trace = []
         for i, c in enumerate(self.cowan_list):
             if add_list[i][0]:
                 for j, (key, value) in enumerate(
-                    c.cal_data.widen_part.grouped_widen_data.items()
+                        c.cal_data.widen_part.grouped_widen_data.items()
                 ):
                     if add_list[i][1][j]:
                         index_low, index_high = map(int, key.split('_'))
@@ -1166,7 +1209,7 @@ class SimulateSpectral:
                                 go.Scatter(
                                     x=value['wavelength'],
                                     y=value['cross_P'] / value['cross_P'].max()
-                                    + height,
+                                      + height,
                                     mode='lines',
                                     name=name,
                                 )
@@ -1220,28 +1263,28 @@ class SimulateSpectral:
         )
 
         S = (
-            9
-            * 1e-6
-            * electron_num
-            * np.sqrt(temperature / ion_energy)
-            * np.exp(-ion_energy / temperature)
-        ) / (ion_energy**1.5 * (4.88 + temperature / ion_energy))
+                    9
+                    * 1e-6
+                    * electron_num
+                    * np.sqrt(temperature / ion_energy)
+                    * np.exp(-ion_energy / temperature)
+            ) / (ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
         Ar = (
-            5.2
-            * 1e-14
-            * np.sqrt(ion_energy / temperature)
-            * ion_num
-            * (
-                0.429
-                + 0.5 * np.log(ion_energy / temperature)
-                + 0.469 * np.sqrt(temperature / ion_energy)
-            )
+                5.2
+                * 1e-14
+                * np.sqrt(ion_energy / temperature)
+                * ion_num
+                * (
+                        0.429
+                        + 0.5 * np.log(ion_energy / temperature)
+                        + 0.469 * np.sqrt(temperature / ion_energy)
+                )
         )
         A3r = (
-            2.97
-            * 1e-27
-            * electron_num
-            / (temperature * ion_energy**2 * (4.88 + temperature / ion_energy))
+                2.97
+                * 1e-27
+                * electron_num
+                / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy))
         )
 
         ratio = S / (Ar + electron_density * A3r)
@@ -1269,28 +1312,28 @@ class SimulateSpectral:
         )
 
         S = (
-            9
-            * 1e-6
-            * electron_num
-            * np.sqrt(temperature / ion_energy)
-            * np.exp(-ion_energy / temperature)
-        ) / (ion_energy**1.5 * (4.88 + temperature / ion_energy))
+                    9
+                    * 1e-6
+                    * electron_num
+                    * np.sqrt(temperature / ion_energy)
+                    * np.exp(-ion_energy / temperature)
+            ) / (ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
         Ar = (
-            5.2
-            * 1e-14
-            * np.sqrt(ion_energy / temperature)
-            * ion_num
-            * (
-                0.429
-                + 0.5 * np.log(ion_energy / temperature)
-                + 0.469 * np.sqrt(temperature / ion_energy)
-            )
+                5.2
+                * 1e-14
+                * np.sqrt(ion_energy / temperature)
+                * ion_num
+                * (
+                        0.429
+                        + 0.5 * np.log(ion_energy / temperature)
+                        + 0.469 * np.sqrt(temperature / ion_energy)
+                )
         )
         A3r = (
-            2.97
-            * 1e-27
-            * electron_num
-            / (temperature * ion_energy**2 * (4.88 + temperature / ion_energy))
+                2.97
+                * 1e-27
+                * electron_num
+                / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy))
         )
 
         Co = S / (Ar + electron_density * A3r)
@@ -1323,8 +1366,8 @@ class SimulateSpectral:
         """
         temp_electron_num = self.cowan_list[0].in36.atom.num - ion
         for n in range(1, 7):
-            if temp_electron_num > 2 * n**2:
-                temp_electron_num -= 2 * n**2
+            if temp_electron_num > 2 * n ** 2:
+                temp_electron_num -= 2 * n ** 2
             else:
                 electron_num = temp_electron_num
                 return electron_num
@@ -1355,117 +1398,18 @@ class SimulateSpectral:
 
     # 计算光谱相似度
     def get_spectrum_similarity(self):
-        if self.characteristic_peaks:
-            self.spectrum_similarity = self.spectrum_similarity11(
+        if len(self.characteristic_peaks) == 0:
+            self.spectrum_similarity = self.spectrum_similarity1(
                 self.exp_data.data[['wavelength', 'intensity']],
                 self.sim_data[['wavelength', 'intensity']],
             )
         else:
-            self.spectrum_similarity = self.spectrum_similarity10(
+            self.spectrum_similarity = self.spectrum_similarity2(
                 self.exp_data.data[['wavelength', 'intensity']],
                 self.sim_data[['wavelength', 'intensity']],
             )
 
-    @staticmethod
-    def spectrum_similarity1(fax: pd.DataFrame, fbx: pd.DataFrame):
-        """
-        计算两个光谱的相似度
-        遍历实验光谱的每个点，找到模拟光谱中最近的点，计算距离，并求和
-        Args:
-            fax: 实验光谱
-            fbx: 模拟光谱
-
-        Returns:
-
-        """
-        col_names_a = fax.columns
-        col_names_b = fbx.columns
-        x1 = fax[col_names_a[0]].values
-        y1 = fax[col_names_a[1]].values
-        x2 = fbx[col_names_b[0]].values
-        y2 = fbx[col_names_b[1]].values
-        y1 = y1 / y1.max()
-        y2 = y2 / y2.max()
-
-        res = 0
-        for i in range(fax.shape[0]):
-            res += min(np.sqrt((x1[i] - x2) ** 2 + (y1[i] - y2) ** 2))
-        return res / fax.shape[0]
-
-    def spectrum_similarity2(self, fax: pd.DataFrame, fbx: pd.DataFrame):
-        """
-        计算两个光谱的相似度，根据R2进行判断
-        Args:
-            fax: 实验光谱
-            fbx: 模拟光谱
-
-        Returns:
-
-        """
-        x, y1, y2 = self.get_y1y2(fax, fbx)
-
-        # y2是测量值，y1是预测值
-        SS_reg = np.power(y1 - y2.mean(), 2).sum()
-        SS_tot = np.power(y2 - y2.mean(), 2).sum()
-        R2 = SS_reg / SS_tot
-        if R2 > 1:
-            return 1 / R2
-        else:
-            return R2
-
-    def spectrum_similarity3(self, fax: pd.DataFrame, fbx: pd.DataFrame):
-        x, y1, y2 = self.get_y1y2(fax, fbx)
-
-        distance, path = fastdtw(y1, y2)
-        return distance
-
-    def spectrum_similarity4(self, fax: pd.DataFrame, fbx: pd.DataFrame):
-        x, y1, y2 = self.get_y1y2(fax, fbx)
-        corr = np.corrcoef(y1, y2)[0, 1]
-        return corr + 1
-
-    def spectrum_similarity5(self, fax: pd.DataFrame, fbx: pd.DataFrame):
-        """
-        峰值匹配法
-        :param fax:
-        :param fbx:
-        :return:
-        """
-        x, y1, y2 = self.get_y1y2(fax, fbx)
-        # 找出两个光谱数据的峰值位置
-        peaks1, _ = find_peaks(y1, height=0.1)
-        peaks2, _ = find_peaks(y2, height=0.1)
-        # 计算两个光谱数据峰值位置的相似性
-        match = np.intersect1d(peaks1, peaks2)
-        similarity = len(match) / min(len(peaks1), len(peaks2))
-        return similarity
-
-    def spectrum_similarity6(self, fax: pd.DataFrame, fbx: pd.DataFrame):
-        x, y1, y2 = self.get_y1y2(fax, fbx)
-        n = len(y1)
-        rho = (n * (y1 * y2).sum() - y1.sum() * y2.sum()) / (
-            np.sqrt(
-                (n * (y1**2).sum() - (y1.sum()) ** 2)
-                * (n * (y2**2).sum() - (y2.sum()) ** 2)
-            )
-        )
-        return rho
-
-    def spectrum_similarity7(self, fax: pd.DataFrame, fbx: pd.DataFrame):
-        x, y1, y2 = self.get_y1y2(fax, fbx)
-        return scipy.stats.pearsonr(y1, y2)[0]
-
-    def spectrum_similarity8(self, fax: pd.DataFrame, fbx: pd.DataFrame):
-        x, y1, y2 = self.get_y1y2(fax, fbx)
-        return np.sqrt(sum(pow(a - b, 2) for a, b in zip(y1, y2)))
-
-    def spectrum_similarity9(self, fax: pd.DataFrame, fbx: pd.DataFrame):
-        x, y1, y2 = self.get_y1y2(fax, fbx)
-        tmp = np.sum(y1 * y2)
-        non = np.linalg.norm(x) * np.linalg.norm(y2)
-        return np.round(tmp / float(non), 9)
-
-    def spectrum_similarity10(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+    def spectrum_similarity1(self, fax: pd.DataFrame, fbx: pd.DataFrame):
         """
         自动峰值匹配法
 
@@ -1493,6 +1437,9 @@ class SimulateSpectral:
                     min_index = i + 1
             temp_peaks.append(peaks1[min_index])
         peaks1 = temp_peaks
+
+        self.peaks_index = [peaks1, peaks2]
+
         similarity = 0
         for i in range(len(peaks1) - 1):
             for j in range(i + 1, len(peaks1)):
@@ -1503,22 +1450,25 @@ class SimulateSpectral:
             similarity = len(peaks1)
         return similarity
 
-    def spectrum_similarity11(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+    def spectrum_similarity2(self, fax: pd.DataFrame, fbx: pd.DataFrame):
         """
-        指定峰值匹配法
+        指定峰值匹配法，自动匹配实验谱线的峰
         Args:
-            fax:
-            fbx:
+            fax: 实验数据
+            fbx: 计算数据
 
         Returns:
 
         """
+        # 拿到一维的数据
         x, y1, y2 = self.get_y1y2(fax, fbx)
-        peaks2, _ = find_peaks(y2)  # 找出模拟光谱的峰值位
+        # 找出模拟光谱的峰值位置
+        peaks2, _ = find_peaks(y2)
+        # 指出模拟光谱谱峰对应的波长
         peaks2_wavelength = np.array([x[index] for index in peaks2])
-        exp_wavelength_indexes = []
-        cal_wavelength_indexes = []
         # 将给定的特征峰的强度与模拟光谱特征峰的强度进行比较
+        exp_wavelength_indexes = []  # 用来存放实验谱峰的索引值
+        cal_wavelength_indexes = []  # 用来存放计算谱峰的索引值
         for wavelength in self.characteristic_peaks:
             exp_index = np.argmin(abs(x - wavelength))
             # min_index: wavelength 所对应的峰在 peaks2 中的索引
@@ -1530,18 +1480,50 @@ class SimulateSpectral:
                     min_index = i + 1
             exp_wavelength_indexes.append(exp_index)
             cal_wavelength_indexes.append(peaks2[min_index])
-
+        # 如果对应谱峰太远，就直接赋值
+        for i in range(len(exp_wavelength_indexes)):
+            if abs(exp_wavelength_indexes[i] - cal_wavelength_indexes[i]) > (len(x)) * 0.01:
+                cal_wavelength_indexes[i] = exp_wavelength_indexes[i]
+        self.peaks_index = [exp_wavelength_indexes, cal_wavelength_indexes]
         # 计算两个光谱数据峰值位置以及强度的相似性
         similarity = 0
         for i in range(len(exp_wavelength_indexes) - 1):
             for j in range(i + 1, len(exp_wavelength_indexes)):
                 similarity += abs(
-                    y1[exp_wavelength_indexes[i]] / y1[exp_wavelength_indexes[j]] - y2[cal_wavelength_indexes[i]] / y2[cal_wavelength_indexes[j]]
+                    y1[exp_wavelength_indexes[i]] / y1[exp_wavelength_indexes[j]]
+                    - y2[cal_wavelength_indexes[i]] / y2[cal_wavelength_indexes[j]]
                 )
-        # TODO
-        # 画图测试
-        if similarity > len(exp_wavelength_indexes):
-            similarity = len(exp_wavelength_indexes)
+        if similarity > len(exp_wavelength_indexes) * 3:
+            similarity = len(exp_wavelength_indexes) * 3
+        return similarity
+
+    def spectrum_similarity3(self, fax: pd.DataFrame, fbx: pd.DataFrame):
+        """
+        指定峰值匹配法，直接通过波长取峰
+        Args:
+            fax:
+            fbx:
+
+        Returns:
+
+        """
+        x, y1, y2 = self.get_y1y2(fax, fbx)
+        exp_wavelength_indexes = []
+        # 将给定的特征峰的强度与模拟光谱特征峰的强度进行比较
+        for wavelength in self.characteristic_peaks:
+            exp_index = np.argmin(abs(x - wavelength))
+            exp_wavelength_indexes.append(exp_index)
+        self.peaks_index = [exp_wavelength_indexes, exp_wavelength_indexes]
+        # 计算两个光谱数据峰值位置以及强度的相似性
+        similarity = 0
+        for i in range(len(exp_wavelength_indexes) - 1):
+            for j in range(i + 1, len(exp_wavelength_indexes)):
+                similarity += abs(
+                    y1[exp_wavelength_indexes[i]] / y1[exp_wavelength_indexes[j]]
+                    - y2[exp_wavelength_indexes[i]] / y2[exp_wavelength_indexes[j]]
+                )
+        if similarity > len(exp_wavelength_indexes) * 3:
+            similarity = len(exp_wavelength_indexes) * 3
         return similarity
 
     @staticmethod

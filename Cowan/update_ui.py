@@ -151,7 +151,12 @@ class UpdatePage1(MainWindow):
 
 class UpdatePage2(MainWindow):
     def update_exp_sim_figure(self):
-        self.simulate.plot_html()
+        if self.simulate.temperature is None or self.simulate.electron_density is None:
+            return
+        if self.ui.show_peaks.isChecked():
+            self.simulate.plot_html(show_point=True)
+        else:
+            self.simulate.plot_html()
         self.ui.page2_add_spectrum_web.load(QUrl.fromLocalFile(self.simulate.plot_path))
 
     def update_exp_figure(self):
@@ -209,10 +214,12 @@ class UpdatePage2(MainWindow):
             self.ui.st_resolution_table.setItem(i, 4, item5)
 
     def update_temperature_density(self):
+        if self.simulate.temperature is None or self.simulate.electron_density is None:
+            return
         self.ui.page2_temperature.setValue(self.simulate.temperature)
         temp = '{:.2e}'.format(self.simulate.electron_density)
         base = eval(temp.split('e+')[0])
-        index = eval(temp.split('e+')[1])
+        index = int(temp.split('e+')[1])
         self.ui.page2_density_base.setValue(base)
         self.ui.page2_density_index.setValue(index)
 

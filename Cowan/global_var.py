@@ -8,6 +8,6 @@ def PROJECT_PATH():
     return CURRENT_PROJECT_PATH
 
 
-def SET_PROJECT_PATH(val):
+def SET_PROJECT_PATH(val: Path):
     global CURRENT_PROJECT_PATH
     CURRENT_PROJECT_PATH = val

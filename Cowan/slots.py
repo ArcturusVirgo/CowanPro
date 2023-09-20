@@ -450,7 +450,7 @@ class Page2(MainWindow):
             else:
                 self.simulate.add_or_not[i] = False
 
-    def plot_spectrum(self):
+    def plot_spectrum(self, *args):
         if self.expdata_2 is None:
             QMessageBox.warning(self, '警告', '请先导入实验数据！')
             return
@@ -526,7 +526,7 @@ class Page2(MainWindow):
         temp = density.split('e+')
         self.ui.page2_temperature.setValue(eval(temperature))
         self.ui.page2_density_base.setValue(eval(temp[0]))
-        self.ui.page2_density_index.setValue(eval(temp[1]))
+        self.ui.page2_density_index.setValue(int(temp[1]))
         functools.partial(UpdatePage2.update_exp_sim_figure, self)()
 
     def st_resolution_recoder(self):
@@ -587,6 +587,7 @@ class Page2(MainWindow):
         def update_grid():
             functools.partial(UpdatePage2.update_grid, self)()
             self.ui.page2_cal_grid.setDisabled(False)
+            self.ui.statusbar.showMessage('网格更新完成！')
 
         # 函数定义结束↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
@@ -597,6 +598,7 @@ class Page2(MainWindow):
         )
         self.expdata_2 = copy.deepcopy(self.simulate.exp_data)
         if self.simulated_grid is not None:
+            self.ui.statusbar.showMessage('正在更新网格，请稍后……')
             # QMetaObject.invokeMethod(self.simulated_grid, 'update_similarity')
             self.simulated_grid.change_task('update', self.expdata_2)
             self.simulated_grid.start()

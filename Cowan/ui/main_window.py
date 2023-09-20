@@ -1401,14 +1401,14 @@ class Ui_main_window(object):
         sizePolicy7.setHeightForWidth(self.crossP.sizePolicy().hasHeightForWidth())
         self.crossP.setSizePolicy(sizePolicy7)
         self.crossP.setAutoFillBackground(False)
-        self.crossP.setChecked(False)
+        self.crossP.setChecked(True)
 
         self.horizontalLayout_3.addWidget(self.crossP)
 
         self.crossNP = QRadioButton(self.widget_2)
         self.crossNP.setObjectName(u"crossNP")
         self.crossNP.setEnabled(False)
-        self.crossNP.setChecked(True)
+        self.crossNP.setChecked(False)
 
         self.horizontalLayout_3.addWidget(self.crossNP)
 
@@ -1460,6 +1460,11 @@ class Ui_main_window(object):
 
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
+        self.show_peaks = QRadioButton(self.groupBox_3)
+        self.show_peaks.setObjectName(u"show_peaks")
+
+        self.horizontalLayout_8.addWidget(self.show_peaks)
+
         self.choose_peaks = QPushButton(self.groupBox_3)
         self.choose_peaks.setObjectName(u"choose_peaks")
 
@@ -1499,10 +1504,10 @@ class Ui_main_window(object):
 
         self.horizontalLayout_8.addWidget(self.page2_density_base)
 
-        self.page2_density_index = QDoubleSpinBox(self.groupBox_3)
+        self.page2_density_index = QSpinBox(self.groupBox_3)
         self.page2_density_index.setObjectName(u"page2_density_index")
-        self.page2_density_index.setSingleStep(0.100000000000000)
-        self.page2_density_index.setValue(19.000000000000000)
+        self.page2_density_index.setMinimumSize(QSize(50, 0))
+        self.page2_density_index.setMaximumSize(QSize(50, 16777215))
 
         self.horizontalLayout_8.addWidget(self.page2_density_index)
 
@@ -1566,7 +1571,7 @@ class Ui_main_window(object):
 
         self.temperature_num = QSpinBox(self.groupBox_2)
         self.temperature_num.setObjectName(u"temperature_num")
-        self.temperature_num.setValue(20)
+        self.temperature_num.setValue(10)
 
         self.horizontalLayout_21.addWidget(self.temperature_num)
 
@@ -1603,7 +1608,7 @@ class Ui_main_window(object):
 
         self.density_num = QSpinBox(self.groupBox_2)
         self.density_num.setObjectName(u"density_num")
-        self.density_num.setValue(20)
+        self.density_num.setValue(10)
         self.density_num.setDisplayIntegerBase(10)
 
         self.horizontalLayout_20.addWidget(self.density_num)
@@ -1619,9 +1624,11 @@ class Ui_main_window(object):
 
         self.horizontalLayout_16.addWidget(self.density_min_base)
 
-        self.density_min_index = QDoubleSpinBox(self.groupBox_2)
+        self.density_min_index = QSpinBox(self.groupBox_2)
         self.density_min_index.setObjectName(u"density_min_index")
-        self.density_min_index.setValue(17.000000000000000)
+        self.density_min_index.setMinimumSize(QSize(50, 0))
+        self.density_min_index.setMaximumSize(QSize(50, 16777215))
+        self.density_min_index.setValue(17)
 
         self.horizontalLayout_16.addWidget(self.density_min_index)
 
@@ -1632,13 +1639,16 @@ class Ui_main_window(object):
         self.horizontalLayout_17.setObjectName(u"horizontalLayout_17")
         self.density_max_base = QDoubleSpinBox(self.groupBox_2)
         self.density_max_base.setObjectName(u"density_max_base")
-        self.density_max_base.setValue(5.000000000000000)
+        self.density_max_base.setValue(1.000000000000000)
 
         self.horizontalLayout_17.addWidget(self.density_max_base)
 
-        self.density_max_index = QDoubleSpinBox(self.groupBox_2)
+        self.density_max_index = QSpinBox(self.groupBox_2)
         self.density_max_index.setObjectName(u"density_max_index")
-        self.density_max_index.setValue(21.000000000000000)
+        self.density_max_index.setMinimumSize(QSize(50, 0))
+        self.density_max_index.setMaximumSize(QSize(50, 16777215))
+        self.density_max_index.setValue(23)
+        self.density_max_index.setDisplayIntegerBase(10)
 
         self.horizontalLayout_17.addWidget(self.density_max_index)
 
@@ -2210,6 +2220,7 @@ class Ui_main_window(object):
         self.crossNP.setText(QCoreApplication.translate("main_window", u"cross-NP", None))
         self.label_2.setText(QCoreApplication.translate("main_window", u"\u8ba1\u7b97\u8c31", None))
         self.groupBox_3.setTitle(QCoreApplication.translate("main_window", u"\u6a21\u62df\u8c31\u7ebf", None))
+        self.show_peaks.setText("")
         self.choose_peaks.setText(QCoreApplication.translate("main_window", u"\u7279\u5f81\u5cf0\u6311\u9009", None))
         self.peaks_label.setText(QCoreApplication.translate("main_window", u"\u672a\u6307\u5b9a", None))
         self.label_18.setText(QCoreApplication.translate("main_window", u"\u6e29\u5ea6", None))

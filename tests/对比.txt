@@ -1,7 +1,27 @@
-        self.ui.selection_list.clear()
-        self.ui.page2_selection_list.clear()
-        for cowan in self.simulate.cowan_list:
-            self.ui.selection_list.addItem(QListWidgetItem(cowan.name))
-            item = QListWidgetItem(cowan.name)
-            item.setCheckState(Qt.CheckState.Checked)
-            self.ui.page2_selection_list.addItem(item)
+        self.ui.st_resolution_table.clear()
+        self.ui.st_resolution_table.setRowCount(
+            len(self.space_time_resolution.simulate_spectral_dict)
+        )
+        self.ui.st_resolution_table.setColumnCount(5)
+        self.ui.st_resolution_table.setHorizontalHeaderLabels(
+            ['时间', '位置', '温度', '密度', '实验谱']
+        )
+        for i, (key, value) in enumerate(
+            self.space_time_resolution.simulate_spectral_dict.items()
+        ):
+            item1 = QTableWidgetItem(key[0])
+            item2 = QTableWidgetItem(f'({key[1][0]}, {key[1][1]}, {key[1][2]})')
+            if value.temperature is not None and value.electron_density is not None:
+                item3 = QTableWidgetItem('{:.3f}'.format(value.temperature))
+                item4 = QTableWidgetItem('{:.3e}'.format(value.electron_density))
+            else:
+                item3 = QTableWidgetItem('None')
+                item3.setBackground(QBrush(QColor(255, 0, 0)))
+                item4 = QTableWidgetItem('None')
+                item4.setBackground(QBrush(QColor(255, 0, 0)))
+            item5 = QTableWidgetItem(value.exp_data.filepath.name)
+            self.ui.st_resolution_table.setItem(i, 0, item1)
+            self.ui.st_resolution_table.setItem(i, 1, item2)
+            self.ui.st_resolution_table.setItem(i, 2, item3)
+            self.ui.st_resolution_table.setItem(i, 3, item4)
+            self.ui.st_resolution_table.setItem(i, 4, item5)
