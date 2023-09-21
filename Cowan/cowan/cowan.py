@@ -464,33 +464,8 @@ class In2:
 
         """
         self.input_card: List[str] = [
-            'g5inp',
-            '  ',
-            '0',
-            ' 0',
-            '0',
-            '00',
-            '  0.000',
-            ' ',
-            '00000000',
-            ' 0000000',
-            '   00000',
-            ' 000',
-            '0',
-            '90',
-            '99',
-            '90',
-            '90',
-            '90',
-            '.0000',
-            '     ',
-            '0',
-            '7',
-            '2',
-            '2',
-            '9',
-            '     ',
-        ]
+            'g5inp', '  ', '0', ' 0', '0', '00', '  0.000', ' ', '00000000', ' 0000000', '   00000', ' 000', '0', '90',
+            '99', '90', '90', '90', '.0000', '     ', '0', '7', '2', '2', '9', '     ', ]
 
     def read_from_file(self, path: Path):
         """
@@ -507,34 +482,7 @@ class In2:
         line = line.strip('\n')
         if len(line) != 80:
             line += ' ' * (80 - len(line) - 1)
-        rules = [
-            5,
-            2,
-            1,
-            2,
-            1,
-            2,
-            7,
-            1,
-            8,
-            8,
-            8,
-            4,
-            1,
-            2,
-            2,
-            2,
-            2,
-            2,
-            5,
-            5,
-            1,
-            1,
-            1,
-            1,
-            1,
-            5,
-        ]
+        rules = [5, 2, 1, 2, 1, 2, 7, 1, 8, 8, 8, 4, 1, 2, 2, 2, 2, 2, 5, 5, 1, 1, 1, 1, 1, 5, ]
         input_card_list = []
         for rule in rules:
             input_card_list.append(line[:rule])
@@ -1020,38 +968,15 @@ class WidenPart:
             population: np.array,
             new_J: np.array,
     ):
-        uu = (
-                (new_intensity * population / (2 * new_J + 1))
-                * 2
-                * fwhmgauss
-                / (
-                        2
-                        * np.pi
-                        * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)
-                )
-        )
+        uu = ((new_intensity * population / (2 * new_J + 1)) * 2 * fwhmgauss / (
+                2 * np.pi * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)))
         if self.only_p:
             return -1, -1, uu.sum()
         else:
-            tt = (
-                    new_intensity
-                    / np.sqrt(2 * np.pi)
-                    / fwhmgauss
-                    * 2.355
-                    * np.exp(
-                -(2.355 ** 2) * (new_wavelength - wave) ** 2 / fwhmgauss ** 2 / 2
-            )
-            )
-            ss = (
-                    (new_intensity / (2 * new_J + 1))
-                    * 2
-                    * fwhmgauss
-                    / (
-                            2
-                            * np.pi
-                            * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)
-                    )
-            )
+            tt = (new_intensity / np.sqrt(2 * np.pi) / fwhmgauss * 2.355 * np.exp(
+                -(2.355 ** 2) * (new_wavelength - wave) ** 2 / fwhmgauss ** 2 / 2))
+            ss = ((new_intensity / (2 * new_J + 1)) * 2 * fwhmgauss / (
+                    2 * np.pi * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)))
             return tt.sum(), ss.sum(), uu.sum()
 
     @staticmethod

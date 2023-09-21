@@ -57,6 +57,8 @@ class Ui_main_window(object):
         self.save_project.setObjectName(u"save_project")
         self.exit_project = QAction(main_window)
         self.exit_project.setObjectName(u"exit_project")
+        self.reset_cal = QAction(main_window)
+        self.reset_cal.setObjectName(u"reset_cal")
         self.centralwidget = QWidget(main_window)
         self.centralwidget.setObjectName(u"centralwidget")
         self.centralwidget.setEnabled(True)
@@ -1989,6 +1991,7 @@ class Ui_main_window(object):
         self.menu.addAction(self.exit_project)
         self.menu_2.addAction(self.load_exp_data)
         self.menu_3.addAction(self.show_guides)
+        self.menu_3.addAction(self.reset_cal)
 
         self.retranslateUi(main_window)
 
@@ -2012,6 +2015,7 @@ class Ui_main_window(object):
         self.action_5.setText(QCoreApplication.translate("main_window", u"\u52a0\u8f7d\u9879\u76ee", None))
         self.save_project.setText(QCoreApplication.translate("main_window", u"\u4fdd\u5b58\u9879\u76ee", None))
         self.exit_project.setText(QCoreApplication.translate("main_window", u"\u9000\u51fa", None))
+        self.reset_cal.setText(QCoreApplication.translate("main_window", u"\u91cd\u7f6e\u8ba1\u7b97\u6309\u94ae", None))
 
         __sortingEnabled = self.navigation.isSortingEnabled()
         self.navigation.setSortingEnabled(False)

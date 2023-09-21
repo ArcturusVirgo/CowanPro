@@ -2,7 +2,6 @@ import shelve
 
 from PySide6.QtWidgets import QAbstractItemView
 
-
 from cowan import *
 
 
@@ -35,7 +34,10 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.ui = Ui_main_window()
         self.ui.setupUi(self)
+        # 设置全局变量
+        SET_PROJECT_PATH(project_path)
 
+        # 设置参考线
         self.v_line = None
 
         # 第一页使用
@@ -53,15 +55,12 @@ class MainWindow(QMainWindow):
         self.simulate_page4: Optional[SimulateSpectral] = None
         self.space_time_resolution = SpaceTimeResolution()
 
-        # 测试
-
         # 初始化
         self.init()
         self.bind_slot()
 
         self.ui.navigation.setCurrentRow(0)
 
-        SET_PROJECT_PATH(project_path)
         if load:
             self.load_project()
         else:
@@ -441,170 +440,86 @@ class MainWindow(QMainWindow):
 
     def bind_slot(self):
         # 设置左侧列表与右侧页面切换之间的关联
-        self.ui.navigation.currentRowChanged.connect(
-            self.ui.stackedWidget.setCurrentIndex
-        )
+        self.ui.navigation.currentRowChanged.connect(self.ui.stackedWidget.setCurrentIndex)
 
         # ------------------------------- 菜单栏 -------------------------------
         self.ui.save_project.triggered.connect(self.save_project)
-        # self.ui.exit_project.triggered.connect(self.slot_exit_project)
-        self.ui.load_exp_data.triggered.connect(
-            functools.partial(Menu.load_exp_data, self)
-        )  # 加载实验数据
-        self.ui.show_guides.triggered.connect(
-            functools.partial(Menu.show_guides, self)
-        )  # 显示参考线
+        self.ui.load_exp_data.triggered.connect(functools.partial(Menu.load_exp_data, self))  # 加载实验数据
+        self.ui.show_guides.triggered.connect(functools.partial(Menu.show_guides, self))  # 显示参考线
+        self.ui.reset_cal.triggered.connect(
+            lambda: self.ui.page2_cal_grid.setDisabled(False))  # 重置计算按钮
 
         # ------------------------------- 第一页 -------------------------------
         # 元素选择 - 下拉框
-        self.ui.atomic_num.activated.connect(
-            functools.partial(Page1.atom_changed, self)
-        )  # 原子序数
-        self.ui.atomic_symbol.activated.connect(
-            functools.partial(Page1.atom_changed, self)
-        )  # 元素符号
-        self.ui.atomic_name.activated.connect(
-            functools.partial(Page1.atom_changed, self)
-        )  # 元素名称
-        self.ui.atomic_ion.activated.connect(
-            functools.partial(Page1.atom_ion_changed, self)
-        )  # 离化度
+        self.ui.atomic_num.activated.connect(functools.partial(Page1.atom_changed, self))  # 原子序数
+        self.ui.atomic_symbol.activated.connect(functools.partial(Page1.atom_changed, self))  # 元素符号
+        self.ui.atomic_name.activated.connect(functools.partial(Page1.atom_changed, self))  # 元素名称
+        self.ui.atomic_ion.activated.connect(functools.partial(Page1.atom_ion_changed, self))  # 离化度
         # 按钮
-        self.ui.add_configuration.clicked.connect(
-            functools.partial(Page1.add_configuration, self)
-        )  # 添加组态
-        self.ui.load_in36.clicked.connect(
-            functools.partial(Page1.load_in36, self)
-        )  # 加载in36文件
-        self.ui.load_in2.clicked.connect(
-            functools.partial(Page1.load_in2, self)
-        )  # 加载in2文件
-        self.ui.preview_in36.clicked.connect(
-            functools.partial(Page1.preview_in36, self)
-        )  # 预览in36
-        self.ui.preview_in2.clicked.connect(
-            functools.partial(Page1.preview_in2, self)
-        )  # 预览in2
-        self.ui.configuration_move_down.clicked.connect(
-            functools.partial(Page1.configuration_move_down, self)
-        )  # 组态下移
-        self.ui.configuration_move_up.clicked.connect(
-            functools.partial(Page1.configuration_move_up, self)
-        )  # 组态上移
-        self.ui.run_cowan.clicked.connect(
-            functools.partial(Page1.run_cowan, self)
-        )  # 运行Cowan
+        self.ui.add_configuration.clicked.connect(functools.partial(Page1.add_configuration, self))  # 添加组态
+        self.ui.load_in36.clicked.connect(functools.partial(Page1.load_in36, self))  # 加载in36文件
+        self.ui.load_in2.clicked.connect(functools.partial(Page1.load_in2, self))  # 加载in2文件
+        self.ui.preview_in36.clicked.connect(functools.partial(Page1.preview_in36, self))  # 预览in36
+        self.ui.preview_in2.clicked.connect(functools.partial(Page1.preview_in2, self))  # 预览in2
+        self.ui.configuration_move_down.clicked.connect(functools.partial(Page1.configuration_move_down, self))  # 组态下移
+        self.ui.configuration_move_up.clicked.connect(functools.partial(Page1.configuration_move_up, self))  # 组态上移
+        self.ui.run_cowan.clicked.connect(functools.partial(Page1.run_cowan, self))  # 运行Cowan
         # 单选框
-        self.ui.auto_write_in36.clicked.connect(
-            functools.partial(Page1.auto_write_in36, self)
-        )  # 自动生成in36
-        self.ui.manual_write_in36.clicked.connect(
-            functools.partial(Page1.manual_write_in36, self)
-        )  # 手动输入in36
+        self.ui.auto_write_in36.clicked.connect(functools.partial(Page1.auto_write_in36, self))  # 自动生成in36
+        self.ui.manual_write_in36.clicked.connect(functools.partial(Page1.manual_write_in36, self))  # 手动输入in36
         self.ui.gauss.clicked.connect(  # 线状谱展宽成gauss
-            lambda: self.ui.web_cal_widen.load(
-                QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_gauss)
-            )
-        )
+            lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_gauss)))
         self.ui.crossP.clicked.connect(  # 线状谱展宽成crossP
-            lambda: self.ui.web_cal_widen.load(
-                QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_P)
-            )
-        )
+            lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_P)))
         self.ui.crossNP.clicked.connect(  # 线状谱展宽成crossNP
-            lambda: self.ui.web_cal_widen.load(
-                QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_NP)
-            )
-        )
+            lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_NP)))
         # 输入框
-        self.ui.in2_11_e.valueChanged.connect(
-            functools.partial(Page1.in2_11_e_value_changed, self)
-        )  # in2 11 e
+        self.ui.in2_11_e.valueChanged.connect(functools.partial(Page1.in2_11_e_value_changed, self))  # in2 11 e
         # 右键菜单
         self.ui.in36_configuration_view.customContextMenuRequested.connect(
-            functools.partial(Page1.in36_configuration_view_right_menu, self)
-        )  # 组态显示卡的右键菜单
+            functools.partial(Page1.in36_configuration_view_right_menu, self))  # 组态显示卡的右键菜单
         self.ui.run_history_list.customContextMenuRequested.connect(
-            functools.partial(Page1.run_history_list_right_menu, self)
-        )  # 运行历史
+            functools.partial(Page1.run_history_list_right_menu, self))  # 运行历史
         self.ui.selection_list.customContextMenuRequested.connect(
-            functools.partial(Page1.selection_list_right_menu, self)
-        )  # 叠加离子
+            functools.partial(Page1.selection_list_right_menu, self))  # 叠加离子
         # 双击操作
-        self.ui.run_history_list.itemDoubleClicked.connect(
-            functools.partial(Page1.load_history, self)
-        )  # 加载库中的项目
+        self.ui.run_history_list.itemDoubleClicked.connect(functools.partial(Page1.load_history, self))  # 加载库中的项目
         # 数字选择框
-        self.ui.update_offect.clicked.connect(
-            functools.partial(Page1.offset_changed, self)
-        )  # 偏移
+        self.ui.update_offect.clicked.connect(functools.partial(Page1.offset_changed, self))  # 偏移
 
         # ------------------------------- 第二页 -------------------------------
         # 按钮
-        self.ui.page2_plot_spectrum.clicked.connect(
-            functools.partial(Page2.plot_spectrum, self)
-        )  # 绘制模拟谱
-        self.ui.page2_load_exp_data.clicked.connect(
-            functools.partial(Page2.load_exp_data, self)
-        )  # 加载实验数据
-        self.ui.page2_cal_grid.clicked.connect(
-            functools.partial(Page2.cal_grid, self)
-        )  # 计算网格
-        self.ui.recoder.clicked.connect(
-            functools.partial(Page2.st_resolution_recoder, self)
-        )  # 记录
-        self.ui.plot_exp_2.clicked.connect(
-            functools.partial(Page2.plot_exp, self)
-        )  # 绘制实验谱
-        self.ui.load_space_time.clicked.connect(
-            functools.partial(Page2.load_space_time, self)
-        )  # 批量加载时空分辨光谱
-        self.ui.choose_peaks.clicked.connect(
-            functools.partial(Page2.choose_peaks, self)
-        )  # 选择峰位置
+        self.ui.page2_plot_spectrum.clicked.connect(functools.partial(Page2.plot_spectrum, self))  # 绘制模拟谱
+        self.ui.page2_load_exp_data.clicked.connect(functools.partial(Page2.load_exp_data, self))  # 加载实验数据
+        self.ui.page2_cal_grid.clicked.connect(functools.partial(Page2.cal_grid, self))  # 计算网格
+        self.ui.recoder.clicked.connect(functools.partial(Page2.st_resolution_recoder, self))  # 记录
+        self.ui.plot_exp_2.clicked.connect(functools.partial(Page2.plot_exp, self))  # 绘制实验谱
+        self.ui.load_space_time.clicked.connect(functools.partial(Page2.load_space_time, self))  # 批量加载时空分辨光谱
+        self.ui.choose_peaks.clicked.connect(functools.partial(Page2.choose_peaks, self))  # 选择峰位置
         # 复选框
-        self.ui.show_peaks.toggled.connect(
-            functools.partial(Page2.plot_spectrum, self)
-        )
+        self.ui.show_peaks.toggled.connect(functools.partial(Page2.plot_spectrum, self))
         # 单击操作
-        self.ui.page2_grid_list.itemSelectionChanged.connect(
-            functools.partial(Page2.grid_list_clicked, self)
-        )  # 网格列表
+        self.ui.page2_grid_list.itemSelectionChanged.connect(functools.partial(Page2.grid_list_clicked, self))  # 网格列表
         # 双击操作
         self.ui.st_resolution_table.itemDoubleClicked.connect(
-            functools.partial(Page2.st_resolution_double_clicked, self)
-        )  # 加载库中的项目
+            functools.partial(Page2.st_resolution_double_clicked, self))  # 加载库中的项目
 
         # 列表
-        self.ui.page2_selection_list.itemChanged.connect(
-            functools.partial(Page2.selection_list_changed, self)
-        )  # 选择列表
+        self.ui.page2_selection_list.itemChanged.connect(functools.partial(Page2.selection_list_changed, self))  # 选择列表
 
         # ------------------------------- 第三页 -------------------------------
         # 按钮
-        self.ui.td_by_t.clicked.connect(
-            functools.partial(Page3.plot_by_times, self)
-        )  # 绘制模拟谱
-        self.ui.td_by_s.clicked.connect(
-            functools.partial(Page3.plot_by_locations, self)
-        )  # 绘制模拟谱
-        self.ui.td_by_st.clicked.connect(
-            functools.partial(Page3.plot_by_space_time, self)
-        )  # 绘制模拟谱
+        self.ui.td_by_t.clicked.connect(functools.partial(Page3.plot_by_times, self))  # 绘制模拟谱
+        self.ui.td_by_s.clicked.connect(functools.partial(Page3.plot_by_locations, self))  # 绘制模拟谱
+        self.ui.td_by_st.clicked.connect(functools.partial(Page3.plot_by_space_time, self))  # 绘制模拟谱
 
         # ------------------------------- 第四页 -------------------------------
         # 按钮
-        self.ui.pushButton.clicked.connect(
-            functools.partial(Page4.plot_example, self)
-        )  # 绘制模拟谱
+        self.ui.pushButton.clicked.connect(functools.partial(Page4.plot_example, self))  # 绘制模拟谱
         # 下拉框
-        self.ui.comboBox.activated.connect(
-            functools.partial(Page4.comboBox_changed, self)
-        )  # 选择列表
+        self.ui.comboBox.activated.connect(functools.partial(Page4.comboBox_changed, self))  # 选择列表
         # tree view
-        self.ui.treeWidget.itemChanged.connect(
-            functools.partial(Page4.tree_item_changed, self)
-        )  # 选择列表
+        self.ui.treeWidget.itemChanged.connect(functools.partial(Page4.tree_item_changed, self))  # 选择列表
 
 
 class LoginWindow(QWidget):
@@ -636,11 +551,10 @@ class LoginWindow(QWidget):
         self.ui.new_project.clicked.connect(self.slot_new_project)
         self.ui.select_path.clicked.connect(self.slot_select_path)
         self.ui.project_path.textChanged.connect(self.slot_project_path_changed)
-        self.ui.project_list.itemDoubleClicked.connect(
-            self.slot_project_path_item_double_clicked
-        )
+        self.ui.project_list.itemDoubleClicked.connect(self.slot_project_path_item_double_clicked)
 
     def slot_create_project(self):
+        # 创建项目
         name = self.ui.project_name.text()
         path_ = self.ui.project_path.text()
         if name == '' or path_ == '':
@@ -664,6 +578,7 @@ class LoginWindow(QWidget):
         self.main_window.show()
 
     def slot_delete_project(self):
+        # 删除项目
         key = self.ui.project_list.currentIndex().data()
         path_ = Path(self.project_data[key]['path'])
         shutil.rmtree(path_)

@@ -4350,6 +4350,7 @@
      <string>工具</string>
     </property>
     <addaction name="show_guides"/>
+    <addaction name="reset_cal"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
@@ -4412,6 +4413,11 @@
   <action name="exit_project">
    <property name="text">
     <string>退出</string>
+   </property>
+  </action>
+  <action name="reset_cal">
+   <property name="text">
+    <string>重置计算按钮</string>
    </property>
   </action>
  </widget>
