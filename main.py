@@ -530,6 +530,9 @@ class LoginWindow(QWidget):
     def init_UI(self):
         # 打开并读取文件
         file_path = self.WORKING_PATH / 'projects.json'
+        if not file_path.exists():
+            file_path.touch()
+            file_path.write_text('{}', encoding='utf-8')
         self.project_data = json.loads(file_path.read_text())
 
         # 设置列表
