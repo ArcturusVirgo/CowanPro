@@ -1319,6 +1319,49 @@ class Ui_main_window(object):
 
         self.verticalLayout_3.addWidget(self.line_5)
 
+        self.horizontalLayout_26 = QHBoxLayout()
+        self.horizontalLayout_26.setObjectName(u"horizontalLayout_26")
+        self.label_24 = QLabel(self.widget)
+        self.label_24.setObjectName(u"label_24")
+
+        self.horizontalLayout_26.addWidget(self.label_24)
+
+        self.widen_temp = QDoubleSpinBox(self.widget)
+        self.widen_temp.setObjectName(u"widen_temp")
+        self.widen_temp.setMinimumSize(QSize(50, 0))
+        self.widen_temp.setSingleStep(0.100000000000000)
+        self.widen_temp.setValue(25.600000000000001)
+
+        self.horizontalLayout_26.addWidget(self.widen_temp)
+
+        self.label_23 = QLabel(self.widget)
+        self.label_23.setObjectName(u"label_23")
+
+        self.horizontalLayout_26.addWidget(self.label_23)
+
+        self.widen_fwhm = QDoubleSpinBox(self.widget)
+        self.widen_fwhm.setObjectName(u"widen_fwhm")
+        self.widen_fwhm.setMinimumSize(QSize(50, 0))
+        self.widen_fwhm.setMaximum(10.000000000000000)
+        self.widen_fwhm.setSingleStep(0.010000000000000)
+        self.widen_fwhm.setValue(0.270000000000000)
+
+        self.horizontalLayout_26.addWidget(self.widen_fwhm)
+
+        self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_26.addItem(self.horizontalSpacer_13)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_26)
+
+        self.line_10 = QFrame(self.widget)
+        self.line_10.setObjectName(u"line_10")
+        self.line_10.setFrameShape(QFrame.HLine)
+        self.line_10.setFrameShadow(QFrame.Sunken)
+
+        self.verticalLayout_3.addWidget(self.line_10)
+
         self.horizontalLayout_7 = QHBoxLayout()
         self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
         self.groupBox_5 = QGroupBox(self.widget)
@@ -2215,6 +2258,8 @@ class Ui_main_window(object):
         self.label_9.setText(QCoreApplication.translate("main_window", u"nm", None))
         self.update_offect.setText(QCoreApplication.translate("main_window", u"\u66f4\u65b0", None))
         self.run_cowan.setText(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))
+        self.label_24.setText(QCoreApplication.translate("main_window", u"\u5c55\u5bbd\u6e29\u5ea6", None))
+        self.label_23.setText(QCoreApplication.translate("main_window", u"FWHM", None))
         self.groupBox_5.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97\u5386\u53f2", None))
         self.groupBox_6.setTitle(QCoreApplication.translate("main_window", u"\u5e93", None))
         self.label.setText(QCoreApplication.translate("main_window", u"\u5b9e\u9a8c\u8c31", None))

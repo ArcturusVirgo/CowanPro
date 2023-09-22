@@ -683,7 +683,7 @@ class WidenAll:
         self.only_p = only_p
 
         data = self.init_data.copy()
-        fwhmgauss = self.__fwhmgauss
+        fwhmgauss = self.fwhmgauss
         lambda_range = self.exp_data.x_range
 
         new_data = data.copy()
@@ -817,7 +817,7 @@ class WidenAll:
             return tt.sum(), ss.sum(), uu.sum()
 
     @staticmethod
-    def __fwhmgauss(wavelength: float):
+    def fwhmgauss(wavelength: float):
         return 0.5
 
 

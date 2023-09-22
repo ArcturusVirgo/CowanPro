@@ -245,8 +245,10 @@ class Page1(MainWindow):
         self.cowan.run()
         self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
         self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
-        self.cowan.cal_data.widen_all.widen(temperature=25.6, only_p=False)
-        self.cowan.cal_data.widen_part.widen_by_group(temperature=25.6)
+        self.cowan.cal_data.widen_all.fwhmgauss = lambda x: self.ui.widen_fwhm.value()
+        widen_temperature = self.ui.widen_temp.value()
+        self.cowan.cal_data.widen_all.widen(temperature=widen_temperature, only_p=False)
+        self.cowan.cal_data.widen_part.widen_by_group(temperature=widen_temperature)
         # -------------------------- 画图 --------------------------
         self.cowan.cal_data.plot_line()
         self.cowan.cal_data.widen_all.plot_widen()
