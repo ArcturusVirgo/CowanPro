@@ -473,7 +473,7 @@ class MainWindow(QMainWindow):
         # 双击操作
         self.ui.run_history_list.itemDoubleClicked.connect(functools.partial(Page1.load_history, self))  # 加载库中的项目
         # 数字选择框
-        self.ui.update_offect.clicked.connect(functools.partial(Page1.offset_changed, self))  # 偏移
+        self.ui.update_offect.clicked.connect(functools.partial(Page1.re_widen, self))  # 偏移
 
         # ------------------------------- 第二页 -------------------------------
         # 按钮

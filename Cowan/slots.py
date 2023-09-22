@@ -354,10 +354,13 @@ class Page1(MainWindow):
         functools.partial(UpdatePage1.update_line_figure, self)()
         functools.partial(UpdatePage1.update_widen_figure, self)()
 
-    def offset_changed(self):
+    def re_widen(self):
         self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
         self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
-        self.cowan.cal_data.widen_all.widen(25.6, False)
+        self.cowan.cal_data.widen_all.fwhmgauss = lambda x: self.ui.widen_fwhm.value()
+        widen_temperature = self.ui.widen_temp.value()
+        self.cowan.cal_data.widen_all.widen(widen_temperature, False)
+        self.cowan.cal_data.widen_part.widen_by_group(temperature=widen_temperature)
         for i, cowan_ in enumerate(self.run_history):
             if cowan_.name == self.cowan.name:
                 self.run_history[i] = copy.deepcopy(self.cowan)

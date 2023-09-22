@@ -1262,56 +1262,6 @@ class Ui_main_window(object):
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_5)
 
-        self.line_4 = QFrame(self.widget)
-        self.line_4.setObjectName(u"line_4")
-        self.line_4.setFrameShape(QFrame.HLine)
-        self.line_4.setFrameShadow(QFrame.Sunken)
-
-        self.verticalLayout_3.addWidget(self.line_4)
-
-        self.horizontalLayout_6 = QHBoxLayout()
-        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.label_10 = QLabel(self.widget)
-        self.label_10.setObjectName(u"label_10")
-
-        self.horizontalLayout_6.addWidget(self.label_10)
-
-        self.offset = QDoubleSpinBox(self.widget)
-        self.offset.setObjectName(u"offset")
-        self.offset.setMinimumSize(QSize(63, 0))
-        self.offset.setDecimals(3)
-        self.offset.setMinimum(-50.000000000000000)
-        self.offset.setMaximum(50.000000000000000)
-        self.offset.setSingleStep(0.010000000000000)
-        self.offset.setValue(0.000000000000000)
-
-        self.horizontalLayout_6.addWidget(self.offset)
-
-        self.label_9 = QLabel(self.widget)
-        self.label_9.setObjectName(u"label_9")
-
-        self.horizontalLayout_6.addWidget(self.label_9)
-
-        self.update_offect = QPushButton(self.widget)
-        self.update_offect.setObjectName(u"update_offect")
-        self.update_offect.setMaximumSize(QSize(50, 16777215))
-
-        self.horizontalLayout_6.addWidget(self.update_offect)
-
-        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.horizontalLayout_6.addItem(self.horizontalSpacer_7)
-
-        self.run_cowan = QPushButton(self.widget)
-        self.run_cowan.setObjectName(u"run_cowan")
-        sizePolicy.setHeightForWidth(self.run_cowan.sizePolicy().hasHeightForWidth())
-        self.run_cowan.setSizePolicy(sizePolicy)
-
-        self.horizontalLayout_6.addWidget(self.run_cowan)
-
-
-        self.verticalLayout_3.addLayout(self.horizontalLayout_6)
-
         self.line_5 = QFrame(self.widget)
         self.line_5.setObjectName(u"line_5")
         self.line_5.setFrameShape(QFrame.HLine)
@@ -1348,12 +1298,60 @@ class Ui_main_window(object):
 
         self.horizontalLayout_26.addWidget(self.widen_fwhm)
 
+        self.label_10 = QLabel(self.widget)
+        self.label_10.setObjectName(u"label_10")
+
+        self.horizontalLayout_26.addWidget(self.label_10)
+
+        self.offset = QDoubleSpinBox(self.widget)
+        self.offset.setObjectName(u"offset")
+        self.offset.setMinimumSize(QSize(63, 0))
+        self.offset.setDecimals(3)
+        self.offset.setMinimum(-50.000000000000000)
+        self.offset.setMaximum(50.000000000000000)
+        self.offset.setSingleStep(0.010000000000000)
+        self.offset.setValue(0.000000000000000)
+
+        self.horizontalLayout_26.addWidget(self.offset)
+
         self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_26.addItem(self.horizontalSpacer_13)
 
+        self.update_offect = QPushButton(self.widget)
+        self.update_offect.setObjectName(u"update_offect")
+        self.update_offect.setMinimumSize(QSize(75, 0))
+        self.update_offect.setMaximumSize(QSize(75, 16777215))
+
+        self.horizontalLayout_26.addWidget(self.update_offect)
+
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_26)
+
+        self.line_4 = QFrame(self.widget)
+        self.line_4.setObjectName(u"line_4")
+        self.line_4.setFrameShape(QFrame.HLine)
+        self.line_4.setFrameShadow(QFrame.Sunken)
+
+        self.verticalLayout_3.addWidget(self.line_4)
+
+        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_6.addItem(self.horizontalSpacer_7)
+
+        self.run_cowan = QPushButton(self.widget)
+        self.run_cowan.setObjectName(u"run_cowan")
+        sizePolicy.setHeightForWidth(self.run_cowan.sizePolicy().hasHeightForWidth())
+        self.run_cowan.setSizePolicy(sizePolicy)
+        self.run_cowan.setMinimumSize(QSize(75, 0))
+        self.run_cowan.setMaximumSize(QSize(75, 16777215))
+
+        self.horizontalLayout_6.addWidget(self.run_cowan)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_6)
 
         self.line_10 = QFrame(self.widget)
         self.line_10.setObjectName(u"line_10")
@@ -2254,12 +2252,11 @@ class Ui_main_window(object):
         self.configuration_edit.setText("")
         self.configuration_edit.setPlaceholderText(QCoreApplication.translate("main_window", u"\u7535\u5b50\u7ec4\u6001", None))
         self.add_configuration.setText(QCoreApplication.translate("main_window", u"\u6dfb\u52a0", None))
-        self.label_10.setText(QCoreApplication.translate("main_window", u"\u504f\u79fb", None))
-        self.label_9.setText(QCoreApplication.translate("main_window", u"nm", None))
-        self.update_offect.setText(QCoreApplication.translate("main_window", u"\u66f4\u65b0", None))
-        self.run_cowan.setText(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))
         self.label_24.setText(QCoreApplication.translate("main_window", u"\u5c55\u5bbd\u6e29\u5ea6", None))
         self.label_23.setText(QCoreApplication.translate("main_window", u"FWHM", None))
+        self.label_10.setText(QCoreApplication.translate("main_window", u"\u504f\u79fb", None))
+        self.update_offect.setText(QCoreApplication.translate("main_window", u"\u91cd\u65b0\u5c55\u5bbd", None))
+        self.run_cowan.setText(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))
         self.groupBox_5.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97\u5386\u53f2", None))
         self.groupBox_6.setTitle(QCoreApplication.translate("main_window", u"\u5e93", None))
         self.label.setText(QCoreApplication.translate("main_window", u"\u5b9e\u9a8c\u8c31", None))
