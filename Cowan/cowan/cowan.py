@@ -281,9 +281,9 @@ class In36:
             if value == ['-1']:
                 break
             v0 = '{:>5}'.format(value[0])
-            v1 = '{:>9}'.format(value[1])
+            v1 = '{:>10}'.format(value[1])
             v2 = '{:>7}'.format(value[2])
-            v3 = '             '
+            v3 = '           '
             v4 = ' '.join(value[3:])
             input_card_list.append([[v0, v1, v2, v3, v4], self.__judge_parity(v4)])
         self.control_card, self.configuration_card = control_card_list, input_card_list
@@ -306,11 +306,11 @@ class In36:
             temp_list = []
         if configuration not in temp_list:
             v0 = '{:>5}'.format(self.atom.num)
-            v1 = '{:>9}'.format(
+            v1 = '{:>10}'.format(
                 f'{self.atom.ion + 1}{ATOM[self.atom.num][0]}+{self.atom.ion}'
             )
             v2 = '{:>7}'.format('11111')
-            v3 = '             '
+            v3 = '           '
             v4 = configuration
             self.configuration_card.append(
                 [[v0, v1, v2, v3, v4], self.__judge_parity(v4)]
@@ -496,11 +496,12 @@ class In2:
         Returns:
             in2 字符串
         """
-        in2 = ''
-        in2 += ''.join(self.input_card)
-        in2 += '\n'
-        in2 += '        -1\n'
-        return in2
+        in2 = 'g5inp     000 0.0000          01        .095.095  8499848484 0.00   1 18229'
+        new_in2 = in2[:50] + ''.join(self.input_card[13:18]) + in2[60:]
+        # in2 += ''.join(self.input_card)
+        new_in2 += '\n'
+        new_in2 += '        -1\n'
+        return new_in2
 
     def save(self, path: Path):
         """
@@ -527,7 +528,7 @@ class Cowan:
         self.cal_data: Optional[CalData] = None
         self.run_path = PROJECT_PATH() / f'cal_result/{self.name}'
 
-    def run(self, delta_lambda=0.0):
+    def run(self):
         """
         运行 Cowan 程序，创建 cal_data 对象
         Returns:
@@ -539,9 +540,16 @@ class Cowan:
 
         # 运行文件
         os.chdir(self.run_path)
+        print('-' * 40)
+        print(f'calculating name: {self.name}')
+        print('running: ./RCN.exe -->', end=' ')
         rcn = subprocess.run('./RCN.exe')
+        print('running: ./RCN2.exe -->', end=' ')
         rcn2 = subprocess.run('./RCN2.exe')
+        print('editing: ing11 -->', end=' ')
         self.__edit_ing11()
+        print('completed')
+        print('running: ./RCG.exe -->', end=' ')
         rcg = subprocess.run('./RCG.exe')
         os.chdir(original_path)
 

@@ -1390,13 +1390,13 @@ class Ui_main_window(object):
 
         self.gauss = QRadioButton(self.widget_2)
         self.gauss.setObjectName(u"gauss")
-        self.gauss.setEnabled(False)
+        self.gauss.setEnabled(True)
 
         self.horizontalLayout_3.addWidget(self.gauss)
 
         self.crossP = QRadioButton(self.widget_2)
         self.crossP.setObjectName(u"crossP")
-        self.crossP.setEnabled(False)
+        self.crossP.setEnabled(True)
         sizePolicy7 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         sizePolicy7.setHorizontalStretch(0)
         sizePolicy7.setVerticalStretch(0)
@@ -1409,7 +1409,7 @@ class Ui_main_window(object):
 
         self.crossNP = QRadioButton(self.widget_2)
         self.crossNP.setObjectName(u"crossNP")
-        self.crossNP.setEnabled(False)
+        self.crossNP.setEnabled(True)
         self.crossNP.setChecked(False)
 
         self.horizontalLayout_3.addWidget(self.crossNP)
@@ -1995,7 +1995,7 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
 
 

@@ -1,4 +1,5 @@
 import shelve
+import sys
 
 from PySide6.QtWidgets import QAbstractItemView
 
@@ -403,40 +404,27 @@ class MainWindow(QMainWindow):
         self.ui.atomic_symbol.addItems(list(zip(*ATOM.values()))[0])
         self.ui.atomic_name.addItems(list(zip(*ATOM.values()))[1])
         # in36组态表格相关设置
-        self.ui.in36_configuration_view.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )  # 设置行选择模式
+        self.ui.in36_configuration_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)  # 设置行选择模式
         self.ui.in36_configuration_view.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )  # 设置表格列宽自适应
+            QHeaderView.ResizeMode.ResizeToContents)  # 设置表格列宽自适应
 
-        self.ui.page2_grid_list.setEditTriggers(
-            QAbstractItemView.EditTrigger.NoEditTriggers
-        )  # 设置表格不可编辑
+        self.ui.page2_grid_list.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # 设置表格不可编辑
         self.ui.page2_grid_list.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )  # 设置表格列宽自适应
+            QHeaderView.ResizeMode.ResizeToContents)  # 设置表格列宽自适应
 
-        self.ui.st_resolution_table.setEditTriggers(
-            QAbstractItemView.EditTrigger.NoEditTriggers
-        )  # 设置表格不可编辑
+        self.ui.st_resolution_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # 设置表格不可编辑
         self.ui.st_resolution_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
-        )  # 设置表格列宽自适应
+            QHeaderView.ResizeMode.ResizeToContents)  # 设置表格列宽自适应
         # 设置右键菜单
         self.ui.in36_configuration_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.run_history_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.selection_list.setContextMenuPolicy(Qt.CustomContextMenu)
         # 设置单选
-        self.ui.page2_grid_list.setSelectionMode(
-            QAbstractItemView.SelectionMode.SingleSelection
-        )
+        self.ui.page2_grid_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         # 隐藏树控件的标题
         self.ui.treeWidget.header().hide()
         # 第三页 时空分辨表格设置
-        self.ui.st_resolution_table.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )  # 设置行选择模式
+        self.ui.st_resolution_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)  # 设置行选择模式
 
     def bind_slot(self):
         # 设置左侧列表与右侧页面切换之间的关联
@@ -520,6 +508,10 @@ class MainWindow(QMainWindow):
         self.ui.comboBox.activated.connect(functools.partial(Page4.comboBox_changed, self))  # 选择列表
         # tree view
         self.ui.treeWidget.itemChanged.connect(functools.partial(Page4.tree_item_changed, self))  # 选择列表
+
+    def closeEvent(self, event):
+        self.save_project()
+        sys.exit()
 
 
 class LoginWindow(QWidget):

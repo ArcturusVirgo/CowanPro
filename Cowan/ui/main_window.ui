@@ -89,7 +89,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page">
        <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,4">
@@ -3424,7 +3424,7 @@
              <item>
               <widget class="QRadioButton" name="gauss">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="text">
                 <string>gauss</string>
@@ -3434,7 +3434,7 @@
              <item>
               <widget class="QRadioButton" name="crossP">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -3456,7 +3456,7 @@
              <item>
               <widget class="QRadioButton" name="crossNP">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="text">
                 <string>cross-NP</string>
