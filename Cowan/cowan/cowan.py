@@ -266,7 +266,7 @@ class In36:
         with open(path, 'r') as f:
             lines = f.readlines()
         # 控制卡读入
-        control_card_text = lines[0]
+        control_card_text = lines[0].strip('\n')
         control_card_list = []
         if len(control_card_text) != 80:
             control_card_text += ' ' * (80 - len(control_card_text))
@@ -528,6 +528,23 @@ class Cowan:
         self.cal_data: Optional[CalData] = None
         self.run_path = PROJECT_PATH() / f'cal_result/{self.name}'
 
+
+class CowanThread(QtCore.QThread):
+    sub_complete = Signal(str)
+    all_completed = Signal(str)
+
+    def __init__(self, old_cowan: Cowan):
+        super().__init__()
+        self.old_cowan = old_cowan
+        self.in36: In36 = old_cowan.in36
+        self.in2: In2 = old_cowan.in2
+        self.name: str = old_cowan.name
+        self.exp_data: ExpData = old_cowan.exp_data
+        self.coupling_mode = old_cowan.coupling_mode  # 1是L-S耦合 2是j-j耦合
+
+        self.cal_data: Optional[CalData] = old_cowan.cal_data
+        self.run_path = old_cowan.run_path
+
     def run(self):
         """
         运行 Cowan 程序，创建 cal_data 对象
@@ -540,21 +557,19 @@ class Cowan:
 
         # 运行文件
         os.chdir(self.run_path)
-        print('-' * 40)
-        print(f'calculating name: {self.name}')
-        print('running: ./RCN.exe -->', end=' ')
+        self.sub_complete.emit('0')
         rcn = subprocess.run('./RCN.exe')
-        print('running: ./RCN2.exe -->', end=' ')
+        self.sub_complete.emit('25')
         rcn2 = subprocess.run('./RCN2.exe')
-        print('editing: ing11 -->', end=' ')
+        self.sub_complete.emit('50')
         self.__edit_ing11()
-        print('completed')
-        print('running: ./RCG.exe -->', end=' ')
         rcg = subprocess.run('./RCG.exe')
+        self.sub_complete.emit('100')
         os.chdir(original_path)
 
         # 更新 cal_data 对象
         self.cal_data = CalData(self.name, self.exp_data)
+        self.all_completed.emit('completed')
 
     def __get_ready(self):
         if self.run_path.exists():
@@ -571,6 +586,15 @@ class Cowan:
             f.write(text)
         with open('./out2ing', 'w', encoding='utf-8') as f:
             f.write(text)
+
+    def update_origin(self):
+        self.old_cowan.in36 = self.in36
+        self.old_cowan.in2 = self.in2
+        self.old_cowan.name = self.name
+        self.old_cowan.exp_data = self.exp_data
+        self.old_cowan.coupling_mode = self.coupling_mode
+        self.old_cowan.cal_data = self.cal_data
+        self.old_cowan.run_path = self.run_path
 
 
 class CalData:
@@ -655,6 +679,7 @@ class WidenAll:
         self.delta_lambda: float = delta_lambda
         self.n = n
         self.only_p = None
+        self.fwhm_value: float = 0.5
 
         self.plot_path_gauss = (
                 PROJECT_PATH() / f'figure/gauss/{self.name}.html'
@@ -816,9 +841,8 @@ class WidenAll:
             )
             return tt.sum(), ss.sum(), uu.sum()
 
-    @staticmethod
-    def fwhmgauss(wavelength: float):
-        return 0.5
+    def fwhmgauss(self, wavelength: float):
+        return self.fwhm_value
 
 
 class WidenPart:
@@ -836,6 +860,7 @@ class WidenPart:
         self.delta_lambda: float = delta_lambda
         self.n = n
         self.only_p = None
+        self.fwhm_value = 0.5
 
         self.plot_path_list = {}
 
@@ -885,7 +910,7 @@ class WidenPart:
         self.only_p = only_p
 
         data = temp_data.copy()
-        fwhmgauss = self.__fwhmgauss
+        fwhmgauss = self.fwhmgauss
         lambda_range = self.exp_data.x_range
 
         new_data = data.copy()
@@ -987,9 +1012,14 @@ class WidenPart:
                     2 * np.pi * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)))
             return tt.sum(), ss.sum(), uu.sum()
 
-    @staticmethod
-    def __fwhmgauss(wavelength: float):
-        return 0.5
+    def fwhmgauss(self, wavelength: float):
+        return self.fwhm_value
+
+
+class CowanList:
+    def __init__(self):
+        self.cowan_list: List[Cowan] = []  # 用于存储 cowan 对象
+        self.add_or_not: List[bool] = []  # cowan 对象是否被添加
 
 
 class SimulateSpectral:
@@ -1051,7 +1081,7 @@ class SimulateSpectral:
         for cowan, abu, flag in zip(self.cowan_list, self.abundance, self.add_or_not):
             if flag:
                 temp += cowan.cal_data.widen_all.widen_data['cross_P'].values * abu
-                print(cowan.name, abu)
+                # print(cowan.name, abu)
                 # temp_np += cowan.cal_data.widen_all.widen_data['cross_P'].values
         res['intensity'] = temp
         # plt.plot(res['wavelength'].values, temp_np, label='np')
@@ -1480,7 +1510,7 @@ class SimulateSpectral:
         return x, y1, y2
 
 
-class SimulateGrid(QtCore.QThread):
+class SimulateGrid:
     progress = Signal(str)  # 计数完成后发送一次信号
     end = Signal(str)  # 计数完成后发送一次信号
     up_end = Signal(str)  #
@@ -1515,6 +1545,29 @@ class SimulateGrid(QtCore.QThread):
         if task == 'update':
             self.update_exp = args[0]
 
+
+class SimulateGridThread(QtCore.QThread):
+    progress = Signal(str)  # 计数完成后发送一次信号
+    end = Signal(str)  # 计数完成后发送一次信号
+    up_end = Signal(str)  #
+
+    def __init__(self, old_grid: SimulateGrid):
+        super().__init__()
+        self.old_grid = old_grid
+        self.task = old_grid.task
+        self.update_exp = old_grid.update_exp
+
+        self.simulate = old_grid.simulate
+        self.temperature_tuple = old_grid.temperature_tuple
+        self.density_tuple = old_grid.density_tuple
+        self.t_num: int = old_grid.t_num
+        self.ne_num: int = old_grid.ne_num
+
+        self.t_list = old_grid.t_list
+        self.ne_list = old_grid.ne_list
+
+        self.grid_data = old_grid.grid_data
+
     def run(self):
         if self.task == 'cal':
             self.cal_grid()
@@ -1526,6 +1579,7 @@ class SimulateGrid(QtCore.QThread):
             nonlocal current_progress
             current_progress += 1
             self.grid_data[(t, ne)] = f.result()
+            # self.grid_data[(t, ne)].sim_data = None
             self.progress.emit(str(current_progress))
 
         # 多线程
@@ -1534,12 +1588,8 @@ class SimulateGrid(QtCore.QThread):
         pool = ProcessPoolExecutor(os.cpu_count())
         for temperature in self.t_list:
             for density in self.ne_list:
-                future = pool.submit(
-                    self.simulate.get_simulate_data, eval(temperature), eval(density)
-                )
-                future.add_done_callback(
-                    functools.partial(callback, temperature, density)
-                )
+                future = pool.submit(self.simulate.get_simulate_data, eval(temperature), eval(density))
+                future.add_done_callback(functools.partial(callback, temperature, density))
         pool.shutdown()
         self.end.emit(0)
 
@@ -1557,6 +1607,18 @@ class SimulateGrid(QtCore.QThread):
             self.simulate.get_spectrum_similarity()
             self.grid_data[key] = copy.deepcopy(self.simulate)
         self.up_end.emit(0)
+
+    def update_origin(self):
+        self.old_grid.task = self.task
+        self.old_grid.update_exp = self.update_exp
+        self.old_grid.simulate = self.simulate
+        self.old_grid.temperature_tuple = self.temperature_tuple
+        self.old_grid.density_tuple = self.density_tuple
+        self.old_grid.t_num = self.t_num
+        self.old_grid.ne_num = self.ne_num
+        self.old_grid.t_list = self.t_list
+        self.old_grid.ne_list = self.ne_list
+        self.old_grid.grid_data = self.grid_data
 
 
 class SpaceTimeResolution:

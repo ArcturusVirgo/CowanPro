@@ -1,8 +1,9 @@
 import shelve
 import sys
 
+from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QAbstractItemView
-
+from pympler import asizeof
 from cowan import *
 
 
@@ -28,6 +29,105 @@ class VerticalLine(QWidget):
             self.move(self.pos() + (event.globalPosition().toPoint() - self.dragPos))
             self.dragPos = event.globalPosition().toPoint()
             event.accept()
+
+
+class LoginWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_login_window()
+        self.ui.setupUi(self)
+        self.WORKING_PATH = Path.cwd()
+
+        self.project_data: dict = {}
+        self.temp_path: str = ''
+        self.main_window: Optional[MainWindow] = None
+
+        self.init_UI()
+
+    def init_UI(self):
+        # 打开并读取文件
+        file_path = self.WORKING_PATH / 'projects.json'
+        if not file_path.exists():
+            file_path.touch()
+            file_path.write_text('{}', encoding='utf-8')
+        self.project_data = json.loads(file_path.read_text())
+
+        # 设置列表
+        self.update_project_list()
+        self.bind_slot()
+
+    def bind_slot(self):
+        self.ui.create_project.clicked.connect(self.slot_create_project)
+        self.ui.delete_project.clicked.connect(self.slot_delete_project)
+        self.ui.back.clicked.connect(self.slot_back)
+        self.ui.new_project.clicked.connect(self.slot_new_project)
+        self.ui.select_path.clicked.connect(self.slot_select_path)
+        self.ui.project_path.textChanged.connect(self.slot_project_path_changed)
+        self.ui.project_list.itemDoubleClicked.connect(self.slot_project_path_item_double_clicked)
+
+    def slot_create_project(self):
+        # 创建项目
+        name = self.ui.project_name.text()
+        path_ = self.ui.project_path.text()
+        if name == '' or path_ == '':
+            QMessageBox.critical(self, '错误', '项目名称和路径不能为空！')
+            return
+        if name in self.project_data.keys():
+            QMessageBox.critical(self, '错误', '项目名称已存在！')
+            return
+        # 获取项目名称和路径
+        path_ = path_.replace('/', '\\')
+        self.project_data[name] = {'path': path_}
+        self.update_project_list()
+
+        # 如果目录不存在，就创建
+        path_ = Path(path_)
+        old_path = self.WORKING_PATH / 'init_file'
+        shutil.copytree(old_path, path_)
+
+        self.hide()
+        self.main_window = MainWindow(path_)
+        self.main_window.show()
+
+    def slot_delete_project(self):
+        # 删除项目
+        key = self.ui.project_list.currentIndex().data()
+        path_ = Path(self.project_data[key]['path'])
+        shutil.rmtree(path_)
+        self.project_data.pop(key)
+        self.update_project_list()
+
+    def slot_back(self):
+        self.ui.stackedWidget.setCurrentIndex(0)
+
+    def slot_new_project(self):
+        self.ui.stackedWidget.setCurrentIndex(1)
+
+    def slot_select_path(self):
+        self.temp_path = QFileDialog.getExistingDirectory(self, '选择项目路径', './')
+        self.ui.project_path.setText(self.temp_path)
+
+    def slot_project_path_changed(self):
+        name = self.ui.project_path.text().split('/')[-1]
+        if name == '':
+            name = self.ui.project_path.text().split('/')[-2]
+        self.ui.project_name.setText(name)
+
+    def slot_project_path_item_double_clicked(self, index):
+        name = index.text()
+        path_ = self.project_data[name]['path']
+        path_ = Path(path_)
+        self.hide()
+        self.main_window = MainWindow(path_, True)
+        self.main_window.show()
+
+    def update_project_list(self):
+        self.ui.project_list.clear()
+        self.ui.project_list.addItems(self.project_data.keys())
+
+        # 写入json文件
+        file_path = self.WORKING_PATH / 'projects.json'
+        file_path.write_text(json.dumps(self.project_data), encoding='utf-8')
 
 
 class MainWindow(QMainWindow):
@@ -64,9 +164,10 @@ class MainWindow(QMainWindow):
 
         if load:
             self.load_project()
-        else:
-            self.test()
-            # self.load_Ge()
+            # print(self.simulate.cowan_list[0].in36.control_card)
+
+        # self.test()
+        # self.load_Ge()
 
     def test(self):
         SET_PROJECT_PATH(Path('F:/Cowan/Al'))
@@ -80,7 +181,10 @@ class MainWindow(QMainWindow):
             self.in2 = In2()
             self.expdata_1 = ExpData(PROJECT_PATH() / './exp_data.csv')
             self.cowan = Cowan(self.in36, self.in2, f'Al_{i}', self.expdata_1, 1)
-            self.cowan.run()
+            cowan_r = CowanThread(self.cowan)
+            cowan_r.start()
+            cowan_r.wait()
+            cowan_r.update_origin()
             self.cowan.cal_data.widen_all.delta_lambda = delta[i]
             self.cowan.cal_data.widen_all.widen(25.6, False)
             self.run_history.append(copy.deepcopy(self.cowan))
@@ -150,6 +254,7 @@ class MainWindow(QMainWindow):
             self.cowan.cal_data.widen_all.widen(25.6, False)
             self.run_history.append(copy.deepcopy(self.cowan))
             self.simulate.add_cowan(self.cowan)
+            print(f'加载{self.cowan.name}')
 
         # for p in Path(r'F:\Cowan\Ge\exp_data').iterdir():
         #     x, time = p.stem.split('_')
@@ -339,6 +444,7 @@ class MainWindow(QMainWindow):
 
         # 更新界面
         # 第一页 =================================================
+        self.ui.cowan_now_name.setText(f'当前计算：{self.cowan.name}')
         # ----- 原子信息 -----
         if self.atom.num == 1 and self.atom.ion == 0:
             raise Exception('原子信息未初始化！')
@@ -369,7 +475,9 @@ class MainWindow(QMainWindow):
         # ----- 实验数据的文件名 -----
         self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.as_posix())
         if not self.simulate.exp_data:
-            raise Exception('实验数据未初始化！')
+            print('第二页实验数据没加载')
+            return
+
         # ----- 第二页的密度温度 -----
         functools.partial(UpdatePage2.update_temperature_density, self)()
         functools.partial(UpdatePage2.update_exp_sim_figure, self)()
@@ -379,24 +487,57 @@ class MainWindow(QMainWindow):
         functools.partial(UpdatePage2.update_characteristic_peaks, self)()
 
     def save_project(self):
-        self.ui.statusbar.showMessage('正在保存项目，请稍后...')
-        obj_info = shelve.open(PROJECT_PATH().joinpath('.cowan/obj_info').as_posix())
-        # 第一页
-        obj_info['atom'] = self.atom
-        obj_info['in36'] = self.in36
-        obj_info['in2'] = self.in2
-        obj_info['expdata_1'] = self.expdata_1
-        obj_info['run_history'] = self.run_history
-        obj_info['cowan'] = self.cowan
-        # 第二页
-        obj_info['expdata_2'] = self.expdata_2
-        obj_info['simulate'] = self.simulate
-        # obj_info['simulated_grid'] = self.simulated_grid
-        obj_info['space_time_resolution'] = self.space_time_resolution
-        # 第四页
-        obj_info['simulate_page4'] = self.simulate_page4
-        obj_info.close()
-        self.ui.statusbar.showMessage('项目保存成功！')
+        class SaveThread(QThread):
+            succeed = Signal(int)
+            progress = Signal(int)
+
+            def __init__(self, ):
+                super().__init__()
+
+        def update_progress(val, text):
+            thread.progress.emit(val)
+            # progressDialog.setValue(val)
+            progressDialog.setLabelText(f'正在保存{text}变量，请稍后...')
+
+        def thread_func():
+            obj_info = shelve.open(PROJECT_PATH().joinpath('.cowan/obj_info').as_posix())
+            # 第一页
+            update_progress(5, 'atom')
+            obj_info['atom'] = self.atom
+            update_progress(10, 'in36')
+            obj_info['in36'] = self.in36
+            update_progress(15, 'in2')
+            obj_info['in2'] = self.in2
+            update_progress(20, 'expdata_1')
+            obj_info['expdata_1'] = self.expdata_1
+            update_progress(25, 'run_history')
+            obj_info['run_history'] = self.run_history
+            update_progress(30, 'cowan')
+            obj_info['cowan'] = self.cowan
+            # 第二页
+            update_progress(35, 'expdata_2')
+            obj_info['expdata_2'] = self.expdata_2
+            update_progress(50, 'simulate')
+            obj_info['simulate'] = self.simulate
+            # update_progress(80, 'simulated_grid')
+            # obj_info['simulated_grid'] = self.simulated_grid
+            update_progress(90, 'space_time_resolution')
+            obj_info['space_time_resolution'] = self.space_time_resolution
+            # 第四页
+            obj_info['simulate_page4'] = self.simulate_page4
+            update_progress(100, 'space_time_resolution')
+            thread.succeed.emit(0)
+            self.ui.statusbar.showMessage('保存成功！')
+
+        thread = SaveThread()
+        thread.run = thread_func
+        progressDialog = NonStopProgressDialog('', '', 0, 100, self)
+        progressDialog.setWindowTitle('保存项目')
+        progressDialog.setLabelText('正在保存项目，请稍后...')
+        thread.progress.connect(progressDialog.setValue)
+        # thread.succeed.connect(lambda x: progressDialog.close())
+        progressDialog.show()
+        thread.start()
 
     def init(self):
         # 给元素选择器设置初始值
@@ -434,8 +575,8 @@ class MainWindow(QMainWindow):
         self.ui.save_project.triggered.connect(self.save_project)
         self.ui.load_exp_data.triggered.connect(functools.partial(Menu.load_exp_data, self))  # 加载实验数据
         self.ui.show_guides.triggered.connect(functools.partial(Menu.show_guides, self))  # 显示参考线
-        self.ui.reset_cal.triggered.connect(
-            lambda: self.ui.page2_cal_grid.setDisabled(False))  # 重置计算按钮
+        self.ui.reset_cal.triggered.connect(lambda: self.ui.page2_cal_grid.setDisabled(False))  # 重置计算按钮
+        self.ui.exit_project.triggered.connect(self.print_memory)  # 退出项目
 
         # ------------------------------- 第一页 -------------------------------
         # 元素选择 - 下拉框
@@ -509,114 +650,32 @@ class MainWindow(QMainWindow):
         # tree view
         self.ui.treeWidget.itemChanged.connect(functools.partial(Page4.tree_item_changed, self))  # 选择列表
 
+    def print_memory(self):
+        # 第一页使用
+        print('{:>22} {:>15.2f} MB'.format('atom', asizeof.asizeof(self.atom) / 1024**2))
+        print('{:>22} {:>15.2f} MB'.format('in36', asizeof.asizeof(self.in36) / 1024**2))
+        print('{:>22} {:>15.2f} MB'.format('in2', asizeof.asizeof(self.in2) / 1024**2))
+        print('{:>22} {:>15.2f} MB'.format('expdata_1', asizeof.asizeof(self.expdata_1) / 1024**2))
+        print('{:>22} {:>15.2f} MB'.format('run_history', asizeof.asizeof(self.run_history) / 1024**2))
+        print('{:>22} {:>15.2f} MB'.format('cowan', asizeof.asizeof(self.cowan) / 1024**2))
+        # 第二页使用
+        print('{:>22} {:>15.2f} MB'.format('expdata_2', asizeof.asizeof(self.expdata_2) / 1024**2))
+        print('{:>22} {:>15.2f} MB'.format('simulate', asizeof.asizeof(self.simulate) / 1024**2))
+        print('{:>22} {:>15.2f} [GB]'.format('simulated_grid', asizeof.asizeof(self.simulated_grid) / 1024**3))
+        print('{:>22} {:>15.2f} [GB]'.format('space_time_resolution', asizeof.asizeof(self.space_time_resolution) / 1024**3))
+        # 第四页使用
+        print('{:>22} {:>15.2f} MB'.format('simulate_page4', asizeof.asizeof(self.simulate_page4) / 1024**2))
+
+
     def closeEvent(self, event):
-        self.save_project()
+        # self.save_project()
         sys.exit()
-
-
-class LoginWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.ui = Ui_login_window()
-        self.ui.setupUi(self)
-        self.WORKING_PATH = Path.cwd()
-
-        self.project_data: dict = {}
-        self.temp_path: str = ''
-        self.main_window: Optional[MainWindow] = None
-
-        self.init_UI()
-
-    def init_UI(self):
-        # 打开并读取文件
-        file_path = self.WORKING_PATH / 'projects.json'
-        if not file_path.exists():
-            file_path.touch()
-            file_path.write_text('{}', encoding='utf-8')
-        self.project_data = json.loads(file_path.read_text())
-
-        # 设置列表
-        self.update_project_list()
-        self.bind_slot()
-
-    def bind_slot(self):
-        self.ui.create_project.clicked.connect(self.slot_create_project)
-        self.ui.delete_project.clicked.connect(self.slot_delete_project)
-        self.ui.back.clicked.connect(self.slot_back)
-        self.ui.new_project.clicked.connect(self.slot_new_project)
-        self.ui.select_path.clicked.connect(self.slot_select_path)
-        self.ui.project_path.textChanged.connect(self.slot_project_path_changed)
-        self.ui.project_list.itemDoubleClicked.connect(self.slot_project_path_item_double_clicked)
-
-    def slot_create_project(self):
-        # 创建项目
-        name = self.ui.project_name.text()
-        path_ = self.ui.project_path.text()
-        if name == '' or path_ == '':
-            QMessageBox.critical(self, '错误', '项目名称和路径不能为空！')
-            return
-        if name in self.project_data.keys():
-            QMessageBox.critical(self, '错误', '项目名称已存在！')
-            return
-        # 获取项目名称和路径
-        path_ = path_.replace('/', '\\')
-        self.project_data[name] = {'path': path_}
-        self.update_project_list()
-
-        # 如果目录不存在，就创建
-        path_ = Path(path_)
-        old_path = self.WORKING_PATH / 'init_file'
-        shutil.copytree(old_path, path_)
-
-        self.hide()
-        self.main_window = MainWindow(path_)
-        self.main_window.show()
-
-    def slot_delete_project(self):
-        # 删除项目
-        key = self.ui.project_list.currentIndex().data()
-        path_ = Path(self.project_data[key]['path'])
-        shutil.rmtree(path_)
-        self.project_data.pop(key)
-        self.update_project_list()
-
-    def slot_back(self):
-        self.ui.stackedWidget.setCurrentIndex(0)
-
-    def slot_new_project(self):
-        self.ui.stackedWidget.setCurrentIndex(1)
-
-    def slot_select_path(self):
-        self.temp_path = QFileDialog.getExistingDirectory(self, '选择项目路径', './')
-        self.ui.project_path.setText(self.temp_path)
-
-    def slot_project_path_changed(self):
-        name = self.ui.project_path.text().split('/')[-1]
-        if name == '':
-            name = self.ui.project_path.text().split('/')[-2]
-        self.ui.project_name.setText(name)
-
-    def slot_project_path_item_double_clicked(self, index):
-        name = index.text()
-        path_ = self.project_data[name]['path']
-        path_ = Path(path_)
-        self.hide()
-        self.main_window = MainWindow(path_, True)
-        self.main_window.show()
-
-    def update_project_list(self):
-        self.ui.project_list.clear()
-        self.ui.project_list.addItems(self.project_data.keys())
-
-        # 写入json文件
-        file_path = self.WORKING_PATH / 'projects.json'
-        file_path.write_text(json.dumps(self.project_data), encoding='utf-8')
 
 
 if __name__ == '__main__':
     app = QApplication([])
     window = LoginWindow()  # 启动登陆页面
     # window = MainWindow(Path('F:/Cowan/Al'), False)  # 启动主界面
-    # window = MainWindow(Path('F:/Cowan/Ge'), True)  # 启动主界面
+    # window = MainWindow(Path('F:/Cowan/Ge'), False)  # 启动主界面
     window.show()
     app.exec()

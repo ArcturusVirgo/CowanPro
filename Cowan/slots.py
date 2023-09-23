@@ -1,3 +1,5 @@
+import copy
+
 from PySide6.QtGui import QAction, QCursor
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -9,8 +11,10 @@ from PySide6.QtWidgets import (
     QListWidget,
     QPushButton,
     QInputDialog,
-    QHBoxLayout, QWidget,
+    QHBoxLayout, QWidget, QProgressDialog,
 )
+
+from . import NonStopProgressDialog
 from .cowan import *
 from .global_var import *
 from main import MainWindow, VerticalLine
@@ -232,54 +236,86 @@ class Page1(MainWindow):
             )
 
     def run_cowan(self):
+        def cowan_complete():
+            # 等待运行结束
+            cowan_run.wait()
+            cowan_run.update_origin()
+
+            self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
+            self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
+            self.cowan.cal_data.widen_all.fwhm_value = self.ui.widen_fwhm.value()
+            self.cowan.cal_data.widen_part.fwhm_value = self.ui.widen_fwhm.value()
+            widen_temperature = self.ui.widen_temp.value()
+            self.cowan.cal_data.widen_all.widen(temperature=widen_temperature, only_p=False)
+            self.cowan.cal_data.widen_part.widen_by_group(widen_temperature)
+            # -------------------------- 画图 --------------------------
+            self.cowan.cal_data.plot_line()
+            self.cowan.cal_data.widen_all.plot_widen()
+            self.cowan.cal_data.widen_part.plot_widen_by_group()
+            # -------------------------- 添加到运行历史 --------------------------
+            # 如果已经存在，先删除
+            index = -1
+            for i, cowan_ in enumerate(self.run_history):
+                if cowan_.name == self.cowan.name:
+                    index = i
+                    break
+            if index != -1:
+                self.run_history.pop(index)
+            self.run_history.append(copy.deepcopy(self.cowan))
+            # 如果存在于叠加列表中，就更新它
+            for i, cowan_ in enumerate(self.simulate.cowan_list):
+                if cowan_.name == self.cowan.name:
+                    self.simulate.cowan_list[i] = copy.deepcopy(self.cowan)
+                    break
+
+            # -------------------------- 更新页面 --------------------------
+            # 更新历史记录列表
+            functools.partial(UpdatePage1.update_history_list, self)()
+            self.ui.run_history_list.setCurrentRow(len(self.run_history) - 1)  # 选中最后一项
+            # 线状谱和展宽数据
+            functools.partial(UpdatePage1.update_line_figure, self)()
+            functools.partial(UpdatePage1.update_widen_figure, self)()
+            self.ui.cowan_now_name.setText(f'当前计算：{self.cowan.name}')
+
+        def update_progress(val: str):
+            if val == '0':
+                progressDialog.setLabelText('正在计算RCN...')
+                progressDialog.setValue(0)
+            elif val == '25':
+                progressDialog.setLabelText('正在计算RCN2...')
+                progressDialog.setValue(25)
+            elif val == '50':
+                progressDialog.setLabelText('正在计算RCG...')
+                progressDialog.setValue(50)
+            elif val == '100':
+                progressDialog.setLabelText('所有计算均已完成！')
+                progressDialog.setValue(100)
+
         # -------------------------- 准备工作 --------------------------
-        Page1.get_in36_control_card(self, self.in36)
-        Page1.get_in2_control_card(self, self.in2)
-        name = '{}_{}'.format(self.atom.symbol, self.atom.ion)
         if self.expdata_1 is None:  # 如果没有加载实验数据
             QMessageBox.warning(self, '警告', '请先加载实验数据！')
             return
+
+        if not self.in36.configuration_card:  # 如果没有组态卡
+            QMessageBox.warning(self, '警告', '请先添加组态！')
+            return
+        Page1.get_in36_control_card(self, self.in36)
+        Page1.get_in2_control_card(self, self.in2)
+        name = '{}_{}'.format(self.atom.symbol, self.atom.ion)
+
         coupling_mode = self.ui.coupling_mode.currentIndex() + 1
         # -------------------------- 运行 --------------------------
         self.cowan = Cowan(self.in36, self.in2, name, self.expdata_1, coupling_mode)
-        self.cowan.run()
-        self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
-        self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
-        self.cowan.cal_data.widen_all.fwhmgauss = lambda x: self.ui.widen_fwhm.value()
-        widen_temperature = self.ui.widen_temp.value()
-        self.cowan.cal_data.widen_all.widen(temperature=widen_temperature, only_p=False)
-        self.cowan.cal_data.widen_part.widen_by_group(temperature=widen_temperature)
-        # -------------------------- 画图 --------------------------
-        self.cowan.cal_data.plot_line()
-        self.cowan.cal_data.widen_all.plot_widen()
-        self.cowan.cal_data.widen_part.plot_widen_by_group()
-        # -------------------------- 添加到运行历史 --------------------------
-        # 如果已经存在，先删除
-        index = -1
-        for i, cowan_ in enumerate(self.run_history):
-            if cowan_.name == self.cowan.name:
-                index = i
-                break
-        if index != -1:
-            self.run_history.pop(index)
-        self.run_history.append(copy.deepcopy(self.cowan))
-        # 如果存在于叠加列表中，就更新它
-        for i, cowan_ in enumerate(self.simulate.cowan_list):
-            if cowan_.name == self.cowan.name:
-                self.simulate.cowan_list[i] = copy.deepcopy(self.cowan)
-                break
+        cowan_run = CowanThread(self.cowan)
+        # ----界面代码
+        progressDialog = NonStopProgressDialog('', '', 0, 100, self)
+        progressDialog.setWindowTitle('计算进度：')
+        cowan_run.sub_complete.connect(update_progress)
+        cowan_run.all_completed.connect(cowan_complete)
 
-        # -------------------------- 更新页面 --------------------------
-        # 将叠加谱线选择框设为可用
-        self.ui.gauss.setEnabled(True)
-        self.ui.crossP.setEnabled(True)
-        self.ui.crossNP.setEnabled(True)
-        # 更新历史记录列表
-        functools.partial(UpdatePage1.update_history_list, self)()
-        self.ui.run_history_list.setCurrentRow(len(self.run_history) - 1)  # 选中最后一项
-        # 线状谱和展宽数据
-        functools.partial(UpdatePage1.update_line_figure, self)()
-        functools.partial(UpdatePage1.update_widen_figure, self)()
+        # ----界面代码
+        cowan_run.start()
+        progressDialog.show()
 
     def run_history_list_right_menu(self, *args):
         right_menu = QMenu(self.ui.run_history_list)
@@ -340,6 +376,7 @@ class Page1(MainWindow):
         self.expdata_1 = copy.deepcopy(self.cowan.exp_data)
 
         # -------------------------- 更新页面 --------------------------
+        self.ui.cowan_now_name.setText(f'当前计算：{self.cowan.name}')
         # ----- 原子信息 -----
         functools.partial(UpdatePage1.update_atom, self)()
         # ----- in36 -----
@@ -348,6 +385,7 @@ class Page1(MainWindow):
         functools.partial(UpdatePage1.update_in2, self)()
         # ----- 偏移量 -----
         self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
+        self.ui.widen_fwhm.setValue(self.cowan.cal_data.widen_all.fwhm_value)
         # ----- 实验数据 -----
         functools.partial(UpdatePage1.update_exp_figure, self)()
         # ----- 线状谱和展宽 -----
@@ -357,7 +395,8 @@ class Page1(MainWindow):
     def re_widen(self):
         self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
         self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
-        self.cowan.cal_data.widen_all.fwhmgauss = lambda x: self.ui.widen_fwhm.value()
+        self.cowan.cal_data.widen_all.fwhm_value = self.ui.widen_fwhm.value()
+        self.cowan.cal_data.widen_part.fwhm_value = self.ui.widen_fwhm.value()
         widen_temperature = self.ui.widen_temp.value()
         self.cowan.cal_data.widen_all.widen(widen_temperature, False)
         self.cowan.cal_data.widen_part.widen_by_group(temperature=widen_temperature)
@@ -461,11 +500,11 @@ class Page2(MainWindow):
             return
         else:
             self.simulate.exp_data = copy.deepcopy(self.expdata_2)
+        if not self.simulate.cowan_list:
+            QMessageBox.warning(self, '警告', '请先添加计算结果！')
+            return
         temperature = self.ui.page2_temperature.value()
-        density = (
-                self.ui.page2_density_base.value()
-                * 10 ** self.ui.page2_density_index.value()
-        )
+        density = (self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value())
         self.simulate.get_simulate_data(temperature, density)
 
         # -------------------------- 更新页面 --------------------------
@@ -483,12 +522,14 @@ class Page2(MainWindow):
     def cal_grid(self):
         # 函数定义开始↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
         def update_progress_bar(progress):
-            self.ui.page2_progressBar.setValue(int(progress))
+            progressDialog.setValue(int(progress))
 
         def update_ui(*args):
+            simulated_grid_run.wait()
+            simulated_grid_run.update_origin()
             # -------------------------- 更新页面 --------------------------
             functools.partial(UpdatePage2.update_grid, self)()
-            self.ui.page2_cal_grid.setDisabled(False)
+            self.ui.page2_cal_grid.setEnabled(True)
 
         # 函数定义完成↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
@@ -497,6 +538,7 @@ class Page2(MainWindow):
             return
         else:
             self.simulate.exp_data = copy.deepcopy(self.expdata_2)
+        # 准备阶段
         t_range = [
             self.ui.temperature_min.value(),
             self.ui.temperature_max.value(),
@@ -509,13 +551,21 @@ class Page2(MainWindow):
             self.ui.density_max_index.value(),
             self.ui.density_num.value(),
         ]
-        self.ui.page2_cal_grid.setDisabled(True)
         self.ui.page2_progressBar.setRange(0, t_range[2] * ne_range[4])
         self.simulated_grid = SimulateGrid(t_range, ne_range, self.simulate)
         self.simulated_grid.change_task('cal')
-        self.simulated_grid.start()
-        self.simulated_grid.end.connect(update_ui)
-        self.simulated_grid.progress.connect(update_progress_bar)
+        simulated_grid_run = SimulateGridThread(self.simulated_grid)
+        # ----界面代码
+        progressDialog = NonStopProgressDialog('', '', 0, 100, self)
+        progressDialog.setWindowTitle('计算进度：')
+        progressDialog.setLabelText('正在计算网格，请稍后...')
+        progressDialog.resize(500, 75)
+        simulated_grid_run.progress.connect(update_progress_bar)
+        simulated_grid_run.end.connect(update_ui)
+
+        simulated_grid_run.start()
+        progressDialog.show()
+        self.ui.page2_cal_grid.setEnabled(False)
 
     def grid_list_clicked(self):
         item = self.ui.page2_grid_list.currentItem()
@@ -526,6 +576,8 @@ class Page2(MainWindow):
         self.simulate = copy.deepcopy(
             self.simulated_grid.grid_data[(temperature, density)]
         )
+        # if self.simulate.sim_data is None:
+        #     self.simulate.get_simulate_data(temperature, density)
 
         # -------------------------- 更新页面 --------------------------
         temp = density.split('e+')
@@ -577,6 +629,7 @@ class Page2(MainWindow):
             self.simulate.temperature = None
             self.simulate.electron_density = None
             self.simulate.exp_data = copy.deepcopy(self.expdata_2)
+            self.simulate.sim_data = None
             self.space_time_resolution.add_st((tim, (loc, '0', '0')), self.simulate)
 
         # -------------------------- 更新页面 --------------------------
@@ -590,24 +643,30 @@ class Page2(MainWindow):
     def st_resolution_double_clicked(self, *args):
         # 函数定义开始↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
         def update_grid():
+            simulated_grid_run.wait()
+            progressDialog.close()
+            simulated_grid_run.update_origin()
             functools.partial(UpdatePage2.update_grid, self)()
-            self.ui.page2_cal_grid.setDisabled(False)
-            self.ui.statusbar.showMessage('网格更新完成！')
 
         # 函数定义结束↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
         index = self.ui.st_resolution_table.currentIndex().row()
         key = list(self.space_time_resolution.simulate_spectral_dict.keys())[index]
-        self.simulate = copy.deepcopy(
-            self.space_time_resolution.simulate_spectral_dict[key]
-        )
+        self.simulate = copy.deepcopy(self.space_time_resolution.simulate_spectral_dict[key])
         self.expdata_2 = copy.deepcopy(self.simulate.exp_data)
         if self.simulated_grid is not None:
             self.ui.statusbar.showMessage('正在更新网格，请稍后……')
             # QMetaObject.invokeMethod(self.simulated_grid, 'update_similarity')
             self.simulated_grid.change_task('update', self.expdata_2)
-            self.simulated_grid.start()
-            self.simulated_grid.up_end.connect(update_grid)
+            simulated_grid_run = SimulateGridThread(self.simulated_grid)
+            progressDialog = NonStopProgressDialog('', '', 0, 0, self)
+            progressDialog.setWindowTitle('计算进度：')
+            progressDialog.setLabelText('正在更新网格，请稍后……')
+            progressDialog.resize(500, 75)
+            simulated_grid_run.up_end.connect(update_grid)
+
+            simulated_grid_run.start()
+            progressDialog.show()
 
         # -------------------------- 更新页面 --------------------------
         self.ui.st_time.setText(key[0])
@@ -644,6 +703,7 @@ class Page2(MainWindow):
                     return
             self.simulate.characteristic_peaks.append(input_value)
             self.simulate.characteristic_peaks.sort()
+            dialog.activateWindow()
             update_ui()
 
         def del_data():
@@ -661,9 +721,8 @@ class Page2(MainWindow):
             right_menu.popup(QCursor.pos())  # 显示右键菜单
 
         # 创建窗口元素
-        dialog = QDialog()
+        dialog = QWidget()
         dialog.resize(200, 300)
-        dialog.setWindowModality(Qt.ApplicationModal)
         peaks_browser = QListWidget(dialog)
         peaks_browser.setContextMenuPolicy(Qt.CustomContextMenu)  # 允许使用右键菜单
         add_button = QPushButton('添加', dialog)
@@ -688,7 +747,7 @@ class Page2(MainWindow):
         peaks_browser.customContextMenuRequested.connect(show_right_menu)
 
         update_ui()
-        dialog.exec()
+        dialog.show()
         functools.partial(UpdatePage2.update_characteristic_peaks, self)()
 
 

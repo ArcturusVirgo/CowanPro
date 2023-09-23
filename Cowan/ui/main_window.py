@@ -1337,6 +1337,11 @@ class Ui_main_window(object):
 
         self.horizontalLayout_6 = QHBoxLayout()
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.cowan_now_name = QLabel(self.widget)
+        self.cowan_now_name.setObjectName(u"cowan_now_name")
+
+        self.horizontalLayout_6.addWidget(self.cowan_now_name)
+
         self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_6.addItem(self.horizontalSpacer_7)
@@ -2256,6 +2261,7 @@ class Ui_main_window(object):
         self.label_23.setText(QCoreApplication.translate("main_window", u"FWHM", None))
         self.label_10.setText(QCoreApplication.translate("main_window", u"\u504f\u79fb", None))
         self.update_offect.setText(QCoreApplication.translate("main_window", u"\u91cd\u65b0\u5c55\u5bbd", None))
+        self.cowan_now_name.setText(QCoreApplication.translate("main_window", u"\u5f53\u524d\u8ba1\u7b97\uff1a", None))
         self.run_cowan.setText(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))
         self.groupBox_5.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97\u5386\u53f2", None))
         self.groupBox_6.setTitle(QCoreApplication.translate("main_window", u"\u5e93", None))
