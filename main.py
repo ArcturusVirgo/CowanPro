@@ -322,34 +322,9 @@ class MainWindow(QMainWindow):
                 item = QTableWidgetItem(str(df.iloc[i, j]))
                 self.ui.in36_configuration_view.setItem(i, j, item)
         # ----- in2 -----
-        in2_input_name = [
-            'in2_1',
-            'in2_2',
-            'in2_3',
-            'in2_4',
-            'in2_5',
-            'in2_6',
-            'in2_7',
-            'in2_8',
-            'in2_9_a',
-            'in2_9_b',
-            'in2_9_c',
-            'in2_9_d',
-            'in2_10',
-            'in2_11_a',
-            'in2_11_b',
-            'in2_11_c',
-            'in2_11_d',
-            'in2_11_e',
-            'in2_12',
-            'in2_13',
-            'in2_14',
-            'in2_15',
-            'in2_16',
-            'in2_17',
-            'in2_18',
-            'in2_19',
-        ]
+        in2_input_name = ['in2_1', 'in2_2', 'in2_3', 'in2_4', 'in2_5', 'in2_6', 'in2_7', 'in2_8', 'in2_9_a', 'in2_9_b',
+                          'in2_9_c', 'in2_9_d', 'in2_10', 'in2_11_a', 'in2_11_b', 'in2_11_c', 'in2_11_d', 'in2_11_e',
+                          'in2_12', 'in2_13', 'in2_14', 'in2_15', 'in2_16', 'in2_17', 'in2_18', 'in2_19', ]
         for i, n in enumerate(in2_input_name):
             if '11' in n:
                 eval(f'self.ui.{n}').setValue(int(self.in2.input_card[i].strip(' ')))
@@ -679,7 +654,8 @@ class MainWindow(QMainWindow):
         print('{:>22} {:>15.2f} MB'.format('simulate_page4', asizeof.asizeof(self.simulate_page4) / 1024 ** 2))
         # 其他
         print('网格：')
-        print('{:>22} {:>15.2f} [GB]'.format('simulated_grid', asizeof.asizeof(self.simulated_grid.grid_data) / 1024 ** 3))
+        print('{:>22} {:>15.2f} [GB]'.format('simulated_grid',
+                                             asizeof.asizeof(self.simulated_grid.grid_data) / 1024 ** 3))
 
     def closeEvent(self, event):
         # self.save_project()
