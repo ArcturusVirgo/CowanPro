@@ -1021,11 +1021,25 @@ class CowanList:
         self.cowan_list: List[Cowan] = []  # 用于存储 cowan 对象
         self.add_or_not: List[bool] = []  # cowan 对象是否被添加
 
+    def add_cowan(self, *args):
+        for cowan in args:
+            for i, old_cowan in enumerate(self.cowan_list):
+                if cowan.name == old_cowan.name:
+                    self.add_or_not[i] = True
+                    self.cowan_list[i] = copy.deepcopy(cowan)
+            self.cowan_list.append(copy.deepcopy(cowan))
+            self.add_or_not.append(True)
+
+    def del_cowan(self, index):
+        self.cowan_list.pop(index)
+        self.add_or_not.pop(index)
+
 
 class SimulateSpectral:
-    def __init__(self):
-        self.cowan_list: List[Cowan] = []  # 用于存储 cowan 对象
-        self.add_or_not: List[bool] = []  # cowan 对象是否被添加
+    def __init__(self, cowan_list: CowanList):
+        self.cowan_list = cowan_list.cowan_list  # 指针
+        self.add_or_not = cowan_list.add_or_not  # 指针
+
         self.exp_data: Optional[ExpData] = None  # 实验光谱数据
         self.spectrum_similarity = None  # 光谱相似度
         self.temperature = None  # 模拟的等离子体温度
@@ -1044,15 +1058,6 @@ class SimulateSpectral:
 
     def load_exp_data(self, path: Path):
         self.exp_data = ExpData(path)
-
-    def add_cowan(self, *args):
-        for cowan in args:
-            self.cowan_list.append(copy.deepcopy(cowan))
-            self.add_or_not.append(True)
-
-    def del_cowan(self, index):
-        self.cowan_list.pop(index)
-        self.add_or_not.pop(index)
 
     def get_simulate_data(self, temperature, electron_density):
         """
@@ -1511,10 +1516,6 @@ class SimulateSpectral:
 
 
 class SimulateGrid:
-    progress = Signal(str)  # 计数完成后发送一次信号
-    end = Signal(str)  # 计数完成后发送一次信号
-    up_end = Signal(str)  #
-
     def __init__(self, temperature, density, simulate):
         super().__init__()
         self.task = 'cal'

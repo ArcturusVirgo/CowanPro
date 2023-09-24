@@ -117,7 +117,7 @@ class UpdatePage1(MainWindow):
     def update_selection_list(self):
         self.ui.selection_list.clear()
         self.ui.page2_selection_list.clear()
-        for cowan in self.simulate.cowan_list:
+        for cowan in self.cowan_list.cowan_list:
             self.ui.selection_list.addItem(QListWidgetItem(cowan.name))
             item = QListWidgetItem(cowan.name)
             item.setCheckState(Qt.CheckState.Checked)

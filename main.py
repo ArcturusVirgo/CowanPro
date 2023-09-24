@@ -1,5 +1,6 @@
 import shelve
 import sys
+import warnings
 
 from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QAbstractItemView
@@ -146,13 +147,14 @@ class MainWindow(QMainWindow):
         self.in36: Optional[In36] = In36(self.atom)
         self.in2: Optional[In2] = In2()
         self.expdata_1: Optional[ExpData] = None
+        self.cowan_list: CowanList = CowanList()
 
         self.run_history: List[Cowan] = []
         self.cowan: Optional[Cowan] = None
 
         self.expdata_2: Optional[ExpData] = None
         self.simulated_grid: Optional[SimulateGrid] = None
-        self.simulate: Optional[SimulateSpectral] = SimulateSpectral()
+        self.simulate: Optional[SimulateSpectral] = SimulateSpectral(self.cowan_list)
         self.simulate_page4: Optional[SimulateSpectral] = None
         self.space_time_resolution = SpaceTimeResolution()
 
@@ -167,7 +169,7 @@ class MainWindow(QMainWindow):
             # print(self.simulate.cowan_list[0].in36.control_card)
 
         # self.test()
-        # self.load_Ge()
+        self.load_Ge()
 
     def test(self):
         SET_PROJECT_PATH(Path('F:/Cowan/Al'))
@@ -188,7 +190,7 @@ class MainWindow(QMainWindow):
             self.cowan.cal_data.widen_all.delta_lambda = delta[i]
             self.cowan.cal_data.widen_all.widen(25.6, False)
             self.run_history.append(copy.deepcopy(self.cowan))
-            self.simulate.add_cowan(self.cowan)
+            self.cowan_list.add_cowan(self.cowan)
         self.simulate.exp_data = copy.deepcopy(self.expdata_1)
         self.simulate.characteristic_peaks = [8.8200, 10.4010, 10.7980, 10.9590, 12.5860, 13.11]
         for x in range(5):
@@ -253,7 +255,7 @@ class MainWindow(QMainWindow):
             self.cowan.cal_data = CalData(f'Ge_{name}', self.expdata_1)
             self.cowan.cal_data.widen_all.widen(25.6, False)
             self.run_history.append(copy.deepcopy(self.cowan))
-            self.simulate.add_cowan(self.cowan)
+            self.cowan_list.add_cowan(self.cowan)
             print(f'加载{self.cowan.name}')
 
         # for p in Path(r'F:\Cowan\Ge\exp_data').iterdir():
@@ -433,6 +435,7 @@ class MainWindow(QMainWindow):
         self.expdata_1 = obj_info['expdata_1']
         self.run_history = obj_info['run_history']
         self.cowan = obj_info['cowan']
+        self.cowan_list = obj_info['cowan_list']
         # 第二页
         self.expdata_2 = obj_info['expdata_2']
         self.simulate = obj_info['simulate']
@@ -444,15 +447,18 @@ class MainWindow(QMainWindow):
 
         # 更新界面
         # 第一页 =================================================
-        self.ui.cowan_now_name.setText(f'当前计算：{self.cowan.name}')
         # ----- 原子信息 -----
         if self.atom.num == 1 and self.atom.ion == 0:
-            raise Exception('原子信息未初始化！')
+            warnings.warn('原子信息未初始化', UserWarning)
+            return
         functools.partial(UpdatePage1.update_atom, self)()
         # ----- in36 -------
         functools.partial(UpdatePage1.update_in36, self)()
         # ----- in2 -----
         functools.partial(UpdatePage1.update_in2, self)()
+        if self.cowan is None:
+            warnings.warn('Cowan未进行首次计算', UserWarning)
+            return
         # ----- 偏移量 -----
         self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
         # ----- 实验数据 -----
@@ -464,6 +470,7 @@ class MainWindow(QMainWindow):
         self.ui.crossP.setEnabled(True)
         self.ui.crossNP.setEnabled(True)
         # ----- 历史数据 -----
+        self.ui.cowan_now_name.setText(f'当前计算：{self.cowan.name}')
         # 更新历史记录列表
         functools.partial(UpdatePage1.update_history_list, self)()
         # 更新选择列表
@@ -475,7 +482,7 @@ class MainWindow(QMainWindow):
         # ----- 实验数据的文件名 -----
         self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.as_posix())
         if not self.simulate.exp_data:
-            print('第二页实验数据没加载')
+            warnings.warn('第二页实验数据未加载', UserWarning)
             return
 
         # ----- 第二页的密度温度 -----
@@ -514,8 +521,10 @@ class MainWindow(QMainWindow):
             obj_info['run_history'] = self.run_history
             update_progress(30, 'cowan')
             obj_info['cowan'] = self.cowan
+            update_progress(40, 'cowan_list')
+            obj_info['cowan_list'] = self.cowan_list
             # 第二页
-            update_progress(35, 'expdata_2')
+            update_progress(45, 'expdata_2')
             obj_info['expdata_2'] = self.expdata_2
             update_progress(50, 'simulate')
             obj_info['simulate'] = self.simulate
@@ -652,20 +661,24 @@ class MainWindow(QMainWindow):
 
     def print_memory(self):
         # 第一页使用
-        print('{:>22} {:>15.2f} MB'.format('atom', asizeof.asizeof(self.atom) / 1024**2))
-        print('{:>22} {:>15.2f} MB'.format('in36', asizeof.asizeof(self.in36) / 1024**2))
-        print('{:>22} {:>15.2f} MB'.format('in2', asizeof.asizeof(self.in2) / 1024**2))
-        print('{:>22} {:>15.2f} MB'.format('expdata_1', asizeof.asizeof(self.expdata_1) / 1024**2))
-        print('{:>22} {:>15.2f} MB'.format('run_history', asizeof.asizeof(self.run_history) / 1024**2))
-        print('{:>22} {:>15.2f} MB'.format('cowan', asizeof.asizeof(self.cowan) / 1024**2))
+        print('{:>22} {:>15.2f} MB'.format('atom', asizeof.asizeof(self.atom) / 1024 ** 2))
+        print('{:>22} {:>15.2f} MB'.format('in36', asizeof.asizeof(self.in36) / 1024 ** 2))
+        print('{:>22} {:>15.2f} MB'.format('in2', asizeof.asizeof(self.in2) / 1024 ** 2))
+        print('{:>22} {:>15.2f} MB'.format('expdata_1', asizeof.asizeof(self.expdata_1) / 1024 ** 2))
+        print('{:>22} {:>15.2f} MB'.format('run_history', asizeof.asizeof(self.run_history) / 1024 ** 2))
+        print('{:>22} {:>15.2f} MB'.format('cowan', asizeof.asizeof(self.cowan) / 1024 ** 2))
+        print('{:>22} {:>15.2f} MB'.format('cowan_list', asizeof.asizeof(self.cowan_list) / 1024 ** 2))
         # 第二页使用
-        print('{:>22} {:>15.2f} MB'.format('expdata_2', asizeof.asizeof(self.expdata_2) / 1024**2))
-        print('{:>22} {:>15.2f} MB'.format('simulate', asizeof.asizeof(self.simulate) / 1024**2))
-        print('{:>22} {:>15.2f} [GB]'.format('simulated_grid', asizeof.asizeof(self.simulated_grid) / 1024**3))
-        print('{:>22} {:>15.2f} [GB]'.format('space_time_resolution', asizeof.asizeof(self.space_time_resolution) / 1024**3))
+        print('{:>22} {:>15.2f} MB'.format('expdata_2', asizeof.asizeof(self.expdata_2) / 1024 ** 2))
+        print('{:>22} {:>15.2f} MB'.format('simulate', asizeof.asizeof(self.simulate) / 1024 ** 2))
+        print('{:>22} {:>15.2f} [GB]'.format('simulated_grid', asizeof.asizeof(self.simulated_grid) / 1024 ** 3))
+        print('{:>22} {:>15.2f} [GB]'.format('space_time_resolution',
+                                             asizeof.asizeof(self.space_time_resolution) / 1024 ** 3))
         # 第四页使用
-        print('{:>22} {:>15.2f} MB'.format('simulate_page4', asizeof.asizeof(self.simulate_page4) / 1024**2))
-
+        print('{:>22} {:>15.2f} MB'.format('simulate_page4', asizeof.asizeof(self.simulate_page4) / 1024 ** 2))
+        # 其他
+        print('网格：')
+        print('{:>22} {:>15.2f} [GB]'.format('simulated_grid', asizeof.asizeof(self.simulated_grid.grid_data) / 1024 ** 3))
 
     def closeEvent(self, event):
         # self.save_project()

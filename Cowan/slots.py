@@ -265,7 +265,7 @@ class Page1(MainWindow):
             # 如果存在于叠加列表中，就更新它
             for i, cowan_ in enumerate(self.simulate.cowan_list):
                 if cowan_.name == self.cowan.name:
-                    self.simulate.cowan_list[i] = copy.deepcopy(self.cowan)
+                    self.cowan_list.cowan_list[i] = copy.deepcopy(self.cowan)
                     break
 
             # -------------------------- 更新页面 --------------------------
@@ -341,7 +341,7 @@ class Page1(MainWindow):
 
     def add_to_selection(self):
         index = self.ui.run_history_list.currentIndex().row()
-        self.simulate.add_cowan(self.run_history[index])
+        self.cowan_list.add_cowan(self.run_history[index])
 
         # -------------------------- 更新页面 --------------------------
         # 更新选择列表
