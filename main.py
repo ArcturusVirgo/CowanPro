@@ -427,6 +427,7 @@ class MainWindow(QMainWindow):
         try:
             obj_info['atom']
         except KeyError:
+            warnings.warn('初始化文件不存在！', UserWarning)
             return
         # 第一页
         self.atom = obj_info['atom']
