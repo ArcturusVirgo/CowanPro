@@ -247,11 +247,11 @@ class Page1(MainWindow):
             self.cowan.cal_data.widen_part.fwhm_value = self.ui.widen_fwhm.value()
             widen_temperature = self.ui.widen_temp.value()
             self.cowan.cal_data.widen_all.widen(temperature=widen_temperature, only_p=False)
-            self.cowan.cal_data.widen_part.widen_by_group(widen_temperature)
+            # self.cowan.cal_data.widen_part.widen_by_group(widen_temperature)
             # -------------------------- 画图 --------------------------
             self.cowan.cal_data.plot_line()
             self.cowan.cal_data.widen_all.plot_widen()
-            self.cowan.cal_data.widen_part.plot_widen_by_group()
+            # self.cowan.cal_data.widen_part.plot_widen_by_group()
             # -------------------------- 添加到运行历史 --------------------------
             # 如果已经存在，先删除
             index = -1
@@ -265,8 +265,9 @@ class Page1(MainWindow):
             # 如果存在于叠加列表中，就更新它
             for i, cowan_ in enumerate(self.simulate.cowan_list):
                 if cowan_.name == self.cowan.name:
-                    self.cowan_list.cowan_list[i] = copy.deepcopy(self.cowan)
+                    self.simulate.cowan_list[i] = copy.deepcopy(self.cowan)
                     break
+            self.cowan_obj_save = copy.deepcopy([self.simulate.cowan_list, self.simulate.add_or_not])
 
             # -------------------------- 更新页面 --------------------------
             # 更新历史记录列表
@@ -341,7 +342,13 @@ class Page1(MainWindow):
 
     def add_to_selection(self):
         index = self.ui.run_history_list.currentIndex().row()
-        self.cowan_list.add_cowan(self.run_history[index])
+        for i, cc in enumerate(self.simulate.cowan_list):
+            if cc.name == self.run_history[index].name:
+                self.simulate.cowan_list.pop(i)
+                break
+        self.simulate.add_cowan(self.run_history[index])
+        self.cowan_obj_save = copy.deepcopy([self.simulate.cowan_list, self.simulate.add_or_not])
+        # self.cowan_obj_save = copy.deepcopy([self.simulate.cowan_list, self.simulate.add_or_not])
 
         # -------------------------- 更新页面 --------------------------
         # 更新选择列表
@@ -399,7 +406,7 @@ class Page1(MainWindow):
         self.cowan.cal_data.widen_part.fwhm_value = self.ui.widen_fwhm.value()
         widen_temperature = self.ui.widen_temp.value()
         self.cowan.cal_data.widen_all.widen(widen_temperature, False)
-        self.cowan.cal_data.widen_part.widen_by_group(temperature=widen_temperature)
+        # self.cowan.cal_data.widen_part.widen_by_group(temperature=widen_temperature)
         for i, cowan_ in enumerate(self.run_history):
             if cowan_.name == self.cowan.name:
                 self.run_history[i] = copy.deepcopy(self.cowan)
@@ -493,6 +500,7 @@ class Page2(MainWindow):
                 self.simulate.add_or_not[i] = True
             else:
                 self.simulate.add_or_not[i] = False
+        self.cowan_obj_save = copy.deepcopy([self.simulate.cowan_list, self.simulate.add_or_not])
 
     def plot_spectrum(self, *args):
         if self.expdata_2 is None:
@@ -500,7 +508,7 @@ class Page2(MainWindow):
             return
         else:
             self.simulate.exp_data = copy.deepcopy(self.expdata_2)
-        if not self.simulate.cowan_list:
+        if not self.cowan_obj_save:
             QMessageBox.warning(self, '警告', '请先添加计算结果！')
             return
         temperature = self.ui.page2_temperature.value()
@@ -538,20 +546,31 @@ class Page2(MainWindow):
             return
         else:
             self.simulate.exp_data = copy.deepcopy(self.expdata_2)
+
+        if not self.simulate.cowan_list:
+            QMessageBox.warning(self, '警告', '请先添加计算结果！')
+            return
+
         # 准备阶段
         t_range = [
             self.ui.temperature_min.value(),
             self.ui.temperature_max.value(),
-            self.ui.temperature_num.value(),
+            self.ui.temperature_num.value()
         ]
         ne_range = [
             self.ui.density_min_base.value(),
             self.ui.density_min_index.value(),
             self.ui.density_max_base.value(),
             self.ui.density_max_index.value(),
-            self.ui.density_num.value(),
+            self.ui.density_num.value()
         ]
         self.ui.page2_progressBar.setRange(0, t_range[2] * ne_range[4])
+
+        # 删除之前的网格
+        if self.simulated_grid:
+            del self.simulated_grid
+        # todo 释放内存
+        self.print_memory()
         self.simulated_grid = SimulateGrid(t_range, ne_range, self.simulate)
         self.simulated_grid.change_task('cal')
         simulated_grid_run = SimulateGridThread(self.simulated_grid)
@@ -573,9 +592,10 @@ class Page2(MainWindow):
             return
         temperature = self.simulated_grid.t_list[item.column()]
         density = self.simulated_grid.ne_list[item.row()]
-        self.simulate = copy.deepcopy(
-            self.simulated_grid.grid_data[(temperature, density)]
-        )
+        if self.simulate:
+            del self.simulate
+        self.simulate = copy.deepcopy(self.simulated_grid.grid_data[(temperature, density)])
+        self.simulate.cowan_list, self.simulate.add_or_not = copy.deepcopy(self.cowan_obj_save)
         # if self.simulate.sim_data is None:
         #     self.simulate.get_simulate_data(temperature, density)
 
@@ -640,7 +660,7 @@ class Page2(MainWindow):
         # 第四页
         functools.partial(UpdatePage4.update_space_time_combobox, self)()
 
-    def st_resolution_double_clicked(self, *args):
+    def st_resolution_clicked(self, *args):
         # 函数定义开始↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
         def update_grid():
             simulated_grid_run.wait()
@@ -652,6 +672,8 @@ class Page2(MainWindow):
 
         index = self.ui.st_resolution_table.currentIndex().row()
         key = list(self.space_time_resolution.simulate_spectral_dict.keys())[index]
+        if self.simulate:
+            del self.simulate
         self.simulate = copy.deepcopy(self.space_time_resolution.simulate_spectral_dict[key])
         self.expdata_2 = copy.deepcopy(self.simulate.exp_data)
         if self.simulated_grid is not None:
@@ -791,6 +813,12 @@ class Page4(MainWindow):
         functools.partial(UpdatePage4.update_exp_figure, self)()
 
     def plot_example(self):
+        """
+        画图
+
+        Returns:
+
+        """
         add_example = []
         for i in range(self.ui.treeWidget.topLevelItemCount()):
             parent = self.ui.treeWidget.topLevelItem(i)
@@ -806,15 +834,26 @@ class Page4(MainWindow):
                     add_example[i][1].append(False)
 
         self.simulate_page4.plot_example_html(add_example)
-        self.ui.webEngineView_2.load(
-            QUrl.fromLocalFile(self.simulate_page4.example_path)
-        )
+        self.ui.webEngineView_2.load(QUrl.fromLocalFile(self.simulate_page4.example_path))
 
     @staticmethod
     def tree_item_changed(self, item, column):
-        if item.checkState(0) == Qt.Checked:
-            for i in range(item.childCount()):
-                item.child(i).setCheckState(0, Qt.Checked)
+        if item.parent() is None:
+            if item.checkState(0) == Qt.Checked:
+                for i in range(item.childCount()):
+                    if item.child(i).background(0).color().getRgb()[0] == 255:
+                        item.child(i).setCheckState(0, Qt.Unchecked)
+                    else:
+                        item.child(i).setCheckState(0, Qt.Checked)
+            else:
+                for i in range(item.childCount()):
+                    item.child(i).setCheckState(0, Qt.Unchecked)
         else:
-            for i in range(item.childCount()):
-                item.child(i).setCheckState(0, Qt.Unchecked)
+            if item.checkState(0) == Qt.Checked:
+                item.parent().setCheckState(0, Qt.Checked)
+            else:
+                for i in range(item.parent().childCount()):
+                    if item.parent().child(i).checkState(0) == Qt.Checked:
+                        break
+                else:
+                    item.parent().setCheckState(0, Qt.Unchecked)

@@ -7,20 +7,15 @@ import functools
 import os
 import shutil
 import subprocess
-import time
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from pprint import pprint
 from typing import Optional, List, Dict, Tuple
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import scipy
 from PySide6 import QtCore
 from PySide6.QtCore import Signal
-from fastdtw import fastdtw
-from matplotlib import pyplot as plt
 from plotly.offline import plot
 from scipy.interpolate import interp1d
 from scipy.signal import find_peaks
@@ -63,10 +58,7 @@ class Atom:
 
         """
         electron_arrangement = {}
-        for key, value in map(
-                lambda x: [str(x[:2]), int(x[2:])],
-                BASE_CONFIGURATION[self.num][self.ion].split(' '),
-        ):
+        for key, value in map(lambda x: [str(x[:2]), int(x[2:])], BASE_CONFIGURATION[self.num][self.ion].split(' ')):
             electron_arrangement[key] = value
         return electron_arrangement
 
@@ -129,16 +121,11 @@ class Atom:
             raise Exception(f'没有名为{high_name}的支壳层!')
         elif low_name not in self.electron_arrangement.keys():
             raise Exception(f'没有处于{low_name}的电子！')
-        elif (
-                self.electron_arrangement.get(high_name, 0)
-                == 4 * ANGULAR_QUANTUM_NUM_NAME.index(high_name[1]) + 2
-        ):
+        elif self.electron_arrangement.get(high_name, 0) == 4 * ANGULAR_QUANTUM_NUM_NAME.index(high_name[1]) + 2:
             raise Exception(f'{high_name}的电子已经排满！')
 
         self.electron_arrangement[low_name] -= 1
-        self.electron_arrangement[high_name] = (
-                self.electron_arrangement.get(high_name, 0) + 1
-        )
+        self.electron_arrangement[high_name] = (self.electron_arrangement.get(high_name, 0) + 1)
         if self.electron_arrangement[low_name] == 0:
             self.electron_arrangement.pop(low_name)
 
@@ -168,10 +155,8 @@ class ExpData:
 
         """
         self.x_range = x_range
-        self.data = self.data[
-            (self.data['wavelength'] < self.x_range[1])
-            & (self.data['wavelength'] > self.x_range[0])
-            ]
+        self.data = self.data[(self.data['wavelength'] < self.x_range[1]) &
+                              (self.data['wavelength'] > self.x_range[0])]
 
     def __read_file(self):
         """
@@ -182,18 +167,12 @@ class ExpData:
         """
         filetype = self.filepath.suffix[1:]
         if filetype == 'csv':
-            temp_data = pd.read_csv(
-                self.filepath, sep=',', skiprows=1, names=['wavelength', 'intensity']
-            )
+            temp_data = pd.read_csv(self.filepath, sep=',', skiprows=1, names=['wavelength', 'intensity'])
         elif filetype == 'txt':
-            temp_data = pd.read_csv(
-                self.filepath, sep='\s+', skiprows=1, names=['wavelength', 'intensity']
-            )
+            temp_data = pd.read_csv(self.filepath, sep='\s+', skiprows=1, names=['wavelength', 'intensity'])
         else:
             raise ValueError(f'filetype {filetype} is not supported')
-        temp_data['intensity_normalization'] = (
-                temp_data['intensity'] / temp_data['intensity'].max()
-        )
+        temp_data['intensity_normalization'] = (temp_data['intensity'] / temp_data['intensity'].max())
 
         self.data = temp_data
         self.x_range = [self.data['wavelength'].min(), self.data['wavelength'].max()]
@@ -205,9 +184,7 @@ class ExpData:
         Returns:
 
         """
-        trace1 = go.Scatter(
-            x=self.data['wavelength'], y=self.data['intensity'], mode='lines'
-        )
+        trace1 = go.Scatter(x=self.data['wavelength'], y=self.data['intensity'], mode='lines')
         data = [trace1]
         layout = go.Layout(
             margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
@@ -229,31 +206,8 @@ class In36:
         """
         self.atom: Atom = copy.deepcopy(atom)
 
-        self.control_card = [
-            '2',
-            ' ',
-            ' ',
-            '-9',
-            ' ',
-            '  ',
-            ' 2',
-            '   ',
-            '10',
-            '  1.0',
-            '    5.e-08',
-            '    1.e-11',
-            '-2',
-            '  ',
-            ' ',
-            '1',
-            '90',
-            '  ',
-            '  1.0',
-            ' 0.65',
-            '  0.0',
-            '  0.0',
-            '     ',
-        ]
+        self.control_card = ['2', ' ', ' ', '-9', ' ', '  ', ' 2', '   ', '10', '  1.0', '    5.e-08', '    1.e-11',
+                             '-2', '  ', ' ', '1', '90', '  ', '  1.0', ' 0.65', '  0.0', '  0.0', '     ', ]
         self.configuration_card = []
 
     def read_from_file(self, path: Path):
@@ -306,15 +260,11 @@ class In36:
             temp_list = []
         if configuration not in temp_list:
             v0 = '{:>5}'.format(self.atom.num)
-            v1 = '{:>10}'.format(
-                f'{self.atom.ion + 1}{ATOM[self.atom.num][0]}+{self.atom.ion}'
-            )
+            v1 = '{:>10}'.format(f'{self.atom.ion + 1}{ATOM[self.atom.num][0]}+{self.atom.ion}')
             v2 = '{:>7}'.format('11111')
             v3 = '           '
             v4 = configuration
-            self.configuration_card.append(
-                [[v0, v1, v2, v3, v4], self.__judge_parity(v4)]
-            )
+            self.configuration_card.append([[v0, v1, v2, v3, v4], self.__judge_parity(v4)])
 
     def configuration_move(self, index, opt: str):
         """
@@ -330,15 +280,11 @@ class In36:
         if opt == 'up':
             if 1 <= index <= len(self.configuration_card):
                 self.configuration_card[index], self.configuration_card[index - 1] = (
-                    self.configuration_card[index - 1],
-                    self.configuration_card[index],
-                )
+                    self.configuration_card[index - 1], self.configuration_card[index],)
         elif opt == 'down':
             if 0 <= index <= len(self.configuration_card) - 2:
                 self.configuration_card[index], self.configuration_card[index + 1] = (
-                    self.configuration_card[index + 1],
-                    self.configuration_card[index],
-                )
+                    self.configuration_card[index + 1], self.configuration_card[index],)
         else:
             raise ValueError('opt must be "up" or "down"')
 
@@ -1021,25 +967,11 @@ class CowanList:
         self.cowan_list: List[Cowan] = []  # 用于存储 cowan 对象
         self.add_or_not: List[bool] = []  # cowan 对象是否被添加
 
-    def add_cowan(self, *args):
-        for cowan in args:
-            for i, old_cowan in enumerate(self.cowan_list):
-                if cowan.name == old_cowan.name:
-                    self.add_or_not[i] = True
-                    self.cowan_list[i] = copy.deepcopy(cowan)
-            self.cowan_list.append(copy.deepcopy(cowan))
-            self.add_or_not.append(True)
-
-    def del_cowan(self, index):
-        self.cowan_list.pop(index)
-        self.add_or_not.pop(index)
-
 
 class SimulateSpectral:
-    def __init__(self, cowan_list: CowanList):
-        self.cowan_list = cowan_list.cowan_list  # 指针
-        self.add_or_not = cowan_list.add_or_not  # 指针
-
+    def __init__(self):
+        self.cowan_list: List[Cowan] = []  # 用于存储 cowan 对象
+        self.add_or_not: List[bool] = []  # cowan 对象是否被添加
         self.exp_data: Optional[ExpData] = None  # 实验光谱数据
         self.spectrum_similarity = None  # 光谱相似度
         self.temperature = None  # 模拟的等离子体温度
@@ -1058,6 +990,19 @@ class SimulateSpectral:
 
     def load_exp_data(self, path: Path):
         self.exp_data = ExpData(path)
+
+    def add_cowan(self, *args):
+        for cowan in args:
+            for i, old_cowan in enumerate(self.cowan_list):
+                if cowan.name == old_cowan.name:
+                    self.add_or_not[i] = True
+                    self.cowan_list[i] = copy.deepcopy(cowan)
+            self.cowan_list.append(copy.deepcopy(cowan))
+            self.add_or_not.append(True)
+
+    def del_cowan(self, index):
+        self.cowan_list.pop(index)
+        self.add_or_not.pop(index)
 
     def get_simulate_data(self, temperature, electron_density):
         """
@@ -1146,7 +1091,8 @@ class SimulateSpectral:
         """
         绘制各个组态的贡献
         Args:
-            add_list:
+            add_list: [[T, [F, T, F, ...]], [T, [F, T, F, ...]], ...]
+
 
         Returns:
 
@@ -1154,16 +1100,14 @@ class SimulateSpectral:
         height = 0
         trace = []
         for i, c in enumerate(self.cowan_list):
-            if add_list[i][0]:
-                for j, (key, value) in enumerate(
-                        c.cal_data.widen_part.grouped_widen_data.items()
-                ):
-                    if add_list[i][1][j]:
+            # i 是CowanList中的索引
+            # c 是 Cowan 对象
+            if add_list[i][0]:  # 如果这个离子要画在图上
+                for j, (key, value) in enumerate(c.cal_data.widen_part.grouped_widen_data.items()):
+                    if add_list[i][1][j]:  # 遍历组态
                         index_low, index_high = map(int, key.split('_'))
-                        name = '{}<br />{}'.format(
-                            c.name.replace('_', '+'),
-                            c.in36.get_configuration_name(index_low, index_high),
-                        )
+                        name = '{}<br />{}'.format(c.name.replace('_', '+'),
+                                                   c.in36.get_configuration_name(index_low, index_high), )
                         if value['cross_P'].max() == 0:
                             trace.append(
                                 go.Scatter(
@@ -1579,7 +1523,10 @@ class SimulateGridThread(QtCore.QThread):
         def callback(t, ne, f):
             nonlocal current_progress
             current_progress += 1
-            self.grid_data[(t, ne)] = f.result()
+            temp_cowan = f.result()
+            temp_cowan.cowan_list = None
+            temp_cowan.add_or_not = None
+            self.grid_data[(t, ne)] = temp_cowan
             # self.grid_data[(t, ne)].sim_data = None
             self.progress.emit(str(current_progress))
 

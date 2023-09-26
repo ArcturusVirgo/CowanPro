@@ -75,34 +75,9 @@ class UpdatePage1(MainWindow):
         functools.partial(UpdatePage1.update_in36_configuration, self)()
 
     def update_in2(self):
-        in2_input_name = [
-            'in2_1',
-            'in2_2',
-            'in2_3',
-            'in2_4',
-            'in2_5',
-            'in2_6',
-            'in2_7',
-            'in2_8',
-            'in2_9_a',
-            'in2_9_b',
-            'in2_9_c',
-            'in2_9_d',
-            'in2_10',
-            'in2_11_a',
-            'in2_11_b',
-            'in2_11_c',
-            'in2_11_d',
-            'in2_11_e',
-            'in2_12',
-            'in2_13',
-            'in2_14',
-            'in2_15',
-            'in2_16',
-            'in2_17',
-            'in2_18',
-            'in2_19',
-        ]
+        in2_input_name = ['in2_1', 'in2_2', 'in2_3', 'in2_4', 'in2_5', 'in2_6', 'in2_7', 'in2_8', 'in2_9_a', 'in2_9_b',
+                          'in2_9_c', 'in2_9_d', 'in2_10', 'in2_11_a', 'in2_11_b', 'in2_11_c', 'in2_11_d', 'in2_11_e',
+                          'in2_12', 'in2_13', 'in2_14', 'in2_15', 'in2_16', 'in2_17', 'in2_18', 'in2_19', ]
         for i, n in enumerate(in2_input_name):
             if '11' in n:
                 eval(f'self.ui.{n}').setValue(int(self.in2.input_card[i].strip(' ')))
@@ -117,7 +92,7 @@ class UpdatePage1(MainWindow):
     def update_selection_list(self):
         self.ui.selection_list.clear()
         self.ui.page2_selection_list.clear()
-        for cowan in self.cowan_list.cowan_list:
+        for cowan in self.simulate.cowan_list:
             self.ui.selection_list.addItem(QListWidgetItem(cowan.name))
             item = QListWidgetItem(cowan.name)
             item.setCheckState(Qt.CheckState.Checked)
@@ -136,17 +111,11 @@ class UpdatePage1(MainWindow):
         self.cowan.cal_data.widen_all.plot_widen()
 
         if self.ui.crossP.isChecked():
-            self.ui.web_cal_widen.load(
-                QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_P)
-            )
+            self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_P))
         elif self.ui.crossNP.isChecked():
-            self.ui.web_cal_widen.load(
-                QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_NP)
-            )
+            self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_NP))
         elif self.ui.gauss.isChecked():
-            self.ui.web_cal_widen.load(
-                QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_gauss)
-            )
+            self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_gauss))
 
 
 class UpdatePage2(MainWindow):
@@ -181,21 +150,15 @@ class UpdatePage2(MainWindow):
                 self.ui.page2_grid_list.setItem(
                     self.simulated_grid.ne_list.index(ne),
                     self.simulated_grid.t_list.index(t),
-                    item,
-                )
+                    item, )
 
     def update_space_time_table(self):
         self.ui.st_resolution_table.clear()
         self.ui.st_resolution_table.setRowCount(
-            len(self.space_time_resolution.simulate_spectral_dict)
-        )
+            len(self.space_time_resolution.simulate_spectral_dict))
         self.ui.st_resolution_table.setColumnCount(5)
-        self.ui.st_resolution_table.setHorizontalHeaderLabels(
-            ['时间', '位置', '温度', '密度', '实验谱']
-        )
-        for i, (key, value) in enumerate(
-            self.space_time_resolution.simulate_spectral_dict.items()
-        ):
+        self.ui.st_resolution_table.setHorizontalHeaderLabels(['时间', '位置', '温度', '密度', '实验谱'])
+        for i, (key, value) in enumerate(self.space_time_resolution.simulate_spectral_dict.items()):
             item1 = QTableWidgetItem(key[0])
             item2 = QTableWidgetItem(f'({key[1][0]}, {key[1][1]}, {key[1][2]})')
             if value.temperature is not None and value.electron_density is not None:
@@ -236,14 +199,8 @@ class UpdatePage3(MainWindow):
         temp_times = []
         temp_locations = []
         for key in self.space_time_resolution.simulate_spectral_dict:
-            if (
-                self.space_time_resolution.simulate_spectral_dict[key].temperature
-                is not None
-                or self.space_time_resolution.simulate_spectral_dict[
-                    key
-                ].electron_density
-                is not None
-            ):
+            if (self.space_time_resolution.simulate_spectral_dict[key].temperature is not None
+                    or self.space_time_resolution.simulate_spectral_dict[key].electron_density is not None):
                 temp_times.append(key[0])
                 temp_locations.append(key[1])
         temp_times = set(temp_times)
@@ -259,19 +216,10 @@ class UpdatePage4(MainWindow):
         self.ui.comboBox.clear()
         temp_list = []
         for key in self.space_time_resolution.simulate_spectral_dict:
-            if (
-                self.space_time_resolution.simulate_spectral_dict[key].temperature
-                is not None
-                or self.space_time_resolution.simulate_spectral_dict[
-                    key
-                ].electron_density
-                is not None
-            ):
-                temp_list.append(
-                    '时间：{}       位置：{}, {}, {}'.format(
-                        key[0], key[1][0], key[1][1], key[1][2]
-                    )
-                )
+            if (self.space_time_resolution.simulate_spectral_dict[key].temperature is not None
+                    or self.space_time_resolution.simulate_spectral_dict[key].electron_density is not None):
+                temp_list.append('时间：{}       位置：{}, {}, {}'.format(
+                    key[0], key[1][0], key[1][1], key[1][2]))
         self.ui.comboBox.addItems(temp_list)
 
     def update_treeview(self):
@@ -288,6 +236,9 @@ class UpdatePage4(MainWindow):
                 child.setCheckState(0, Qt.Checked)
                 index_low, index_high = map(int, example.split('_'))
                 child.setText(0, c.in36.get_configuration_name(index_low, index_high))
+                if c.cal_data.widen_part.grouped_widen_data[example]['cross_P'].max() == 0:
+                    child.setBackground(0, QBrush(QColor(255, 0, 0)))
+                    child.setCheckState(0, Qt.Unchecked)
                 parents.addChild(child)
 
     def update_exp_figure(self):
