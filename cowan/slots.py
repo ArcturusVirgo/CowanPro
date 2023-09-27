@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QPushButton,
     QInputDialog,
-    QHBoxLayout, QWidget, QProgressDialog,
+    QHBoxLayout, QWidget, QProgressDialog, QCheckBox,
 )
 
 from . import NonStopProgressDialog
@@ -41,6 +41,9 @@ class Menu(MainWindow):
 
         # 更新实验数据
         self.expdata_1 = ExpData(new_path)
+        # 更新运行历史的实验数据
+        for cowan_ in self.cowan_lists.cowan_run_history:
+            cowan_.exp_data = self.expdata_1
         self.expdata_1.plot_html()
         # 更新页面
         self.ui.exp_web.load(QUrl.fromLocalFile(self.expdata_1.plot_path))
@@ -59,20 +62,39 @@ class Menu(MainWindow):
 
 class Page1(MainWindow):
     def atom_changed(self, index):
+        """
+        当选择的元素改变时
+        Args:
+            index:
+
+        Returns:
+
+        """
         self.atom = Atom(index + 1, 0)
-        self.in36 = In36(self.atom)
 
         # ----------------------------- 更新页面 -----------------------------
         functools.partial(UpdatePage1.update_atom, self)()
 
     def atom_ion_changed(self, index):
+        """
+        当离化度改变时
+        Args:
+            index:
+
+        Returns:
+
+        """
         self.atom = Atom(self.ui.atomic_num.currentIndex() + 1, index)
-        self.in36 = In36(self.atom)
 
         # ----------------------------- 更新页面 -----------------------------
         functools.partial(UpdatePage1.update_atom_ion, self)()
 
     def add_configuration(self):
+        """
+        添加组态
+        Returns:
+
+        """
         # 如果是自动添加
         if self.ui.auto_write_in36.isChecked():
             # 获取基组态
@@ -83,6 +105,7 @@ class Page1(MainWindow):
                 self.ui.high_configuration.currentText(),
             )
             high_configuration = self.atom.get_configuration()
+            # 将原子的状态恢复到基组态
             self.atom.revert_to_ground_state()
 
             # 添加组态
@@ -101,6 +124,7 @@ class Page1(MainWindow):
         )
         if path == '':
             return
+        self.in36 = In36()
         self.in36.read_from_file(Path(path))
         self.atom = copy.deepcopy(self.in36.atom)
 
@@ -116,7 +140,8 @@ class Page1(MainWindow):
         )
         if path == '':
             return
-        self.in2.read_from_file(path)
+        self.in2 = In2()
+        self.in2.read_from_file(Path(path))
         # ----------------------------- 更新页面 -----------------------------
         functools.partial(UpdatePage1.update_in2, self)()
 
@@ -132,7 +157,7 @@ class Page1(MainWindow):
         Page1.get_in36_control_card(self, self.in36)
         in36 = self.in36.get_text()
 
-        temp = '↓         ↓         ↓         ↓         ↓         ↓         ↓         ↓         \n'
+        temp = '↓>1       ↓>11      ↓>21      ↓>31      ↓>41      ↓>51      ↓>61      ↓>71      \n'
         text_browser.setText(temp + in36)
         text_browser.setStyleSheet('font: 12pt "Consolas";')
 
@@ -152,7 +177,7 @@ class Page1(MainWindow):
         Page1.get_in2_control_card(self, self.in2)
         in2 = self.in2.get_text()
 
-        temp = '↓         ↓         ↓         ↓         ↓         ↓         ↓         ↓         \n'
+        temp = '↓>1       ↓>11      ↓>21      ↓>31      ↓>41      ↓>51      ↓>61      ↓>71      \n'
         text_browser.setText(temp + in2)
         text_browser.setStyleSheet('font: 12pt "Consolas";')
 
@@ -170,7 +195,7 @@ class Page1(MainWindow):
         # ----------------------------- 更新页面 -----------------------------
         # 更新 in36 组态输入区
         functools.partial(UpdatePage1.update_in36_configuration, self)()
-        # 调整当前显示的内容
+        # 调整当前选中的内容
         self.ui.in36_configuration_view.setCurrentIndex(
             self.ui.in36_configuration_view.model().index(index - 1, 0)
         )
@@ -185,32 +210,66 @@ class Page1(MainWindow):
         # ----------------------------- 更新页面 -----------------------------
         # 更新 in36 组态输入区
         functools.partial(UpdatePage1.update_in36_configuration, self)()
-        # 调整当前显示的内容
+        # 调整当前选中的内容
         self.ui.in36_configuration_view.setCurrentIndex(
             self.ui.in36_configuration_view.model().index(index + 1, 0)
         )
 
     def in2_11_e_value_changed(self, value):
+        """
+        同步 in2 的斯莱特系数
+        Args:
+            value:
+
+        Returns:
+
+        """
         self.ui.in2_11_a.setValue(value)
         self.ui.in2_11_c.setValue(value)
         self.ui.in2_11_d.setValue(value)
 
     def auto_write_in36(self):
+        """
+        自动添加组态
+        Returns:
+
+        """
         self.ui.high_configuration.setEnabled(True)
         self.ui.configuration_edit.setEnabled(False)
         self.ui.low_configuration.setEnabled(True)
 
     def manual_write_in36(self):
+        """
+        手动添加组态
+        Returns:
+
+        """
         self.ui.configuration_edit.setEnabled(True)
         self.ui.low_configuration.setEnabled(False)
         self.ui.high_configuration.setEnabled(False)
 
     def in36_configuration_view_right_menu(self, *args):
+        def del_configuration():
+            index = self.ui.in36_configuration_view.currentIndex().row()
+            if index < len(self.in36.configuration_card):
+                self.in36.del_configuration(index)
+
+            # ----------------------------- 更新页面 -----------------------------
+            # 更新 in36 组态输入区
+            if self.in36.configuration_card:  # 如果组态卡不为空
+                functools.partial(UpdatePage1.update_in36_configuration, self)()
+            else:  # 如果组态卡为空
+                self.ui.in36_configuration_view.clear()
+                self.ui.in36_configuration_view.setRowCount(0)
+                self.ui.in36_configuration_view.setColumnCount(3)
+                self.ui.in36_configuration_view.setHorizontalHeaderLabels(
+                    ['原子序数', '原子状态', '标识符', '空格', '组态']
+                )
         right_menu = QMenu(self.ui.in36_configuration_view)
 
         # 设置动作
         item_1 = QAction('删除', self.ui.in36_configuration_view)
-        item_1.triggered.connect(functools.partial(Page1.del_configuration, self))
+        item_1.triggered.connect(del_configuration)
 
         # 添加
         right_menu.addAction(item_1)
@@ -218,65 +277,31 @@ class Page1(MainWindow):
         # 显示右键菜单
         right_menu.popup(QCursor.pos())
 
-    def del_configuration(self):
-        index = self.ui.in36_configuration_view.currentIndex().row()
-        if index < len(self.in36.configuration_card):
-            self.in36.del_configuration(index)
-
-        # ----------------------------- 更新页面 -----------------------------
-        # 更新 in36 组态输入区
-        if self.in36.configuration_card:  # 如果组态卡不为空
-            functools.partial(UpdatePage1.update_in36_configuration, self)()
-        else:  # 如果组态卡为空
-            self.ui.in36_configuration_view.clear()
-            self.ui.in36_configuration_view.setRowCount(0)
-            self.ui.in36_configuration_view.setColumnCount(3)
-            self.ui.in36_configuration_view.setHorizontalHeaderLabels(
-                ['原子序数', '原子状态', '标识符', '空格', '组态']
-            )
-
     def run_cowan(self):
         def cowan_complete():
             # 等待运行结束
             cowan_run.wait()
             cowan_run.update_origin()
 
-            self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
-            self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
-            self.cowan.cal_data.widen_all.fwhm_value = self.ui.widen_fwhm.value()
-            self.cowan.cal_data.widen_part.fwhm_value = self.ui.widen_fwhm.value()
-            widen_temperature = self.ui.widen_temp.value()
-            self.cowan.cal_data.widen_all.widen(temperature=widen_temperature, only_p=False)
-            # self.cowan.cal_data.widen_part.widen_by_group(widen_temperature)
-            # -------------------------- 画图 --------------------------
-            self.cowan.cal_data.plot_line()
-            self.cowan.cal_data.widen_all.plot_widen()
-            # self.cowan.cal_data.widen_part.plot_widen_by_group()
+            # -------------------------- 展宽 --------------------------
+            self.cowan.cal_data.widen_all.widen(temperature=25.6, only_p=False)  # 整体展宽
+            # self.cowan.cal_data.widen_part.widen_by_group(widen_temperature)  # 部分展宽
             # -------------------------- 添加到运行历史 --------------------------
-            # 如果已经存在，先删除
-            index = -1
-            for i, cowan_ in enumerate(self.run_history):
-                if cowan_.name == self.cowan.name:
-                    index = i
-                    break
-            if index != -1:
-                self.run_history.pop(index)
-            self.run_history.append(copy.deepcopy(self.cowan))
-            # 如果存在于叠加列表中，就更新它
-            for i, cowan_ in enumerate(self.simulate.cowan_list):
-                if cowan_.name == self.cowan.name:
-                    self.simulate.cowan_list[i] = copy.deepcopy(self.cowan)
-                    break
-            self.cowan_obj_save = copy.deepcopy([self.simulate.cowan_list, self.simulate.add_or_not])
-
+            self.cowan_lists.add_history(self.cowan)
             # -------------------------- 更新页面 --------------------------
             # 更新历史记录列表
             functools.partial(UpdatePage1.update_history_list, self)()
-            self.ui.run_history_list.setCurrentRow(len(self.run_history) - 1)  # 选中最后一项
+            # 更新选择列表
+            functools.partial(UpdatePage1.update_selection_list, self)()
+            self.ui.run_history_list.setCurrentRow(len(self.cowan_lists.cowan_run_history) - 1)  # 选中最后一项
             # 线状谱和展宽数据
             functools.partial(UpdatePage1.update_line_figure, self)()
             functools.partial(UpdatePage1.update_widen_figure, self)()
-            self.ui.cowan_now_name.setText(f'当前计算：{self.cowan.name}')
+            self.ui.cowan_now_name.setText(f'当前展示：{self.cowan.name}')
+            # 更新展宽配置
+            self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
+            self.ui.widen_fwhm.setValue(self.cowan.cal_data.widen_all.fwhm_value)
+            self.ui.widen_temp.setValue(25.6)
 
         def update_progress(val: str):
             if val == '0':
@@ -293,39 +318,58 @@ class Page1(MainWindow):
                 progressDialog.setValue(100)
 
         # -------------------------- 准备工作 --------------------------
-        if self.expdata_1 is None:  # 如果没有加载实验数据
+        # 如果没有加载实验数据
+        if self.expdata_1 is None:
             QMessageBox.warning(self, '警告', '请先加载实验数据！')
             return
-
-        if not self.in36.configuration_card:  # 如果没有组态卡
+        # 如果组态卡是空的
+        if not self.in36.configuration_card:
             QMessageBox.warning(self, '警告', '请先添加组态！')
             return
+        # 从界面读取in36和in2的控制卡
         Page1.get_in36_control_card(self, self.in36)
         Page1.get_in2_control_card(self, self.in2)
+        # 获取此次运行的名称
         name = '{}_{}'.format(self.atom.symbol, self.atom.ion)
-
+        # 获取此次运行的耦合模式
         coupling_mode = self.ui.coupling_mode.currentIndex() + 1
+
         # -------------------------- 运行 --------------------------
+        # 运行Cowan
         self.cowan = Cowan(self.in36, self.in2, name, self.expdata_1, coupling_mode)
         cowan_run = CowanThread(self.cowan)
         # ----界面代码
         progressDialog = NonStopProgressDialog('', '', 0, 100, self)
         progressDialog.setWindowTitle('计算进度：')
-        cowan_run.sub_complete.connect(update_progress)
-        cowan_run.all_completed.connect(cowan_complete)
+        cowan_run.sub_complete.connect(update_progress)  # 更新进度条
+        cowan_run.all_completed.connect(cowan_complete)  # 计算完成
 
         # ----界面代码
         cowan_run.start()
         progressDialog.show()
 
     def run_history_list_right_menu(self, *args):
+        def clear_history():
+            self.cowan_lists.clear_history()
+
+            # -------------------------- 更新页面 --------------------------
+            functools.partial(UpdatePage1.update_history_list, self)()
+
+        def add_to_selection():
+            index = self.ui.run_history_list.currentIndex().row()
+            self.cowan_lists.add_cowan(list(self.cowan_lists.cowan_run_history.values())[index].name)
+
+            # -------------------------- 更新页面 --------------------------
+            # 更新选择列表
+            functools.partial(UpdatePage1.update_selection_list, self)()
+        # 函数定义结束 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         right_menu = QMenu(self.ui.run_history_list)
 
         # 设置动作
         item_1 = QAction('添加至库中', self.ui.run_history_list)
-        item_1.triggered.connect(functools.partial(Page1.add_to_selection, self))
+        item_1.triggered.connect(add_to_selection)
         item_2 = QAction('清空', self.ui.run_history_list)
-        item_2.triggered.connect(functools.partial(Page1.clear_history, self))
+        item_2.triggered.connect(clear_history)
 
         # 添加
         right_menu.addAction(item_1)
@@ -334,32 +378,18 @@ class Page1(MainWindow):
         # 显示右键菜单
         right_menu.popup(QCursor.pos())
 
-    def clear_history(self):
-        self.run_history = []
-
-        # -------------------------- 更新页面 --------------------------
-        functools.partial(UpdatePage1.update_history_list, self)()
-
-    def add_to_selection(self):
-        index = self.ui.run_history_list.currentIndex().row()
-        for i, cc in enumerate(self.simulate.cowan_list):
-            if cc.name == self.run_history[index].name:
-                self.simulate.cowan_list.pop(i)
-                break
-        self.simulate.add_cowan(self.run_history[index])
-        self.cowan_obj_save = copy.deepcopy([self.simulate.cowan_list, self.simulate.add_or_not])
-        # self.cowan_obj_save = copy.deepcopy([self.simulate.cowan_list, self.simulate.add_or_not])
-
-        # -------------------------- 更新页面 --------------------------
-        # 更新选择列表
-        functools.partial(UpdatePage1.update_selection_list, self)()
-
     def selection_list_right_menu(self, *args):
+        def del_selection():
+            index = self.ui.selection_list.currentIndex().row()
+            self.cowan_lists.del_cowan(index)
+
+            # -------------------------- 更新页面 --------------------------
+            functools.partial(UpdatePage1.update_selection_list, self)()
         right_menu = QMenu(self.ui.selection_list)
 
         # 设置动作
         item_1 = QAction('删除', self.ui.selection_list)
-        item_1.triggered.connect(functools.partial(Page1.del_selection, self))
+        item_1.triggered.connect(del_selection)
 
         # 添加
         right_menu.addAction(item_1)
@@ -367,20 +397,21 @@ class Page1(MainWindow):
         # 显示右键菜单
         right_menu.popup(QCursor.pos())
 
-    def del_selection(self):
-        index = self.ui.selection_list.currentIndex().row()
-        self.simulate.cowan_list.pop(index)
-
-        # -------------------------- 更新页面 --------------------------
-        functools.partial(UpdatePage1.update_selection_list, self)()
-
     def load_history(self, *args):
+        """
+        双击运行历史
+        Args:
+            *args:
+
+        Returns:
+
+        """
         index = self.ui.run_history_list.currentIndex().row()
-        self.cowan = copy.deepcopy(self.run_history[index])
+        self.cowan = copy.deepcopy(list(self.cowan_lists.cowan_run_history.values())[index])
         self.in36 = copy.deepcopy(self.cowan.in36)
         self.in2 = copy.deepcopy(self.cowan.in2)
         self.atom = copy.deepcopy(self.in36.atom)
-        self.expdata_1 = copy.deepcopy(self.cowan.exp_data)
+        # self.expdata_1 = copy.deepcopy(self.cowan.exp_data)
 
         # -------------------------- 更新页面 --------------------------
         self.ui.cowan_now_name.setText(f'当前展示：{self.cowan.name}')
@@ -407,18 +438,25 @@ class Page1(MainWindow):
         widen_temperature = self.ui.widen_temp.value()
         self.cowan.cal_data.widen_all.widen(widen_temperature, False)
         # self.cowan.cal_data.widen_part.widen_by_group(temperature=widen_temperature)
-        for i, cowan_ in enumerate(self.run_history):
-            if cowan_.name == self.cowan.name:
-                self.run_history[i] = copy.deepcopy(self.cowan)
-                break
-        # 如果存在于叠加列表中，就更新它
-        for i, cowan_ in enumerate(self.simulate.cowan_list):
-            if cowan_.name == self.cowan.name:
-                self.simulate.cowan_list[i] = copy.deepcopy(self.cowan)
-                break
+
+        # -------------------------- 更新历史记录和选择列表 --------------------------
+        self.cowan_lists.add_history(self.cowan)
+        # for i, cowan_ in enumerate(self.run_history):
+        #     if cowan_.name == self.cowan.name:
+        #         self.run_history[i] = copy.deepcopy(self.cowan)
+        #         break
+        # # 如果存在于叠加列表中，就更新它
+        # for i, cowan_ in enumerate(self.simulate.cowan_list):
+        #     if cowan_.name == self.cowan.name:
+        #         self.simulate.cowan_list[i] = copy.deepcopy(self.cowan)
+        #         break
 
         # ------------------------- 更新界面 -------------------------
         functools.partial(UpdatePage1.update_widen_figure, self)()
+        # 更新选择列表
+        functools.partial(UpdatePage1.update_selection_list, self)()
+        # 更新历史记录列表
+        functools.partial(UpdatePage1.update_history_list, self)()
 
     def get_in36_control_card(self, in36_obj: In36):
         v0 = '{:>1}'.format(self.ui.in36_1.text())
@@ -497,10 +535,9 @@ class Page2(MainWindow):
             # 取出列表项
             item = self.ui.page2_selection_list.item(i)
             if item.checkState() == Qt.CheckState.Checked:
-                self.simulate.add_or_not[i] = True
+                self.cowan_lists.add_or_not[i] = True
             else:
-                self.simulate.add_or_not[i] = False
-        self.cowan_obj_save = copy.deepcopy([self.simulate.cowan_list, self.simulate.add_or_not])
+                self.cowan_lists.add_or_not[i] = False
 
     def load_exp_data(self):
         """
@@ -541,14 +578,16 @@ class Page2(MainWindow):
         if self.expdata_2 is None:
             QMessageBox.warning(self, '警告', '请先导入实验数据！')
             return
-        else:
-            self.simulate.exp_data = copy.deepcopy(self.expdata_2)
-        if not self.cowan_obj_save:
+        if not self.cowan_lists.chose_cowan:
             QMessageBox.warning(self, '警告', '请先添加计算结果！')
             return
         temperature = self.ui.page2_temperature.value()
         density = (self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value())
+        self.simulate = SimulateSpectral()
+        self.simulate.exp_data = copy.deepcopy(self.expdata_2)
+        self.simulate.init_cowan_list(self.cowan_lists)
         self.simulate.get_simulate_data(temperature, density)
+        self.simulate.del_cowan_list()
 
         # -------------------------- 更新页面 --------------------------
         functools.partial(UpdatePage2.update_exp_sim_figure, self)()
@@ -561,6 +600,7 @@ class Page2(MainWindow):
         def update_ui(*args):
             simulated_grid_run.wait()
             simulated_grid_run.update_origin()
+            self.simulate.del_cowan_list()
             # -------------------------- 更新页面 --------------------------
             functools.partial(UpdatePage2.update_grid, self)()
             self.ui.page2_cal_grid.setEnabled(True)
@@ -570,10 +610,7 @@ class Page2(MainWindow):
         if self.expdata_2 is None:
             QMessageBox.warning(self, '警告', '请先导入实验数据！')
             return
-        else:
-            self.simulate.exp_data = copy.deepcopy(self.expdata_2)
-
-        if not self.simulate.cowan_list:
+        if not self.cowan_lists.chose_cowan:
             QMessageBox.warning(self, '警告', '请先添加计算结果！')
             return
 
@@ -590,12 +627,9 @@ class Page2(MainWindow):
             self.ui.density_max_index.value(),
             self.ui.density_num.value()
         ]
-        # self.ui.page2_progressBar.setRange(0, t_range[2] * ne_range[4])
-
-        # 删除之前的网格
-        if self.simulated_grid:
-            del self.simulated_grid
-        self.print_memory()
+        self.simulate = SimulateSpectral()
+        self.simulate.exp_data = copy.deepcopy(self.expdata_2)
+        self.simulate.init_cowan_list(self.cowan_lists)
         self.simulated_grid = SimulateGrid(t_range, ne_range, self.simulate)
         self.simulated_grid.change_task('cal')
         simulated_grid_run = SimulateGridThread(self.simulated_grid)
@@ -618,10 +652,6 @@ class Page2(MainWindow):
         temperature = self.simulated_grid.t_list[item.column()]
         density = self.simulated_grid.ne_list[item.row()]
         self.simulate = copy.deepcopy(self.simulated_grid.grid_data[(temperature, density)])
-        if self.simulate.cowan_list is None or self.simulate.add_or_not is None:
-            self.simulate.cowan_list, self.simulate.add_or_not = copy.deepcopy(self.cowan_obj_save)
-        # if self.simulate.sim_data is None:
-        #     self.simulate.get_simulate_data(temperature, density)
 
         # -------------------------- 更新页面 --------------------------
         temp = density.split('e+')
@@ -642,6 +672,7 @@ class Page2(MainWindow):
             return
         else:
             self.simulate.exp_data = copy.deepcopy(self.expdata_2)
+        self.simulate.del_cowan_list()
         self.space_time_resolution.add_st((st_time, st_space), self.simulate)
 
         # -------------------------- 更新页面 --------------------------
@@ -661,20 +692,14 @@ class Page2(MainWindow):
             loc, tim = file_name.stem.split('_')
             loc = loc.strip('mm')
             tim = tim.strip('ns')
+            self.simulate = SimulateSpectral()
             self.expdata_2 = ExpData(file_name)
-            self.simulate.temperature = None
-            self.simulate.electron_density = None
-            self.simulate.exp_data = copy.deepcopy(self.expdata_2)
-            self.simulate.sim_data = None
+            self.simulate.load_exp_data(Path(file_name))
             self.space_time_resolution.add_st((tim, (loc, '0', '0')), self.simulate)
 
         # -------------------------- 更新页面 --------------------------
         # 第二页
         functools.partial(UpdatePage2.update_space_time_table, self)()
-        # 第三页
-        functools.partial(UpdatePage3.update_space_time_combobox, self)()
-        # 第四页
-        functools.partial(UpdatePage4.update_space_time_combobox, self)()
 
     def st_resolution_clicked(self, *args):
         # 函数定义开始↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
@@ -688,15 +713,10 @@ class Page2(MainWindow):
 
         index = self.ui.st_resolution_table.currentIndex().row()
         key = list(self.space_time_resolution.simulate_spectral_dict.keys())[index]
-        if self.simulate:
-            del self.simulate
         self.simulate = copy.deepcopy(self.space_time_resolution.simulate_spectral_dict[key])
-        if self.simulate.cowan_list is None or self.simulate.add_or_not is None:
-            self.simulate.cowan_list, self.simulate.add_or_not = copy.deepcopy(self.cowan_obj_save)
         self.expdata_2 = copy.deepcopy(self.simulate.exp_data)
         if self.simulated_grid is not None:
             self.ui.statusbar.showMessage('正在更新网格，请稍后……')
-            # QMetaObject.invokeMethod(self.simulated_grid, 'update_similarity')
             self.simulated_grid.change_task('update', self.expdata_2)
             simulated_grid_run = SimulateGridThread(self.simulated_grid)
             progressDialog = NonStopProgressDialog('', '', 0, 0, self)
@@ -717,12 +737,43 @@ class Page2(MainWindow):
             functools.partial(UpdatePage2.update_exp_sim_figure, self)()
         else:
             functools.partial(UpdatePage2.update_exp_figure, self)()
+        functools.partial(UpdatePage2.update_space_time_table, self)()
+        # 将选中的整行的背景色改为红色
+        for i in range(self.ui.st_resolution_table.columnCount()):
+            self.ui.st_resolution_table.item(index, i).setBackground(QColor(255, 255, 0))
+
+    def st_resolution_right_menu(self, *args):
+        def del_st_item():
+            index = self.ui.st_resolution_table.currentIndex().row()
+            key = list(self.space_time_resolution.simulate_spectral_dict.keys())[index]
+            self.space_time_resolution.del_st(key)
+
+            # -------------------------- 更新页面 --------------------------
+            # 第二页
+            functools.partial(UpdatePage2.update_space_time_table, self)()
+            # 第三页
+            functools.partial(UpdatePage3.update_space_time_combobox, self)()
+            # 第四页
+            functools.partial(UpdatePage4.update_space_time_combobox, self)()
+
+        # 函数定义结束 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        right_menu = QMenu(self.ui.st_resolution_table)
+
+        # 设置动作
+        item_1 = QAction('删除', self.ui.st_resolution_table)
+        item_1.triggered.connect(del_st_item)
+
+        # 添加
+        right_menu.addAction(item_1)
+
+        # 显示右键菜单
+        right_menu.popup(QCursor.pos())
 
     def choose_peaks(self):
         def add_data():
-            if self.simulate is None or self.simulate.exp_data is None:
-                minValue = 0
-                maxValue = 10
+            if self.expdata_2 is None:
+                QMessageBox.warning(self, '警告', '请先导入实验数据！')
+                return
             else:
                 minValue = self.simulate.exp_data.x_range[0]
                 maxValue = self.simulate.exp_data.x_range[1]
@@ -751,6 +802,10 @@ class Page2(MainWindow):
             update_ui()
 
         def close_window():
+            if all_changed.isChecked():
+                for sim in self.space_time_resolution.simulate_spectral_dict.values():
+                    sim.characteristic_peaks = copy.deepcopy(self.simulate.characteristic_peaks)
+            functools.partial(UpdatePage2.update_characteristic_peaks, self)()
             dialog.close()
 
         def update_ui():
@@ -760,15 +815,39 @@ class Page2(MainWindow):
         def show_right_menu():
             right_menu.popup(QCursor.pos())  # 显示右键菜单
 
+        def double_clicked():
+            index = peaks_browser.currentRow()
+            minValue = self.simulate.exp_data.x_range[0]
+            maxValue = self.simulate.exp_data.x_range[1]
+            input_value, okPressed = QInputDialog.getDouble(
+                self,
+                "请输入",
+                "特征波长",
+                decimals=3,
+                step=0.002,
+                maxValue=maxValue,
+                minValue=minValue,
+                value=self.simulate.characteristic_peaks[index]
+            )
+            if not okPressed:
+                return
+            self.simulate.characteristic_peaks[index] = input_value
+            self.simulate.characteristic_peaks.sort()
+            dialog.activateWindow()
+            update_ui()
+
         # 创建窗口元素
         dialog = QWidget()
         dialog.resize(200, 300)
         peaks_browser = QListWidget(dialog)
         peaks_browser.setContextMenuPolicy(Qt.CustomContextMenu)  # 允许使用右键菜单
         add_button = QPushButton('添加', dialog)
-        close_button = QPushButton('关闭', dialog)
+        close_button = QPushButton('确认', dialog)
+        all_changed = QCheckBox('全部改变', dialog)
         add_button.clicked.connect(add_data)
         close_button.clicked.connect(close_window)
+        peaks_browser.doubleClicked.connect(double_clicked)
+
         button_layout = QHBoxLayout()
         button_layout.addWidget(add_button)
         button_layout.addWidget(close_button)
@@ -776,6 +855,7 @@ class Page2(MainWindow):
         # 设置布局
         dialog_layout = QVBoxLayout(dialog)
         dialog_layout.addWidget(peaks_browser)
+        dialog_layout.addWidget(all_changed)
         dialog_layout.addLayout(button_layout)
         dialog.setLayout(dialog_layout)
 
@@ -788,7 +868,6 @@ class Page2(MainWindow):
 
         update_ui()
         dialog.show()
-        functools.partial(UpdatePage2.update_characteristic_peaks, self)()
 
 
 class Page3(MainWindow):
@@ -823,11 +902,13 @@ class Page4(MainWindow):
     def comboBox_changed(self, index):
         # 设置树状列表
         self.ui.treeWidget.clear()
-        self.simulate_page4: SimulateSpectral = copy.deepcopy(
-            list(self.space_time_resolution.simulate_spectral_dict.values())[index]
-        )
-        if self.simulate_page4.cowan_list is None or self.simulate_page4.add_or_not is None:
-            self.simulate_page4.cowan_list, self.simulate_page4.add_or_not = copy.deepcopy(self.cowan_obj_save)
+        temp_list = []
+        for key, value in self.space_time_resolution.simulate_spectral_dict.items():
+            if value.temperature is None or value.electron_density is None:
+                continue
+            temp_list.append(copy.deepcopy(value))
+        self.simulate_page4: SimulateSpectral = temp_list[index]
+        self.simulate_page4.init_cowan_list(self.cowan_lists)
         # -------------------------- 更新页面 --------------------------
         functools.partial(UpdatePage4.update_treeview, self)()
         functools.partial(UpdatePage4.update_exp_figure, self)()
@@ -852,9 +933,10 @@ class Page4(MainWindow):
                     add_example[i][1].append(True)
                 else:
                     add_example[i][1].append(False)
-
+        self.simulate_page4.init_cowan_list(self.cowan_lists)
         self.simulate_page4.plot_example_html(add_example)
         self.ui.webEngineView_2.load(QUrl.fromLocalFile(self.simulate_page4.example_path))
+        self.simulate_page4.del_cowan_list()
 
     @staticmethod
     def tree_item_changed(self, item, column):

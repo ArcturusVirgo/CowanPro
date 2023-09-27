@@ -197,14 +197,12 @@ class ExpData:
 
 
 class In36:
-    def __init__(self, atom: Atom):
+    def __init__(self):
         """
         in36 对象，一般附属于 Cowan 对象
 
-        Args:
-            atom: Atom 对象
         """
-        self.atom: Atom = copy.deepcopy(atom)
+        self.atom: Optional[Atom] = None
 
         self.control_card = ['2', ' ', ' ', '-9', ' ', '  ', ' 2', '   ', '10', '  1.0', '    5.e-08', '    1.e-11',
                              '-2', '  ', ' ', '1', '90', '  ', '  1.0', ' 0.65', '  0.0', '  0.0', '     ', ]
@@ -246,6 +244,9 @@ class In36:
         num = int(self.configuration_card[0][0][0].split(' ')[-1])
         ion = int(self.configuration_card[0][0][1].split('+')[-1])
         self.atom = Atom(num=num, ion=ion)
+
+    def set_atom(self, atom: Atom):
+        self.atom = copy.deepcopy(atom)
 
     def add_configuration(self, configuration: str):
         """
@@ -551,8 +552,8 @@ class CalData:
         self.plot_path = (PROJECT_PATH() / f'figure/line/{name}.html').as_posix()
         self.init_data: pd.DataFrame | None = None
 
-        self.widen_all: Optional[WidenAll] = None
-        self.widen_part: Optional[WidenPart] = None
+        self.widen_all: Optional[WidenAll] = None  # 通过self.read_file()赋初值
+        self.widen_part: Optional[WidenPart] = None  # 通过self.read_file()赋初值
 
         self.read_file()
 
@@ -616,15 +617,14 @@ class WidenAll:
             name,
             init_data,
             exp_data: ExpData,
-            delta_lambda=0.0,  # 单位是nm
             n=None,
     ):
         self.name = name
         self.init_data = init_data.copy()
         self.exp_data = exp_data
-        self.delta_lambda: float = delta_lambda
         self.n = n
         self.only_p = None
+        self.delta_lambda: float = 0.0
         self.fwhm_value: float = 0.5
 
         self.plot_path_gauss = (
@@ -753,38 +753,15 @@ class WidenAll:
             population: np.array,
             new_J: np.array,
     ):
-        uu = (
-                (new_intensity * population / (2 * new_J + 1))
-                * 2
-                * fwhmgauss
-                / (
-                        2
-                        * np.pi
-                        * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)
-                )
-        )
+        uu = ((new_intensity * population / (2 * new_J + 1)) * 2 * fwhmgauss / (
+                2 * np.pi * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)))
         if self.only_p:
             return -1, -1, uu.sum()
         else:
-            tt = (
-                    new_intensity
-                    / np.sqrt(2 * np.pi)
-                    / fwhmgauss
-                    * 2.355
-                    * np.exp(
-                -(2.355 ** 2) * (new_wavelength - wave) ** 2 / fwhmgauss ** 2 / 2
-            )
-            )
-            ss = (
-                    (new_intensity / (2 * new_J + 1))
-                    * 2
-                    * fwhmgauss
-                    / (
-                            2
-                            * np.pi
-                            * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)
-                    )
-            )
+            tt = (new_intensity / np.sqrt(2 * np.pi) / fwhmgauss * 2.355 * np.exp(
+                -(2.355 ** 2) * (new_wavelength - wave) ** 2 / fwhmgauss ** 2 / 2))
+            ss = ((new_intensity / (2 * new_J + 1)) * 2 * fwhmgauss / (
+                    2 * np.pi * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)))
             return tt.sum(), ss.sum(), uu.sum()
 
     def fwhmgauss(self, wavelength: float):
@@ -797,15 +774,14 @@ class WidenPart:
             name,
             init_data,
             exp_data: ExpData,
-            delta_lambda=0.0,  # 单位是nm
             n=None,
     ):
         self.name = name
         self.init_data = init_data.copy()
         self.exp_data = exp_data
-        self.delta_lambda: float = delta_lambda
         self.n = n
         self.only_p = None
+        self.delta_lambda: float = 0.0
         self.fwhm_value = 0.5
 
         self.plot_path_list = {}
@@ -964,21 +940,69 @@ class WidenPart:
 
 class CowanList:
     def __init__(self):
-        self.cowan_list: List[Cowan] = []  # 用于存储 cowan 对象
+        self.chose_cowan: List[str] = []  # 用于存储 cowan 对象在历史列表中的索引
         self.add_or_not: List[bool] = []  # cowan 对象是否被添加
+
+        self.cowan_run_history: Dict[str:Cowan] = {}  # 用于存储 cowan 对象
+
+    def add_cowan(self, key):
+        """
+        添加 cowan 对象，如果了列表中已经存在就删除再添加
+        Returns:
+
+        """
+        if key in self.chose_cowan:
+            self.del_cowan(key)
+        self.chose_cowan.append(key)
+        self.add_or_not.append(True)
+
+    def del_cowan(self, key):
+        index = self.chose_cowan.index(key)
+        self.chose_cowan.pop(index)
+        self.add_or_not.pop(index)
+
+    def add_history(self, cowan: Cowan):
+        """
+        添加 cowan 对象，如果了列表中已经存在，就删除再添加
+        如果它存在于叠加列表中，就更新叠加列表
+        Args:
+            cowan:
+
+        Returns:
+
+        """
+
+        if cowan.name in self.cowan_run_history.keys():
+            self.cowan_run_history.pop(cowan.name)
+        self.cowan_run_history[cowan.name] = copy.deepcopy(cowan)
+        if cowan.name in self.chose_cowan:
+            index = self.chose_cowan.index(cowan.name)
+            self.chose_cowan.pop(index)
+            self.add_or_not.pop(index)
+            self.chose_cowan.append(cowan.name)
+            self.add_or_not.append(True)
+
+    def clear_history(self):
+        keys = list(self.cowan_run_history.keys())
+        for key in keys:
+            if key not in self.chose_cowan:
+                self.cowan_run_history.pop(key)
+
+    def __getitem__(self, index):
+        return self.cowan_run_history[self.chose_cowan[index]], self.add_or_not[index]
 
 
 class SimulateSpectral:
     def __init__(self):
-        self.cowan_list: List[Cowan] = []  # 用于存储 cowan 对象
-        self.add_or_not: List[bool] = []  # cowan 对象是否被添加
+        self.cowan_list: Optional[List[Cowan]] = None  # 用于存储 cowan 对象
+        self.add_or_not: Optional[List[bool]] = None  # cowan 对象是否被添加
         self.exp_data: Optional[ExpData] = None  # 实验光谱数据
         self.spectrum_similarity = None  # 光谱相似度
         self.temperature = None  # 模拟的等离子体温度
         self.electron_density = None  # 模拟的等离子体电子密度
 
         self.characteristic_peaks = []  # 特征峰波长
-        self.peaks_index = []
+        self.peaks_index = []  # 特征峰索引
 
         self.abundance = []  # 离子丰度
         self.sim_data = None  # 模拟光谱数据
@@ -991,18 +1015,16 @@ class SimulateSpectral:
     def load_exp_data(self, path: Path):
         self.exp_data = ExpData(path)
 
-    def add_cowan(self, *args):
-        for cowan in args:
-            for i, old_cowan in enumerate(self.cowan_list):
-                if cowan.name == old_cowan.name:
-                    self.add_or_not[i] = True
-                    self.cowan_list[i] = copy.deepcopy(cowan)
-            self.cowan_list.append(copy.deepcopy(cowan))
-            self.add_or_not.append(True)
+    def init_cowan_list(self, cowan_lists: CowanList):
+        temp_list = []
+        for key in cowan_lists.chose_cowan:
+            temp_list.append(cowan_lists.cowan_run_history[key])
+        self.cowan_list = copy.deepcopy(temp_list)
+        self.add_or_not = copy.deepcopy(cowan_lists.add_or_not)
 
-    def del_cowan(self, index):
-        self.cowan_list.pop(index)
-        self.add_or_not.pop(index)
+    def del_cowan_list(self):
+        self.cowan_list = None
+        self.add_or_not = None
 
     def get_simulate_data(self, temperature, electron_density):
         """
@@ -1014,6 +1036,8 @@ class SimulateSpectral:
         Returns:
 
         """
+        if self.cowan_list is None or self.add_or_not is None:
+            raise Exception('cowan_list 未初始化！！！')
         # 将温度和密度赋值给当前对象
         self.temperature = temperature
         self.electron_density = electron_density
@@ -1123,8 +1147,7 @@ class SimulateSpectral:
                             trace.append(
                                 go.Scatter(
                                     x=value['wavelength'],
-                                    y=value['cross_P'] / value['cross_P'].max()
-                                      + height,
+                                    y=value['cross_P'] / value['cross_P'].max() + height,
                                     mode='lines',
                                     name='',
                                     hovertext=name,
@@ -1530,7 +1553,6 @@ class SimulateGridThread(QtCore.QThread):
             temp_cowan.cowan_list = None
             temp_cowan.add_or_not = None
             self.grid_data[(t, ne)] = temp_cowan
-            # self.grid_data[(t, ne)].sim_data = None
             self.progress.emit(str(int(current_progress / self.t_num / self.ne_num * 100)))
 
         # 多线程

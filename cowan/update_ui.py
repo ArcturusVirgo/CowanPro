@@ -14,6 +14,12 @@ from main import MainWindow
 
 class UpdatePage1(MainWindow):
     def update_atom(self):
+        """
+        更新 元素选择器
+        更新 ；离化度列表
+        Returns:
+
+        """
         # 改变元素选择器
         self.ui.atomic_num.setCurrentIndex(self.atom.num - 1)
         self.ui.atomic_name.setCurrentIndex(self.atom.num - 1)
@@ -25,6 +31,12 @@ class UpdatePage1(MainWindow):
         functools.partial(UpdatePage1.update_atom_ion, self)()
 
     def update_atom_ion(self):
+        """
+        更新 元素选择区
+        更新 组态选择区
+        Returns:
+
+        """
         # 改变基组态
         self.ui.base_configuration.setText(self.atom.base_configuration)
         # 改变下态列表
@@ -69,6 +81,12 @@ class UpdatePage1(MainWindow):
             eval(f'self.ui.in36_{i + 1}').setText(self.in36.control_card[i].strip(' '))
 
     def update_in36(self):
+        """
+        更新in36控制卡输入区
+        更新in36组态输入区
+        Returns:
+
+        """
         # 更新in36控制卡输入区
         functools.partial(UpdatePage1.update_in36_control, self)()
         # 更新in36组态输入区
@@ -84,18 +102,26 @@ class UpdatePage1(MainWindow):
             else:
                 eval(f'self.ui.{n}').setText(self.in2.input_card[i].strip(' '))
 
-    def update_history_list(self):
+    def update_history_list(self, high_light_index=None):
         self.ui.run_history_list.clear()
-        for cowan in self.run_history:
-            self.ui.run_history_list.addItem(QListWidgetItem(cowan.name))
+        # if high_light_index == -1:
+        #     high_light_index = len(self.cowan_lists.cowan_run_history) - 1
+        for i, (name, cowan) in enumerate(self.cowan_lists.cowan_run_history.items()):
+            item = QListWidgetItem(cowan.name)
+            # if i == high_light_index:
+            #     item.setBackground(QBrush(QColor(255, 0, 0)))
+            self.ui.run_history_list.addItem(item)
 
     def update_selection_list(self):
         self.ui.selection_list.clear()
         self.ui.page2_selection_list.clear()
-        for cowan in self.simulate.cowan_list:
+        for cowan, flag in self.cowan_lists:
             self.ui.selection_list.addItem(QListWidgetItem(cowan.name))
             item = QListWidgetItem(cowan.name)
-            item.setCheckState(Qt.CheckState.Checked)
+            if flag:
+                item.setCheckState(Qt.CheckState.Checked)
+            else:
+                item.setCheckState(Qt.CheckState.Unchecked)
             self.ui.page2_selection_list.addItem(item)
 
     def update_exp_figure(self):
