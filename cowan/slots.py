@@ -383,7 +383,7 @@ class Page1(MainWindow):
         self.expdata_1 = copy.deepcopy(self.cowan.exp_data)
 
         # -------------------------- 更新页面 --------------------------
-        self.ui.cowan_now_name.setText(f'当前计算：{self.cowan.name}')
+        self.ui.cowan_now_name.setText(f'当前展示：{self.cowan.name}')
         # ----- 原子信息 -----
         functools.partial(UpdatePage1.update_atom, self)()
         # ----- in36 -----
@@ -502,7 +502,42 @@ class Page2(MainWindow):
                 self.simulate.add_or_not[i] = False
         self.cowan_obj_save = copy.deepcopy([self.simulate.cowan_list, self.simulate.add_or_not])
 
+    def load_exp_data(self):
+        """
+        加载实验数据
+        Returns:
+
+        """
+        path, types = QFileDialog.getOpenFileName(
+            self, '请选择实验数据', PROJECT_PATH().as_posix(), '数据文件(*.txt *.csv)'
+        )
+        self.expdata_2 = ExpData(Path(path))
+
+        # -------------------------- 更新页面 --------------------------
+        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
+
+    def plot_exp(self):
+        """
+        导入实验数据后，绘制实验数据
+        Returns:
+
+        """
+        if self.expdata_2 is None:
+            QMessageBox.warning(self, '警告', '请先加载实验数据！')
+            return
+
+        # -------------------------- 更新页面 --------------------------
+        functools.partial(UpdatePage2.update_exp_figure, self)()
+
     def plot_spectrum(self, *args):
+        """
+        绘制叠加光谱
+        Args:
+            *args:
+
+        Returns:
+
+        """
         if self.expdata_2 is None:
             QMessageBox.warning(self, '警告', '请先导入实验数据！')
             return
@@ -517,15 +552,6 @@ class Page2(MainWindow):
 
         # -------------------------- 更新页面 --------------------------
         functools.partial(UpdatePage2.update_exp_sim_figure, self)()
-
-    def load_exp_data(self):
-        path, types = QFileDialog.getOpenFileName(
-            self, '请选择实验数据', PROJECT_PATH().as_posix(), '数据文件(*.txt *.csv)'
-        )
-        self.expdata_2 = ExpData(Path(path))
-
-        # -------------------------- 更新页面 --------------------------
-        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
 
     def cal_grid(self):
         # 函数定义开始↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
@@ -564,12 +590,11 @@ class Page2(MainWindow):
             self.ui.density_max_index.value(),
             self.ui.density_num.value()
         ]
-        self.ui.page2_progressBar.setRange(0, t_range[2] * ne_range[4])
+        # self.ui.page2_progressBar.setRange(0, t_range[2] * ne_range[4])
 
         # 删除之前的网格
         if self.simulated_grid:
             del self.simulated_grid
-        # todo 释放内存
         self.print_memory()
         self.simulated_grid = SimulateGrid(t_range, ne_range, self.simulate)
         self.simulated_grid.change_task('cal')
@@ -592,10 +617,9 @@ class Page2(MainWindow):
             return
         temperature = self.simulated_grid.t_list[item.column()]
         density = self.simulated_grid.ne_list[item.row()]
-        if self.simulate:
-            del self.simulate
         self.simulate = copy.deepcopy(self.simulated_grid.grid_data[(temperature, density)])
-        self.simulate.cowan_list, self.simulate.add_or_not = copy.deepcopy(self.cowan_obj_save)
+        if self.simulate.cowan_list is None or self.simulate.add_or_not is None:
+            self.simulate.cowan_list, self.simulate.add_or_not = copy.deepcopy(self.cowan_obj_save)
         # if self.simulate.sim_data is None:
         #     self.simulate.get_simulate_data(temperature, density)
 
@@ -627,14 +651,6 @@ class Page2(MainWindow):
         functools.partial(UpdatePage3.update_space_time_combobox, self)()
         # 第四页
         functools.partial(UpdatePage4.update_space_time_combobox, self)()
-
-    def plot_exp(self):
-        if self.expdata_2 is None:
-            QMessageBox.warning(self, '警告', '请先加载实验数据！')
-            return
-
-        # -------------------------- 更新页面 --------------------------
-        functools.partial(UpdatePage2.update_exp_figure, self)()
 
     def load_space_time(self):
         path = QFileDialog.getExistingDirectory(
@@ -675,6 +691,8 @@ class Page2(MainWindow):
         if self.simulate:
             del self.simulate
         self.simulate = copy.deepcopy(self.space_time_resolution.simulate_spectral_dict[key])
+        if self.simulate.cowan_list is None or self.simulate.add_or_not is None:
+            self.simulate.cowan_list, self.simulate.add_or_not = copy.deepcopy(self.cowan_obj_save)
         self.expdata_2 = copy.deepcopy(self.simulate.exp_data)
         if self.simulated_grid is not None:
             self.ui.statusbar.showMessage('正在更新网格，请稍后……')
@@ -808,6 +826,8 @@ class Page4(MainWindow):
         self.simulate_page4: SimulateSpectral = copy.deepcopy(
             list(self.space_time_resolution.simulate_spectral_dict.values())[index]
         )
+        if self.simulate_page4.cowan_list is None or self.simulate_page4.add_or_not is None:
+            self.simulate_page4.cowan_list, self.simulate_page4.add_or_not = copy.deepcopy(self.cowan_obj_save)
         # -------------------------- 更新页面 --------------------------
         functools.partial(UpdatePage4.update_treeview, self)()
         functools.partial(UpdatePage4.update_exp_figure, self)()

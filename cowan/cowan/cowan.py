@@ -1050,7 +1050,8 @@ class SimulateSpectral:
 
         """
         x1 = self.exp_data.data['wavelength']
-        y1 = self.exp_data.data['intensity'] / self.exp_data.data['intensity'].max()
+        y1 = ((self.exp_data.data['intensity'] - self.exp_data.data['intensity'].min()) /
+              (self.exp_data.data['intensity'].max() - self.exp_data.data['intensity'].min()))
         x2 = self.sim_data['wavelength']
         y2 = self.sim_data['intensity'] / self.sim_data['intensity'].max()
         trace1 = go.Scatter(
@@ -1106,15 +1107,16 @@ class SimulateSpectral:
                 for j, (key, value) in enumerate(c.cal_data.widen_part.grouped_widen_data.items()):
                     if add_list[i][1][j]:  # 遍历组态
                         index_low, index_high = map(int, key.split('_'))
-                        name = '{}<br />{}'.format(c.name.replace('_', '+'),
-                                                   c.in36.get_configuration_name(index_low, index_high), )
+                        name = '{},{},{}<br />{}'.format(c.name.replace('_', '+'), index_low, index_high,
+                                                         c.in36.get_configuration_name(index_low, index_high))
                         if value['cross_P'].max() == 0:
                             trace.append(
                                 go.Scatter(
                                     x=value['wavelength'],
                                     y=value['cross_P'] + height,
                                     mode='lines',
-                                    name=name,
+                                    name='',
+                                    hovertext=name,
                                 )
                             )
                         else:
@@ -1124,7 +1126,8 @@ class SimulateSpectral:
                                     y=value['cross_P'] / value['cross_P'].max()
                                       + height,
                                     mode='lines',
-                                    name=name,
+                                    name='',
+                                    hovertext=name,
                                 )
                             )
                         height += 1.2
@@ -1528,7 +1531,7 @@ class SimulateGridThread(QtCore.QThread):
             temp_cowan.add_or_not = None
             self.grid_data[(t, ne)] = temp_cowan
             # self.grid_data[(t, ne)].sim_data = None
-            self.progress.emit(str(current_progress))
+            self.progress.emit(str(int(current_progress / self.t_num / self.ne_num * 100)))
 
         # 多线程
         self.grid_data = {}
@@ -1586,7 +1589,10 @@ class SpaceTimeResolution:
 
     # 添加一个位置时间
     def add_st(self, st: tuple, simulate_spectral):
-        self.simulate_spectral_dict[st] = copy.deepcopy(simulate_spectral)
+        temp = copy.deepcopy(simulate_spectral)
+        temp.cowan_list = None
+        temp.add_or_not = None
+        self.simulate_spectral_dict[st] = temp
 
     # 删除一个位置时间
     def del_st(self, st):

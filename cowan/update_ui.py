@@ -235,7 +235,7 @@ class UpdatePage4(MainWindow):
                 child = QTreeWidgetItem()
                 child.setCheckState(0, Qt.Checked)
                 index_low, index_high = map(int, example.split('_'))
-                child.setText(0, c.in36.get_configuration_name(index_low, index_high))
+                child.setText(0, f'{index_low},{index_high} => {c.in36.get_configuration_name(index_low, index_high)}')
                 if c.cal_data.widen_part.grouped_widen_data[example]['cross_P'].max() == 0:
                     child.setBackground(0, QBrush(QColor(255, 0, 0)))
                     child.setCheckState(0, Qt.Unchecked)

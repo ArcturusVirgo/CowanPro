@@ -5,6 +5,7 @@ import warnings
 from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QAbstractItemView
 from pympler import asizeof
+
 from cowan import *
 
 
@@ -240,9 +241,9 @@ class MainWindow(QMainWindow):
         functools.partial(UpdatePage4.update_space_time_combobox, self)()
 
     def load_Ge(self):
-        SET_PROJECT_PATH(Path('F:/Cowan/Ge'))
+        SET_PROJECT_PATH(Path('F:/Cowan/Ge_old'))
         folder_path = Path(r'E:\研究生工作\科研工作\2023_08_08_Ge等离子体光谱\计算数据')
-        self.expdata_1 = ExpData(Path(r'F:\Cowan\Ge\0.4mm.csv'))
+        self.expdata_1 = ExpData(Path(r'F:\Cowan\Ge_old\0.4mm.csv'))
         for path in folder_path.iterdir():
             self.atom = Atom(1, 0)
             self.in36 = In36(self.atom)
@@ -523,8 +524,10 @@ class MainWindow(QMainWindow):
         # thread.succeed.connect(lambda x: progressDialog.close())
         progressDialog.show()
         thread.start()
+        return progressDialog
 
     def init(self):
+        self.setWindowTitle(PROJECT_PATH().name)
         # 给元素选择器设置初始值
         self.ui.atomic_num.addItems(list(map(str, ATOM.keys())))
         self.ui.atomic_symbol.addItems(list(zip(*ATOM.values()))[0])
@@ -658,17 +661,17 @@ class MainWindow(QMainWindow):
         #                                      asizeof.asizeof(self.simulated_grid.grid_data) / 1024 ** 3))
         print('{:>22} {:>15.2f} [GB]'.format('总大小：',
                                              asizeof.asizeof(window) / 1024 ** 3))
+
     def closeEvent(self, event):
-        # self.save_project()
-        # sys.exit()
-        # TODO 取消注释
-        pass
+        # dialog = self.save_project()
+        # dialog.exec()
+        sys.exit()
 
 
 if __name__ == '__main__':
     app = QApplication([])
     window = LoginWindow()  # 启动登陆页面
     # window = MainWindow(Path('F:/Cowan/Al'), True)  # 启动主界面
-    # window = MainWindow(Path('F:/Cowan/Ge'), True)  # 启动主界面
+    # window = MainWindow(Path('F:/Cowan/Ge_old'), False)  # 启动主界面
     window.show()
     app.exec()
