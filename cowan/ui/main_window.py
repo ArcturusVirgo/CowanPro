@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'main_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.1
+## Created by: Qt User Interface Compiler version 6.5.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -30,7 +30,7 @@ class Ui_main_window(object):
     def setupUi(self, main_window):
         if not main_window.objectName():
             main_window.setObjectName(u"main_window")
-        main_window.resize(1334, 883)
+        main_window.resize(1374, 883)
         main_window.setMinimumSize(QSize(0, 0))
         main_window.setMaximumSize(QSize(16777215, 16777215))
         main_window.setStyleSheet(u"")
@@ -59,6 +59,10 @@ class Ui_main_window(object):
         self.exit_project.setObjectName(u"exit_project")
         self.reset_cal = QAction(main_window)
         self.reset_cal.setObjectName(u"reset_cal")
+        self.export_data = QAction(main_window)
+        self.export_data.setObjectName(u"export_data")
+        self.set_xrange = QAction(main_window)
+        self.set_xrange.setObjectName(u"set_xrange")
         self.centralwidget = QWidget(main_window)
         self.centralwidget.setObjectName(u"centralwidget")
         self.centralwidget.setEnabled(True)
@@ -1527,6 +1531,16 @@ class Ui_main_window(object):
 
         self.horizontalLayout_8.addItem(self.horizontalSpacer)
 
+        self.show_abu = QPushButton(self.groupBox_3)
+        self.show_abu.setObjectName(u"show_abu")
+
+        self.horizontalLayout_8.addWidget(self.show_abu)
+
+        self.horizontalLayout_27 = QHBoxLayout()
+        self.horizontalLayout_27.setObjectName(u"horizontalLayout_27")
+
+        self.horizontalLayout_8.addLayout(self.horizontalLayout_27)
+
         self.label_18 = QLabel(self.groupBox_3)
         self.label_18.setObjectName(u"label_18")
 
@@ -2010,7 +2024,7 @@ class Ui_main_window(object):
         main_window.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(main_window)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1334, 22))
+        self.menubar.setGeometry(QRect(0, 0, 1374, 22))
         self.menubar.setNativeMenuBar(True)
         self.menu = QMenu(self.menubar)
         self.menu.setObjectName(u"menu")
@@ -2018,6 +2032,8 @@ class Ui_main_window(object):
         self.menu_2.setObjectName(u"menu_2")
         self.menu_3 = QMenu(self.menubar)
         self.menu_3.setObjectName(u"menu_3")
+        self.menu_4 = QMenu(self.menubar)
+        self.menu_4.setObjectName(u"menu_4")
         main_window.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(main_window)
         self.statusbar.setObjectName(u"statusbar")
@@ -2026,11 +2042,14 @@ class Ui_main_window(object):
         self.menubar.addAction(self.menu.menuAction())
         self.menubar.addAction(self.menu_2.menuAction())
         self.menubar.addAction(self.menu_3.menuAction())
+        self.menubar.addAction(self.menu_4.menuAction())
         self.menu.addAction(self.save_project)
         self.menu.addAction(self.exit_project)
         self.menu_2.addAction(self.load_exp_data)
+        self.menu_2.addAction(self.set_xrange)
         self.menu_3.addAction(self.show_guides)
         self.menu_3.addAction(self.reset_cal)
+        self.menu_4.addAction(self.export_data)
 
         self.retranslateUi(main_window)
 
@@ -2055,6 +2074,8 @@ class Ui_main_window(object):
         self.save_project.setText(QCoreApplication.translate("main_window", u"\u4fdd\u5b58\u9879\u76ee", None))
         self.exit_project.setText(QCoreApplication.translate("main_window", u"\u9000\u51fa", None))
         self.reset_cal.setText(QCoreApplication.translate("main_window", u"\u91cd\u7f6e\u8ba1\u7b97\u6309\u94ae", None))
+        self.export_data.setText(QCoreApplication.translate("main_window", u"\u5bfc\u51fa\u6570\u636e", None))
+        self.set_xrange.setText(QCoreApplication.translate("main_window", u"\u8bbe\u7f6e\u6ce2\u957f\u8303\u56f4", None))
 
         __sortingEnabled = self.navigation.isSortingEnabled()
         self.navigation.setSortingEnabled(False)
@@ -2268,9 +2289,10 @@ class Ui_main_window(object):
         self.show_peaks.setText("")
         self.choose_peaks.setText(QCoreApplication.translate("main_window", u"\u7279\u5f81\u5cf0\u6311\u9009", None))
         self.peaks_label.setText(QCoreApplication.translate("main_window", u"\u672a\u6307\u5b9a", None))
+        self.show_abu.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u79bb\u5b50\u7684\u4e30\u5ea6", None))
         self.label_18.setText(QCoreApplication.translate("main_window", u"\u6e29\u5ea6", None))
         self.label_19.setText(QCoreApplication.translate("main_window", u"\u5bc6\u5ea6", None))
-        self.page2_plot_spectrum.setText(QCoreApplication.translate("main_window", u"\u7ed8\u5236", None))
+        self.page2_plot_spectrum.setText(QCoreApplication.translate("main_window", u"\u6a21\u62df", None))
         self.groupBox_4.setTitle(QCoreApplication.translate("main_window", u"\u7f51\u683c\u8ba1\u7b97", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("main_window", u"\u53c2\u6570\u8f93\u5165\u533a", None))
         self.label_16.setText(QCoreApplication.translate("main_window", u"\u6e29\u5ea6\u8303\u56f4", None))
@@ -2315,5 +2337,6 @@ class Ui_main_window(object):
         self.menu.setTitle(QCoreApplication.translate("main_window", u"\u6587\u4ef6", None))
         self.menu_2.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))
         self.menu_3.setTitle(QCoreApplication.translate("main_window", u"\u5de5\u5177", None))
+        self.menu_4.setTitle(QCoreApplication.translate("main_window", u"\u5bfc\u51fa", None))
     # retranslateUi
 

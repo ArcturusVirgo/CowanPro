@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1334</width>
+    <width>1374</width>
     <height>883</height>
    </rect>
   </property>
@@ -3667,6 +3667,16 @@
               </spacer>
              </item>
              <item>
+              <widget class="QPushButton" name="show_abu">
+               <property name="text">
+                <string>查看各离子的丰度</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_27"/>
+             </item>
+             <item>
               <widget class="QLabel" name="label_18">
                <property name="text">
                 <string>温度</string>
@@ -3725,7 +3735,7 @@
              <item>
               <widget class="QPushButton" name="page2_plot_spectrum">
                <property name="text">
-                <string>绘制</string>
+                <string>模拟</string>
                </property>
               </widget>
              </item>
@@ -4403,7 +4413,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1334</width>
+     <width>1374</width>
      <height>22</height>
     </rect>
    </property>
@@ -4422,6 +4432,7 @@
      <string>计算</string>
     </property>
     <addaction name="load_exp_data"/>
+    <addaction name="set_xrange"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -4430,9 +4441,16 @@
     <addaction name="show_guides"/>
     <addaction name="reset_cal"/>
    </widget>
+   <widget class="QMenu" name="menu_4">
+    <property name="title">
+     <string>导出</string>
+    </property>
+    <addaction name="export_data"/>
+   </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
    <addaction name="menu_3"/>
+   <addaction name="menu_4"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action">
@@ -4496,6 +4514,16 @@
   <action name="reset_cal">
    <property name="text">
     <string>重置计算按钮</string>
+   </property>
+  </action>
+  <action name="export_data">
+   <property name="text">
+    <string>导出数据</string>
+   </property>
+  </action>
+  <action name="set_xrange">
+   <property name="text">
+    <string>设置波长范围</string>
    </property>
   </action>
  </widget>

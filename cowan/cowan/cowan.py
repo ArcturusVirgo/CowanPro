@@ -142,6 +142,7 @@ class ExpData:
         self.filepath: Path = filepath
 
         self.data: Optional[pd.DataFrame] = None
+        self.init_xrange = None
         self.x_range: Optional[List[float]] = None
 
         self.__read_file()
@@ -172,10 +173,12 @@ class ExpData:
             temp_data = pd.read_csv(self.filepath, sep='\s+', skiprows=1, names=['wavelength', 'intensity'])
         else:
             raise ValueError(f'filetype {filetype} is not supported')
-        temp_data['intensity_normalization'] = (temp_data['intensity'] / temp_data['intensity'].max())
+        temp_data['intensity_normalization'] = (temp_data['intensity'] - temp_data['intensity'].min()) / (
+                temp_data['intensity'].max() - temp_data['intensity'].min())
 
         self.data = temp_data
         self.x_range = [self.data['wavelength'].min(), self.data['wavelength'].max()]
+        self.init_xrange = copy.deepcopy(self.x_range)
 
     def plot_html(self):
         """
@@ -627,15 +630,9 @@ class WidenAll:
         self.delta_lambda: float = 0.0
         self.fwhm_value: float = 0.5
 
-        self.plot_path_gauss = (
-                PROJECT_PATH() / f'figure/gauss/{self.name}.html'
-        ).as_posix()
-        self.plot_path_cross_NP = (
-                PROJECT_PATH() / f'figure/cross_NP/{self.name}.html'
-        ).as_posix()
-        self.plot_path_cross_P = (
-                PROJECT_PATH() / f'figure/cross_P/{self.name}.html'
-        ).as_posix()
+        self.plot_path_gauss = (PROJECT_PATH() / f'figure/gauss/{self.name}.html').as_posix()
+        self.plot_path_cross_NP = (PROJECT_PATH() / f'figure/cross_NP/{self.name}.html').as_posix()
+        self.plot_path_cross_P = (PROJECT_PATH() / f'figure/cross_P/{self.name}.html').as_posix()
 
         self.widen_data: pd.DataFrame | None = None
 
@@ -672,8 +669,10 @@ class WidenAll:
             ]
         if self.n is None:
             wave = 1239.85 / np.array(self.exp_data.data['wavelength'].values)
+            print('使用的是实验数据的波长')
         else:
-            wave = np.linspace(min_wavelength_ev, max_wavelength_ev, self.n)
+            wave = 1239.85 / np.linspace(min_wavelength_nm, max_wavelength_nm, self.n)
+            print('使用的是自定义的波长')
         result = pd.DataFrame()
         result['wavelength'] = 1239.85 / wave
 
@@ -685,9 +684,7 @@ class WidenAll:
             return -1
         new_data = new_data.reindex()
         # 获取展宽所需要的数据
-        new_wavelength = abs(
-            1239.85 / (1239.85 / new_data['wavelength_ev'] + self.delta_lambda)
-        )  # 单位时ev
+        new_wavelength = abs(1239.85 / (1239.85 / new_data['wavelength_ev'] + self.delta_lambda))  # 单位时ev
         new_wavelength = new_wavelength.values
         new_intensity = abs(new_data['intensity'])
         new_intensity = new_intensity.values
@@ -702,18 +699,10 @@ class WidenAll:
         new_J = temp_1.combine_first(temp_2)
         new_J = new_J.values
         # 计算布居
-        population = (
-                (2 * new_J + 1)
-                * np.exp(-abs(new_energy - min_energy) * 0.124 / temperature)
-                / (2 * min_J + 1)
-        )
+        population = ((2 * new_J + 1) * np.exp(-abs(new_energy - min_energy) * 0.124 / temperature) / (2 * min_J + 1))
 
-        res = [
-            self.__complex_cal(
-                val, new_intensity, fwhmgauss(val), new_wavelength, population, new_J
-            )
-            for val in wave
-        ]
+        res = [self.__complex_cal(val, new_intensity, fwhmgauss(val), new_wavelength, population, new_J) for val in
+               wave]
         res = list(zip(*res))
         if not self.only_p:
             result['gauss'] = res[0]
@@ -723,15 +712,9 @@ class WidenAll:
 
     def plot_widen(self):
         if not self.only_p:
-            self.__plot_html(
-                self.widen_data, self.plot_path_gauss, 'wavelength', 'gauss'
-            )
-            self.__plot_html(
-                self.widen_data, self.plot_path_cross_NP, 'wavelength', 'cross_NP'
-            )
-        self.__plot_html(
-            self.widen_data, self.plot_path_cross_P, 'wavelength', 'cross_P'
-        )
+            self.__plot_html(self.widen_data, self.plot_path_gauss, 'wavelength', 'gauss')
+            self.__plot_html(self.widen_data, self.plot_path_cross_NP, 'wavelength', 'cross_NP')
+        self.__plot_html(self.widen_data, self.plot_path_cross_P, 'wavelength', 'cross_P')
 
     def __plot_html(self, data, path, x_name, y_name):
         trace1 = go.Scatter(x=data[x_name], y=data[y_name], mode='lines')
@@ -874,11 +857,7 @@ class WidenPart:
         new_J = temp_1.combine_first(temp_2)
         new_J = new_J.values
         # 计算布居
-        population = (
-                (2 * new_J + 1)
-                * np.exp(-abs(new_energy - min_energy) * 0.124 / temperature)
-                / (2 * min_J + 1)
-        )
+        population = ((2 * new_J + 1) * np.exp(-abs(new_energy - min_energy) * 0.124 / temperature) / (2 * min_J + 1))
         if self.n is None:
             wave = 1239.85 / self.exp_data.data['wavelength'].values
         else:
@@ -988,8 +967,15 @@ class CowanList:
             if key not in self.chose_cowan:
                 self.cowan_run_history.pop(key)
 
+    def update_exp_data(self, exp_data: ExpData):
+        for cowan in self.cowan_run_history.values():
+            cowan.exp_data = exp_data
+
     def __getitem__(self, index):
         return self.cowan_run_history[self.chose_cowan[index]], self.add_or_not[index]
+
+    def __setitem__(self):
+        pass
 
 
 class SimulateSpectral:
@@ -1047,9 +1033,7 @@ class SimulateSpectral:
             if flag:
                 cowan.cal_data.widen_all.widen(temperature)
         res = pd.DataFrame()
-        res['wavelength'] = self.cowan_list[0].cal_data.widen_all.widen_data[
-            'wavelength'
-        ]
+        res['wavelength'] = self.cowan_list[0].cal_data.widen_all.widen_data['wavelength']
         temp = np.zeros(res.shape[0])
         # temp_np = np.zeros(res.shape[0])
         for cowan, abu, flag in zip(self.cowan_list, self.abundance, self.add_or_not):
@@ -1058,6 +1042,7 @@ class SimulateSpectral:
                 # print(cowan.name, abu)
                 # temp_np += cowan.cal_data.widen_all.widen_data['cross_P'].values
         res['intensity'] = temp
+        res['intensity_normalization'] = res['intensity'] / res['intensity'].max()
         # plt.plot(res['wavelength'].values, temp_np, label='np')
         # plt.plot(res['wavelength'].values, temp, label='p')
         # plt.legend()
@@ -1074,13 +1059,13 @@ class SimulateSpectral:
 
         """
         x1 = self.exp_data.data['wavelength']
-        y1 = ((self.exp_data.data['intensity'] - self.exp_data.data['intensity'].min()) /
-              (self.exp_data.data['intensity'].max() - self.exp_data.data['intensity'].min()))
+        y1 = self.exp_data.data['intensity_normalization']
         x2 = self.sim_data['wavelength']
-        y2 = self.sim_data['intensity'] / self.sim_data['intensity'].max()
+        y2 = self.sim_data['intensity_normalization']
         trace1 = go.Scatter(
             x=x1, y=y1, mode='lines', line={'color': 'rgb(98, 115, 244)'}
         )
+
         trace2 = go.Scatter(
             x=x2, y=y2, mode='lines', line={'color': 'rgb(237, 78, 64)'}
         )
@@ -1197,35 +1182,13 @@ class SimulateSpectral:
         atomic_num = self.cowan_list[0].in36.atom.num
         ion_num = np.array([i for i in range(atomic_num - 1)])
         ion_energy = np.array(list(IONIZATION_ENERGY[atomic_num].values())[1:])
-        electron_num = np.array(
-            [self.__get_outermost_num(i) for i in range(1, atomic_num)]
-        )
+        electron_num = np.array([self.__get_outermost_num(i) for i in range(1, atomic_num)])
 
-        S = (
-                    9
-                    * 1e-6
-                    * electron_num
-                    * np.sqrt(temperature / ion_energy)
-                    * np.exp(-ion_energy / temperature)
-            ) / (ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
-        Ar = (
-                5.2
-                * 1e-14
-                * np.sqrt(ion_energy / temperature)
-                * ion_num
-                * (
-                        0.429
-                        + 0.5 * np.log(ion_energy / temperature)
-                        + 0.469 * np.sqrt(temperature / ion_energy)
-                )
-        )
-        A3r = (
-                2.97
-                * 1e-27
-                * electron_num
-                / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy))
-        )
-
+        S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
+                ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
+        Ar = (5.2 * 1e-14 * np.sqrt(ion_energy / temperature) * ion_num * (
+                0.429 + 0.5 * np.log(ion_energy / temperature) + 0.469 * np.sqrt(temperature / ion_energy)))
+        A3r = (2.97 * 1e-27 * electron_num / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy)))
         ratio = S / (Ar + electron_density * A3r)
         abundance = self.__calculate_a_over_S(ratio)
         return abundance
@@ -1246,35 +1209,13 @@ class SimulateSpectral:
         atomic_num = self.cowan_list[0].in36.atom.num
         ion_num = np.array([i for i in range(atomic_num)])
         ion_energy = np.array(list(IONIZATION_ENERGY[atomic_num].values()))
-        electron_num = np.array(
-            [self.__get_outermost_num(i) for i in range(atomic_num)]
-        )
+        electron_num = np.array([self.__get_outermost_num(i) for i in range(atomic_num)])
 
-        S = (
-                    9
-                    * 1e-6
-                    * electron_num
-                    * np.sqrt(temperature / ion_energy)
-                    * np.exp(-ion_energy / temperature)
-            ) / (ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
-        Ar = (
-                5.2
-                * 1e-14
-                * np.sqrt(ion_energy / temperature)
-                * ion_num
-                * (
-                        0.429
-                        + 0.5 * np.log(ion_energy / temperature)
-                        + 0.469 * np.sqrt(temperature / ion_energy)
-                )
-        )
-        A3r = (
-                2.97
-                * 1e-27
-                * electron_num
-                / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy))
-        )
-
+        S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
+                ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
+        Ar = (5.2 * 1e-14 * np.sqrt(ion_energy / temperature) * ion_num * (
+                0.429 + 0.5 * np.log(ion_energy / temperature) + 0.469 * np.sqrt(temperature / ion_energy)))
+        A3r = (2.97 * 1e-27 * electron_num / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy)))
         Co = S / (Ar + electron_density * A3r)
         CoM = [Co[0]]
         for i in range(1, atomic_num):
@@ -1291,7 +1232,10 @@ class SimulateSpectral:
         aveion = electron_density / Ratsum
         Ratio = []
         for i in range(atomic_num):
-            Ratio.append(Rat[i] / Ratsum)
+            if Rat[i] / Ratsum < 1e-4:
+                Ratio.append(0)
+            else:
+                Ratio.append(Rat[i] / Ratsum)
         return Ratio
 
     def __get_outermost_num(self, ion: int):
@@ -1377,7 +1321,11 @@ class SimulateSpectral:
             temp_peaks.append(peaks1[min_index])
         peaks1 = temp_peaks
 
-        self.peaks_index = [peaks1, peaks2]
+        new_peaks2 = []
+        for index in peaks2:
+            temp_index = np.argmin(np.abs(x[index] - self.sim_data['wavelength'].values))
+            new_peaks2.append(temp_index)
+        self.peaks_index = [peaks1, new_peaks2]
 
         similarity = 0
         for i in range(len(peaks1) - 1):
@@ -1423,7 +1371,13 @@ class SimulateSpectral:
         for i in range(len(exp_wavelength_indexes)):
             if abs(exp_wavelength_indexes[i] - cal_wavelength_indexes[i]) > (len(x)) * 0.01:
                 cal_wavelength_indexes[i] = exp_wavelength_indexes[i]
-        self.peaks_index = [exp_wavelength_indexes, cal_wavelength_indexes]
+
+        new_cal_wavelength_indexes = []
+        for index in cal_wavelength_indexes:
+            temp_index = np.argmin(np.abs(x[index] - self.sim_data['wavelength'].values))
+            new_cal_wavelength_indexes.append(temp_index)
+        self.peaks_index = [exp_wavelength_indexes, new_cal_wavelength_indexes]
+
         # 计算两个光谱数据峰值位置以及强度的相似性
         similarity = 0
         for i in range(len(exp_wavelength_indexes) - 1):
@@ -1452,7 +1406,13 @@ class SimulateSpectral:
         for wavelength in self.characteristic_peaks:
             exp_index = np.argmin(abs(x - wavelength))
             exp_wavelength_indexes.append(exp_index)
-        self.peaks_index = [exp_wavelength_indexes, exp_wavelength_indexes]
+
+        new_cal_wavelength_indexes = []
+        for index in exp_wavelength_indexes:
+            temp_index = np.argmin(np.abs(x[index] - self.sim_data['wavelength'].values))
+            new_cal_wavelength_indexes.append(temp_index)
+        self.peaks_index = [exp_wavelength_indexes, new_cal_wavelength_indexes]
+
         # 计算两个光谱数据峰值位置以及强度的相似性
         similarity = 0
         for i in range(len(exp_wavelength_indexes) - 1):

@@ -1,5 +1,10 @@
 import copy
+import functools
+import time
+from threading import Thread
 
+from PySide6 import QtWidgets
+from PySide6.QtCore import QThread
 from PySide6.QtGui import QAction, QCursor
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -11,8 +16,11 @@ from PySide6.QtWidgets import (
     QListWidget,
     QPushButton,
     QInputDialog,
-    QHBoxLayout, QWidget, QProgressDialog, QCheckBox,
+    QHBoxLayout, QWidget, QProgressDialog, QCheckBox, QDoubleSpinBox, QProgressBar, QLabel,
 )
+
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib.pyplot as plt
 
 from . import NonStopProgressDialog
 from .cowan import *
@@ -41,9 +49,12 @@ class Menu(MainWindow):
 
         # 更新实验数据
         self.expdata_1 = ExpData(new_path)
+        if self.info['x_range'] is None:
+            pass
+        else:
+            self.expdata_1.set_range(self.info['x_range'])
         # 更新运行历史的实验数据
-        for cowan_ in self.cowan_lists.cowan_run_history:
-            cowan_.exp_data = self.expdata_1
+        self.cowan_lists.update_exp_data(self.expdata_1)
         self.expdata_1.plot_html()
         # 更新页面
         self.ui.exp_web.load(QUrl.fromLocalFile(self.expdata_1.plot_path))
@@ -58,6 +69,172 @@ class Menu(MainWindow):
             self.v_line.close()
             self.v_line = None
             self.ui.show_guides.setText('显示参考线')
+
+    def export_data(self):
+        def save_simulate_data(sim):
+            exp_wavelength = sim.exp_data.data['wavelength']
+            exp_intensity = sim.exp_data.data['intensity']
+            exp_intensity_normalization = sim.exp_data.data['intensity_normalization']
+            cal_wavelength = copy.deepcopy(sim.sim_data['wavelength'])
+            cal_intensity = copy.deepcopy(sim.sim_data['intensity'])
+            cal_intensity_normalization = copy.deepcopy(sim.sim_data['intensity_normalization'])
+            datas = pd.DataFrame({
+                'exp_wavelength': exp_wavelength,
+                'exp_intensity': exp_intensity,
+                'exp_intensity_normalization': exp_intensity_normalization,
+                'cal_wavelength': cal_wavelength,
+                'cal_intensity': cal_intensity,
+                'cal_intensity_normalization': cal_intensity_normalization,
+            })
+            datas.to_csv(path.joinpath(filename_1), index=False)
+
+        path = QFileDialog.getExistingDirectory(self, '选择存储路径', PROJECT_PATH().as_posix())
+        if path == '':
+            return
+        path = Path(path)
+
+        atom_symbol = self.cowan_lists[0][0].in36.atom.symbol
+        atom_num = self.cowan_lists[0][0].in36.atom.num
+
+        # 时空分辨
+        export_table = []
+        for key, value in self.space_time_resolution.simulate_spectral_dict.items():
+            filename_1 = f'{key[0]}_{key[1][0]}_simulate_data.csv'
+            temp_1 = [key[0],
+                      key[1][0],
+                      value.temperature,
+                      value.electron_density,
+                      filename_1]
+            if value.temperature is not None and value.electron_density is not None:
+                save_simulate_data(value)
+                value.init_cowan_list(self.cowan_lists)
+                temp = value.get_abu(value.temperature, value.electron_density)
+                value.del_cowan_list()
+            else:
+                temp = [None] * self.cowan_lists[0][0].in36.atom.num
+            export_table.append(temp_1 + temp)
+        columns = ['时间', '位置', '温度', '电子密度', '模拟光谱'] + [f'{atom_symbol}{i}+' for i in range(atom_num)]
+        data = pd.DataFrame(export_table, columns=columns)
+        data.to_excel(path.joinpath('space_time_resolution.xlsx'), index=False)
+
+        cowan_info = []
+        for cowan_, _ in self.cowan_lists:
+            temp = [
+                cowan_.name,
+                cowan_.coupling_mode,
+                cowan_.cal_data.widen_all.delta_lambda,
+                cowan_.cal_data.widen_all.fwhm_value,
+            ]
+            cowan_info.append(temp)
+        cowan_info = pd.DataFrame(cowan_info, columns=['名称', '耦合模式', '偏移量', '半高全宽'])
+        cowan_info.to_excel(path.joinpath('cowan_info.xlsx'), index=False)
+
+    def set_xrange(self):
+        class UpdateRangeThread(QThread):
+            succeed = Signal(int)
+            progress = Signal(int)
+
+            def __init__(self, ):
+                super().__init__()
+
+        def update_progress(val, text):
+            progress.setValue(val)
+            label.setText(text)
+
+        def update_xrange():
+            update_progress(0, '准备开始')
+            x_range = [min_input.value(), max_input.value()]
+            widen_temperature = self.ui.widen_temp.value()
+            self.info['x_range'] = x_range
+            # 设置第一页的实验谱线
+            update_progress(10, '设置第一页的实验谱线')
+            self.expdata_1.set_range(x_range)
+            functools.partial(UpdatePage1.update_exp_figure, self)()
+            # 设置 页面上的 Cowan
+            update_progress(20, '重新展宽页面上的Cowan')
+            if self.cowan is not None:
+                # 设置范围
+                self.cowan.exp_data.set_range(x_range)
+                self.cowan.cal_data.widen_all.exp_data.set_range(x_range)
+                self.cowan.cal_data.widen_part.exp_data.set_range(x_range)
+                # 重新展宽
+                self.cowan.cal_data.widen_all.widen(widen_temperature, False)
+            # 设置各个 Cowan
+            for i, (cowan_, _) in enumerate(self.cowan_lists):
+                update_progress(20 + int(i / len(self.cowan_lists.chose_cowan) * 40), f'重新展宽{cowan_.name}')
+                # 设置范围
+                cowan_.exp_data.set_range(x_range)
+                cowan_.cal_data.widen_all.exp_data.set_range(x_range)
+                cowan_.cal_data.widen_part.exp_data.set_range(x_range)
+                # 更新展宽参数
+                num = int((x_range[1] - x_range[0]) / (
+                    min(self.expdata_1.data['wavelength'].values[1:] - self.expdata_1.data['wavelength'].values[
+                                                                       :-1])))
+                cowan_.cal_data.widen_all.n = num
+                cowan_.cal_data.widen_part.n = num
+                # 重新展宽
+                cowan_.cal_data.widen_all.widen(widen_temperature, False)
+            # 设置第二页的实验谱线
+            update_progress(65, '设置第二页的实验谱线')
+            if self.expdata_2 is not None:
+                self.expdata_2.set_range(x_range)
+                functools.partial(UpdatePage2.update_exp_figure, self)()
+            # 设置叠加谱线
+            update_progress(65, '重新模拟当前光谱')
+            if self.simulate is not None:
+                self.simulate.exp_data.set_range(x_range)
+                # 重新模拟
+                self.simulate.init_cowan_list(self.cowan_lists)
+                temperature = self.ui.page2_temperature.value()
+                density = (self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value())
+                self.simulate.get_simulate_data(temperature, density)
+                self.simulate.del_cowan_list()
+            # 设置实验叠加谱线
+            for i, (key, sim) in enumerate(self.space_time_resolution.simulate_spectral_dict.items()):
+                update_progress(65 + int(i / len(self.space_time_resolution.simulate_spectral_dict) * 35),
+                                f'重新模拟{key[0]}_{key[1][0]}的光谱')
+                # 设置范围
+                sim.exp_data.set_range(x_range)
+                # 重新模拟
+                if sim.temperature is None or sim.electron_density is None:
+                    continue
+                sim.init_cowan_list(self.cowan_lists)
+                sim.get_simulate_data(sim.temperature, sim.electron_density)
+                sim.del_cowan_list()
+            dialog.close()
+
+        if self.expdata_1 is None:
+            QMessageBox.warning(self.ui, '警告', '实验数据未加载！')
+            return
+        dialog = QWidget()
+        label = QLabel()
+        progress = QProgressBar(dialog)
+        progress.setRange(0, 100)
+        progress.setTextVisible(False)
+        min_input = QDoubleSpinBox()
+        max_input = QDoubleSpinBox()
+        layout_input = QHBoxLayout()
+        layout_input.addWidget(min_input)
+        layout_input.addWidget(max_input)
+        ok_btn = QPushButton('确认')
+        cancel_btn = QPushButton('取消')
+        min_input.setValue(self.expdata_1.init_xrange[0])
+        max_input.setValue(self.expdata_1.init_xrange[1])
+        layout_btn = QHBoxLayout()
+        layout_btn.addWidget(ok_btn)
+        layout_btn.addWidget(cancel_btn)
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(progress)
+        layout.addLayout(layout_input)
+        layout.addLayout(layout_btn)
+        dialog.setLayout(layout)
+
+        cancel_btn.clicked.connect(lambda: dialog.close())
+
+        ok_btn.clicked.connect(update_xrange)
+
+        dialog.show()
 
 
 class Page1(MainWindow):
@@ -265,6 +442,7 @@ class Page1(MainWindow):
                 self.ui.in36_configuration_view.setHorizontalHeaderLabels(
                     ['原子序数', '原子状态', '标识符', '空格', '组态']
                 )
+
         right_menu = QMenu(self.ui.in36_configuration_view)
 
         # 设置动作
@@ -362,6 +540,7 @@ class Page1(MainWindow):
             # -------------------------- 更新页面 --------------------------
             # 更新选择列表
             functools.partial(UpdatePage1.update_selection_list, self)()
+
         # 函数定义结束 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         right_menu = QMenu(self.ui.run_history_list)
 
@@ -385,6 +564,7 @@ class Page1(MainWindow):
 
             # -------------------------- 更新页面 --------------------------
             functools.partial(UpdatePage1.update_selection_list, self)()
+
         right_menu = QMenu(self.ui.selection_list)
 
         # 设置动作
@@ -549,6 +729,10 @@ class Page2(MainWindow):
             self, '请选择实验数据', PROJECT_PATH().as_posix(), '数据文件(*.txt *.csv)'
         )
         self.expdata_2 = ExpData(Path(path))
+        if self.info['x_range'] is None:
+            pass
+        else:
+            self.expdata_2.set_range(self.info['x_range'])
 
         # -------------------------- 更新页面 --------------------------
         self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
@@ -583,7 +767,6 @@ class Page2(MainWindow):
             return
         temperature = self.ui.page2_temperature.value()
         density = (self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value())
-        self.simulate = SimulateSpectral()
         self.simulate.exp_data = copy.deepcopy(self.expdata_2)
         self.simulate.init_cowan_list(self.cowan_lists)
         self.simulate.get_simulate_data(temperature, density)
@@ -627,7 +810,6 @@ class Page2(MainWindow):
             self.ui.density_max_index.value(),
             self.ui.density_num.value()
         ]
-        self.simulate = SimulateSpectral()
         self.simulate.exp_data = copy.deepcopy(self.expdata_2)
         self.simulate.init_cowan_list(self.cowan_lists)
         self.simulated_grid = SimulateGrid(t_range, ne_range, self.simulate)
@@ -692,8 +874,11 @@ class Page2(MainWindow):
             loc, tim = file_name.stem.split('_')
             loc = loc.strip('mm')
             tim = tim.strip('ns')
-            self.simulate = SimulateSpectral()
             self.expdata_2 = ExpData(file_name)
+            if self.info['x_range'] is None:
+                pass
+            else:
+                self.expdata_2.set_range(self.info['x_range'])
             self.simulate.load_exp_data(Path(file_name))
             self.space_time_resolution.add_st((tim, (loc, '0', '0')), self.simulate)
 
@@ -868,6 +1053,53 @@ class Page2(MainWindow):
 
         update_ui()
         dialog.show()
+
+    def show_abu(self):
+        def update_ui():
+            ax.clear()
+            if checkbox.isChecked():
+                temper = self.ui.page2_temperature.value()
+                density = (self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value())
+                self.simulate.init_cowan_list(self.cowan_lists)
+                y_list = self.simulate.get_abu(temper, density)
+                self.simulate.del_cowan_list()
+            else:
+                y_list = self.simulate.abundance
+
+            if checkbox.isChecked():  # 显示全部
+                x_list = [str(i) for i in range(len(y_list))]
+                ax.bar(x_list, y_list)
+            else:  # 显示选中的
+                x_list = [key.split('_')[-1] for key in self.cowan_lists.chose_cowan]
+                ax.bar(x_list, y_list)
+
+            for x_, y_ in zip(x_list, y_list):
+                ax.text(x_, y_, '{:.2f}'.format(y_), ha='center', va='bottom', fontsize=10)
+            ax.set_title('${:2}$\n${:.2f}\\enspace eV \\quad and \\quad {}*10^{{{}}}\\enspace cm^{{-3}}$'.format(
+                self.cowan_lists.chose_cowan[0].split('_')[0],
+                self.ui.page2_temperature.value(),
+                self.ui.page2_density_base.value(),
+                self.ui.page2_density_index.value()))
+
+            canvas.draw()
+
+        if self.simulate is None:
+            QMessageBox.warning(self, '警告', '请先模拟光谱！')
+            return
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        widget = QDialog()
+        canvas = FigureCanvas(fig)
+        checkbox = QCheckBox('显示全部', widget)
+        layout = QVBoxLayout(widget)
+        layout.addWidget(canvas)
+        layout.addWidget(checkbox)
+        checkbox.clicked.connect(update_ui)
+
+        update_ui()
+        widget.exec()
 
 
 class Page3(MainWindow):

@@ -154,93 +154,244 @@ class MainWindow(QMainWindow):
 
         self.expdata_2: Optional[ExpData] = None
         self.simulated_grid: Optional[SimulateGrid] = None
-        self.simulate: Optional[SimulateSpectral] = None
+        self.simulate: Optional[SimulateSpectral] = SimulateSpectral()
         self.simulate_page4: Optional[SimulateSpectral] = None
         self.space_time_resolution = SpaceTimeResolution()
+
+        self.info = {
+            'x_range': None,
+        }
 
         # 初始化
         self.init()
         self.bind_slot()
 
-        self.ui.navigation.setCurrentRow(0)
-
         if load:
             self.load_project()
-            # print(self.simulate.cowan_list[0].in36.control_card)
         else:
             self.load_Ge()
 
         # self.test()
         # self.load_Ge()
 
+    def init(self):
+        # 设置窗口标题
+        self.setWindowTitle(PROJECT_PATH().name)
+        # 给元素选择器设置初始值
+        self.ui.atomic_num.addItems(list(map(str, ATOM.keys())))
+        self.ui.atomic_symbol.addItems(list(zip(*ATOM.values()))[0])
+        self.ui.atomic_name.addItems(list(zip(*ATOM.values()))[1])
+        # in36组态表格相关设置
+        self.ui.in36_configuration_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)  # 设置行选择模式
+        self.ui.in36_configuration_view.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents)  # 设置表格列宽自适应
+        self.ui.in36_configuration_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        # 设置温度密度网格的相关信息
+        self.ui.page2_grid_list.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # 设置表格不可编辑
+        self.ui.page2_grid_list.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents)  # 设置表格列宽自适应
+        self.ui.page2_grid_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)  # 设置单选
+        # 设置时空分辨表格的相关信息
+        self.ui.st_resolution_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # 设置表格不可编辑
+        self.ui.st_resolution_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents)  # 设置表格列宽自适应
+        self.ui.st_resolution_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)  # 设置行选择模式
+        self.ui.st_resolution_table.setContextMenuPolicy(Qt.CustomContextMenu)  # 右键菜单
+        # 设置右键菜单
+        self.ui.run_history_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.selection_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        # 隐藏第四页树控件的标题
+        self.ui.treeWidget.header().hide()
+
+        # 设置初始页为第一页
+        self.ui.navigation.setCurrentRow(0)
+
+    def bind_slot(self):
+        # 设置左侧列表与右侧页面切换之间的关联
+        self.ui.navigation.currentRowChanged.connect(self.ui.stackedWidget.setCurrentIndex)
+
+        # ------------------------------- 菜单栏 -------------------------------
+        # 保存项目
+        self.ui.save_project.triggered.connect(self.save_project)
+        # 加载实验数据
+        self.ui.load_exp_data.triggered.connect(functools.partial(Menu.load_exp_data, self))
+        # 显示参考线
+        self.ui.show_guides.triggered.connect(functools.partial(Menu.show_guides, self))
+        # 重置计算按钮
+        self.ui.reset_cal.triggered.connect(lambda: self.ui.page2_cal_grid.setDisabled(False))
+        # 退出项目
+        self.ui.exit_project.triggered.connect(self.print_memory)
+        # 导出数据
+        self.ui.export_data.triggered.connect(functools.partial(Menu.export_data, self))
+        # 设置x轴范围
+        self.ui.set_xrange.triggered.connect(functools.partial(Menu.set_xrange, self))
+
+        # ------------------------------- 第一页 -------------------------------
+        # =====>> 下拉框
+        # 原子序数改变
+        self.ui.atomic_num.activated.connect(functools.partial(Page1.atom_changed, self))
+        # 元素符号改变
+        self.ui.atomic_symbol.activated.connect(functools.partial(Page1.atom_changed, self))
+        # 元素名称改变
+        self.ui.atomic_name.activated.connect(functools.partial(Page1.atom_changed, self))
+        # 离化度
+        self.ui.atomic_ion.activated.connect(functools.partial(Page1.atom_ion_changed, self))
+        # =====>> 按钮
+        # 添加组态
+        self.ui.add_configuration.clicked.connect(functools.partial(Page1.add_configuration, self))
+        # 加载in36文件
+        self.ui.load_in36.clicked.connect(functools.partial(Page1.load_in36, self))
+        # 加载in2文件
+        self.ui.load_in2.clicked.connect(functools.partial(Page1.load_in2, self))
+        # 预览in36
+        self.ui.preview_in36.clicked.connect(functools.partial(Page1.preview_in36, self))
+        # 预览in2
+        self.ui.preview_in2.clicked.connect(functools.partial(Page1.preview_in2, self))
+        # 组态下移
+        self.ui.configuration_move_down.clicked.connect(functools.partial(Page1.configuration_move_down, self))
+        # 组态上移
+        self.ui.configuration_move_up.clicked.connect(functools.partial(Page1.configuration_move_up, self))
+        # 运行Cowan
+        self.ui.run_cowan.clicked.connect(functools.partial(Page1.run_cowan, self))
+        # =====>> 单选框
+        # 自动生成 in36 组态
+        self.ui.auto_write_in36.clicked.connect(functools.partial(Page1.auto_write_in36, self))
+        # 手动输入 in36 组态
+        self.ui.manual_write_in36.clicked.connect(functools.partial(Page1.manual_write_in36, self))
+        # 线状谱展宽成gauss
+        self.ui.gauss.clicked.connect(
+            lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_gauss)))
+        # 线状谱展宽成crossP
+        self.ui.crossP.clicked.connect(
+            lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_P)))
+        # 线状谱展宽成crossNP
+        self.ui.crossNP.clicked.connect(
+            lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_NP)))
+        # =====>> 输入框
+        # in2 的斯莱特系数改变
+        self.ui.in2_11_e.valueChanged.connect(functools.partial(Page1.in2_11_e_value_changed, self))  # in2 11 e
+        # 偏移
+        self.ui.update_offect.clicked.connect(functools.partial(Page1.re_widen, self))  # 偏移
+        # =====>> 右键菜单
+        # in36 组态表格
+        self.ui.in36_configuration_view.customContextMenuRequested.connect(
+            functools.partial(Page1.in36_configuration_view_right_menu, self))
+        # 运行历史
+        self.ui.run_history_list.customContextMenuRequested.connect(
+            functools.partial(Page1.run_history_list_right_menu, self))
+        # 选择列表
+        self.ui.selection_list.customContextMenuRequested.connect(
+            functools.partial(Page1.selection_list_right_menu, self))
+        # =====>> 双击操作
+        # 加载库中的项目
+        self.ui.run_history_list.itemDoubleClicked.connect(functools.partial(Page1.load_history, self))
+
+        # ------------------------------- 第二页 -------------------------------
+        # =====>> 按钮
+        # 绘制模拟谱
+        self.ui.page2_plot_spectrum.clicked.connect(functools.partial(Page2.plot_spectrum, self))
+        # 加载实验数据
+        self.ui.page2_load_exp_data.clicked.connect(functools.partial(Page2.load_exp_data, self))
+        # 计算网格
+        self.ui.page2_cal_grid.clicked.connect(functools.partial(Page2.cal_grid, self))
+        # 记录
+        self.ui.recoder.clicked.connect(functools.partial(Page2.st_resolution_recoder, self))
+        # 绘制实验谱
+        self.ui.plot_exp_2.clicked.connect(functools.partial(Page2.plot_exp, self))
+        # 批量加载时空分辨光谱
+        self.ui.load_space_time.clicked.connect(functools.partial(Page2.load_space_time, self))
+        # 选择峰位置
+        self.ui.choose_peaks.clicked.connect(functools.partial(Page2.choose_peaks, self))
+        # 显示离子丰度
+        self.ui.show_abu.clicked.connect(functools.partial(Page2.show_abu, self))
+        # =====>> 复选框
+        # 切换特征峰位置是否显示
+        self.ui.show_peaks.toggled.connect(functools.partial(Page2.plot_spectrum, self))
+        # =====>> 单击操作
+        # 加载网格中的模拟谱线
+        self.ui.page2_grid_list.itemSelectionChanged.connect(functools.partial(Page2.grid_list_clicked, self))  # 网格列表
+        # =====>> 双击操作
+        # 加载库中的项目
+        self.ui.st_resolution_table.itemDoubleClicked.connect(functools.partial(Page2.st_resolution_clicked, self))
+        # =====>> 列表
+        # 选择列表该百年
+        self.ui.page2_selection_list.itemChanged.connect(functools.partial(Page2.selection_list_changed, self))
+        # =====>> 右键菜单
+        self.ui.st_resolution_table.customContextMenuRequested.connect(
+            functools.partial(Page2.st_resolution_right_menu, self))  # 时空分辨表格的右键菜单
+
+        # ------------------------------- 第三页 -------------------------------
+        # 按钮
+        self.ui.td_by_t.clicked.connect(functools.partial(Page3.plot_by_times, self))
+        self.ui.td_by_s.clicked.connect(functools.partial(Page3.plot_by_locations, self))
+        self.ui.td_by_st.clicked.connect(functools.partial(Page3.plot_by_space_time, self))
+
+        # ------------------------------- 第四页 -------------------------------
+        # 按钮
+        self.ui.pushButton.clicked.connect(functools.partial(Page4.plot_example, self))  # 绘制模拟谱
+        # 下拉框
+        self.ui.comboBox.activated.connect(functools.partial(Page4.comboBox_changed, self))  # 选择列表
+        # tree view
+        self.ui.treeWidget.itemClicked.connect(functools.partial(Page4.tree_item_changed, self))  # 选择列表
+
     def test(self):
         pass
-        # SET_PROJECT_PATH(Path('F:/Cowan/Al'))
-        # delta = {3: 0.05, 4: -0.04, 5: 0.0, 6: 0.05}
-        #
-        # for i in range(3, 7):
-        #     self.atom = Atom(1, 0)
-        #     self.in36 = In36(self.atom)
-        #     self.in36.read_from_file(PROJECT_PATH() / f'in36_{i}')
-        #     self.atom = copy.deepcopy(self.in36.atom)
-        #     self.in2 = In2()
-        #     self.expdata_1 = ExpData(PROJECT_PATH() / './exp_data.csv')
-        #     self.cowan = Cowan(self.in36, self.in2, f'Al_{i}', self.expdata_1, 1)
-        #     cowan_r = CowanThread(self.cowan)
-        #     cowan_r.start()
-        #     cowan_r.wait()
-        #     cowan_r.update_origin()
-        #     self.cowan.cal_data.widen_all.delta_lambda = delta[i]
-        #     self.cowan.cal_data.widen_all.widen(25.6, False)
-        #     self.run_history.append(copy.deepcopy(self.cowan))
-        #     self.simulate.add_cowan(self.cowan)
-        # self.simulate.exp_data = copy.deepcopy(self.expdata_1)
-        # self.simulate.characteristic_peaks = [8.8200, 10.4010, 10.7980, 10.9590, 12.5860, 13.11]
-        # for x in range(5):
-        #     for time_ in range(5):
-        #         temp = 20
-        #         den = 5.13e20
-        #         self.simulate.get_simulate_data(temp, den)
-        #         self.space_time_resolution.add_st(
-        #             (str(time_), (str(x), '0', '0')), self.simulate
-        #         )
-        #
-        # # -------------------------- 更新页面 --------------------------
-        # # ----- 原子信息 -----
-        # functools.partial(UpdatePage1.update_atom, self)()
-        # # ----- in36 -----
-        # functools.partial(UpdatePage1.update_in36, self)()
-        # # ----- in2 -----
-        # functools.partial(UpdatePage1.update_in2, self)()
-        # # ----- 偏移量 -----
-        # self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
-        # # ----- 实验数据 -----
-        # functools.partial(UpdatePage1.update_exp_figure, self)()
-        # # ----- 线状谱和展宽 -----
-        # functools.partial(UpdatePage1.update_line_figure, self)()
-        # functools.partial(UpdatePage1.update_widen_figure, self)()
-        #
-        # # ----- 历史数据 -----
-        # # 更新历史记录列表
-        # functools.partial(UpdatePage1.update_history_list, self)()
-        # # 更新选择列表
-        # functools.partial(UpdatePage1.update_selection_list, self)()
-        #
-        # # --------------- 第二页
-        # self.expdata_2 = ExpData(PROJECT_PATH() / 'exp_data.csv')
-        # # 更新界面
-        # self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
-        # # 更新谱峰个数
+        SET_PROJECT_PATH(Path('F:/Cowan/Al'))
+        delta = {3: 0.05, 4: -0.04, 5: 0.0, 6: 0.05}
+
+        for i in range(3, 7):
+            self.in36 = In36()
+            self.in36.read_from_file(PROJECT_PATH() / f'in36_{i}')
+            self.atom = copy.deepcopy(self.in36.atom)
+            self.in2 = In2()
+            self.expdata_1 = ExpData(PROJECT_PATH() / './exp_data.csv')
+            self.cowan = Cowan(self.in36, self.in2, f'Al_{i}', self.expdata_1, 1)
+            cowan_r = CowanThread(self.cowan)
+            cowan_r.start()
+            cowan_r.wait()
+            cowan_r.update_origin()
+            self.cowan.cal_data.widen_all.delta_lambda = delta[i]
+            self.cowan.cal_data.widen_all.widen(25.6, False)
+            self.cowan_lists.add_history(self.cowan)
+        self.cowan_lists.chose_cowan = list(self.cowan_lists.cowan_run_history.keys())
+        self.cowan_lists.add_or_not = [True for _ in range(len(self.cowan_lists.chose_cowan))]
+
+        # -------------------------- 更新页面 --------------------------
+        # ----- 原子信息 -----
+        functools.partial(UpdatePage1.update_atom, self)()
+        # ----- in36 -----
+        functools.partial(UpdatePage1.update_in36, self)()
+        # ----- in2 -----
+        functools.partial(UpdatePage1.update_in2, self)()
+        # ----- 偏移量 -----
+        self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
+        # ----- 实验数据 -----
+        functools.partial(UpdatePage1.update_exp_figure, self)()
+        # ----- 线状谱和展宽 -----
+        functools.partial(UpdatePage1.update_line_figure, self)()
+        functools.partial(UpdatePage1.update_widen_figure, self)()
+
+        # ----- 历史数据 -----
+        # 更新历史记录列表
+        functools.partial(UpdatePage1.update_history_list, self)()
+        # 更新选择列表
+        functools.partial(UpdatePage1.update_selection_list, self)()
+
+        # --------------- 第二页
+        self.expdata_2 = ExpData(PROJECT_PATH() / 'exp_data.csv')
+        # 更新界面
+        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
+        # 更新谱峰个数
         # functools.partial(UpdatePage2.update_characteristic_peaks, self)()
-        #
-        # # 时空分辨表格
-        # functools.partial(UpdatePage2.update_space_time_table, self)()
-        #
-        # # --------------- 第三页
-        # functools.partial(UpdatePage3.update_space_time_combobox, self)()
-        #
-        # # --------------- 第四页
-        # functools.partial(UpdatePage4.update_space_time_combobox, self)()
+
+        # 时空分辨表格
+        functools.partial(UpdatePage2.update_space_time_table, self)()
+
+        # --------------- 第三页
+        functools.partial(UpdatePage3.update_space_time_combobox, self)()
+
+        # --------------- 第四页
+        functools.partial(UpdatePage4.update_space_time_combobox, self)()
 
     def load_Ge(self):
         SET_PROJECT_PATH(Path('F:/Cowan/Ge_old'))
@@ -263,87 +414,19 @@ class MainWindow(QMainWindow):
 
         # -------------------------- 更新页面 --------------------------
         # ----- 原子信息 -----
-        # 改变元素选择器
-        self.ui.atomic_num.setCurrentIndex(self.atom.num - 1)
-        self.ui.atomic_name.setCurrentIndex(self.atom.num - 1)
-        self.ui.atomic_symbol.setCurrentIndex(self.atom.num - 1)
-        # 改变离化度列表
-        self.ui.atomic_ion.clear()
-        self.ui.atomic_ion.addItems([str(i) for i in range(self.atom.num)])
-        self.ui.atomic_ion.setCurrentIndex(self.atom.ion)
-        # 改变基组态
-        self.ui.base_configuration.setText(self.atom.base_configuration)
-        # 改变下态列表
-        self.ui.low_configuration.clear()
-        self.ui.low_configuration.addItems(list(self.atom.electron_arrangement.keys()))
-        self.ui.low_configuration.setCurrentIndex(
-            len(self.atom.electron_arrangement.keys()) - 1
-        )
-        # 改变上态列表
-        self.ui.high_configuration.clear()
-        temp_list = []
-        for value in SUBSHELL_SEQUENCE:
-            l_ = ANGULAR_QUANTUM_NUM_NAME.index(value[1])
-            if value in self.atom.electron_arrangement.keys():
-                if self.atom.electron_arrangement[value] != 4 * l_ + 2:
-                    temp_list.append(value)
-            else:
-                temp_list.append(value)
-        self.ui.high_configuration.addItems(temp_list)
-        self.ui.high_configuration.setCurrentIndex(1)
+        functools.partial(UpdatePage1.update_atom, self)()
         # ----- in36 -----
-        # 更新in36控制卡输入区
-        for i in range(23):
-            eval(f'self.ui.in36_{i + 1}').setText(self.in36.control_card[i].strip(' '))
-        # 更新in36组态输入区
-        df = pd.DataFrame(
-            list(zip(*self.in36.configuration_card))[0],
-            columns=['原子序数', '原子状态', '标识符', '空格', '组态'],
-            index=list(range(1, len(self.in36.configuration_card) + 1)),
-        )
-        df['宇称'] = list(zip(*self.in36.configuration_card))[1]
-        df = df[['宇称', '原子状态', '组态']]
-        # 更新表格
-        self.ui.in36_configuration_view.clear()
-        self.ui.in36_configuration_view.setRowCount(df.shape[0])
-        self.ui.in36_configuration_view.setColumnCount(df.shape[1])
-        self.ui.in36_configuration_view.setHorizontalHeaderLabels(df.columns)
-        for i in range(df.shape[0]):
-            for j in range(df.shape[1]):
-                item = QTableWidgetItem(str(df.iloc[i, j]))
-                self.ui.in36_configuration_view.setItem(i, j, item)
+        functools.partial(UpdatePage1.update_in36, self)()
         # ----- in2 -----
-        in2_input_name = ['in2_1', 'in2_2', 'in2_3', 'in2_4', 'in2_5', 'in2_6', 'in2_7', 'in2_8', 'in2_9_a', 'in2_9_b',
-                          'in2_9_c', 'in2_9_d', 'in2_10', 'in2_11_a', 'in2_11_b', 'in2_11_c', 'in2_11_d', 'in2_11_e',
-                          'in2_12', 'in2_13', 'in2_14', 'in2_15', 'in2_16', 'in2_17', 'in2_18', 'in2_19', ]
-        for i, n in enumerate(in2_input_name):
-            if '11' in n:
-                eval(f'self.ui.{n}').setValue(int(self.in2.input_card[i].strip(' ')))
-            else:
-                eval(f'self.ui.{n}').setText(self.in2.input_card[i].strip(' '))
-        # ----- 实验数据 -----
-        self.expdata_1.plot_html()
-        self.ui.exp_web.load(QUrl.fromLocalFile(self.expdata_1.plot_path))
+        functools.partial(UpdatePage1.update_in2, self)()
         # ----- 偏移量 -----
         self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
+        # ----- 实验数据 -----
+        functools.partial(UpdatePage1.update_exp_figure, self)()
         # ----- 线状谱和展宽 -----
-        self.cowan.cal_data.plot_line()
-        self.cowan.cal_data.widen_all.plot_widen()
-        # 加载线状谱
-        self.ui.web_cal_line.load(QUrl.fromLocalFile(self.cowan.cal_data.plot_path))
-        # 加载展宽数据
-        if self.ui.crossP.isChecked():
-            self.ui.web_cal_widen.load(
-                QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_P)
-            )
-        elif self.ui.crossNP.isChecked():
-            self.ui.web_cal_widen.load(
-                QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_NP)
-            )
-        elif self.ui.gauss.isChecked():
-            self.ui.web_cal_widen.load(
-                QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_gauss)
-            )
+        functools.partial(UpdatePage1.update_line_figure, self)()
+        functools.partial(UpdatePage1.update_widen_figure, self)()
+
         # ----- 历史数据 -----
         # 更新历史记录列表
         functools.partial(UpdatePage1.update_history_list, self)()
@@ -355,29 +438,10 @@ class MainWindow(QMainWindow):
         self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
         # 时空分辨表格
         functools.partial(UpdatePage2.update_space_time_table, self)()
-
         # --------------- 第三页
-        # 更新第三页元素
-        self.ui.location_select.clear()
-        temp_times = []
-        temp_locations = []
-        for key in self.space_time_resolution.simulate_spectral_dict:
-            temp_times.append(key[0])
-            temp_locations.append(key[1])
-        temp_times = set(temp_times)
-        temp_locations = set(temp_locations)
-        temp_locations = [f'({key[0]}, {key[1]}, {key[2]})' for key in temp_locations]
-        self.ui.location_select.addItems(temp_locations)
-        self.ui.time_select.addItems(temp_times)
-
+        functools.partial(UpdatePage3.update_space_time_combobox, self)()
         # --------------- 第四页
-        self.ui.comboBox.clear()
-        temp_list = []
-        for key in self.space_time_resolution.simulate_spectral_dict:
-            temp_list.append(f'时间：{key[0]}    位置：{key[1][0]}, {key[1][1]}, {key[1][2]}')
-        self.ui.comboBox.addItems(temp_list)
-        if temp_list:
-            functools.partial(Page4.comboBox_changed, self, 0)()
+        functools.partial(UpdatePage4.update_space_time_combobox, self)()
 
     def save_project(self):
         class SaveThread(QThread):
@@ -407,8 +471,10 @@ class MainWindow(QMainWindow):
             obj_info['cowan_lists'] = self.cowan_lists
             update_progress(35, 'cowan')
             obj_info['cowan'] = self.cowan
+            update_progress(35, 'cowan')
+            obj_info['info'] = self.info
             # 第二页
-            update_progress(40, 'expdata_2')
+            update_progress(45, 'expdata_2')
             obj_info['expdata_2'] = self.expdata_2
             update_progress(50, 'simulate')
             obj_info['simulate'] = self.simulate
@@ -447,6 +513,7 @@ class MainWindow(QMainWindow):
         self.expdata_1 = obj_info['expdata_1']
         self.cowan = obj_info['cowan']
         self.cowan_lists = obj_info['cowan_lists']
+        self.info = obj_info['info']
         # 第二页
         self.expdata_2 = obj_info['expdata_2']
         self.simulate = obj_info['simulate']
@@ -506,121 +573,6 @@ class MainWindow(QMainWindow):
         # ----- 更新谱峰个数 -----
         functools.partial(UpdatePage2.update_characteristic_peaks, self)()
 
-    def init(self):
-        self.setWindowTitle(PROJECT_PATH().name)
-        # 给元素选择器设置初始值
-        self.ui.atomic_num.addItems(list(map(str, ATOM.keys())))
-        self.ui.atomic_symbol.addItems(list(zip(*ATOM.values()))[0])
-        self.ui.atomic_name.addItems(list(zip(*ATOM.values()))[1])
-        # in36组态表格相关设置
-        self.ui.in36_configuration_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)  # 设置行选择模式
-        self.ui.in36_configuration_view.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents)  # 设置表格列宽自适应
-
-        self.ui.page2_grid_list.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # 设置表格不可编辑
-        self.ui.page2_grid_list.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents)  # 设置表格列宽自适应
-
-        self.ui.st_resolution_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # 设置表格不可编辑
-        self.ui.st_resolution_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents)  # 设置表格列宽自适应
-        # 设置右键菜单
-        self.ui.in36_configuration_view.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.ui.run_history_list.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.ui.selection_list.setContextMenuPolicy(Qt.CustomContextMenu)
-        # 设置单选
-        self.ui.page2_grid_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        # 隐藏树控件的标题
-        self.ui.treeWidget.header().hide()
-        # 第三页 时空分辨表格设置
-        self.ui.st_resolution_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)  # 设置行选择模式
-        self.ui.st_resolution_table.setContextMenuPolicy(Qt.CustomContextMenu)
-
-    def bind_slot(self):
-        # 设置左侧列表与右侧页面切换之间的关联
-        self.ui.navigation.currentRowChanged.connect(self.ui.stackedWidget.setCurrentIndex)
-
-        # ------------------------------- 菜单栏 -------------------------------
-        self.ui.save_project.triggered.connect(self.save_project)
-        self.ui.load_exp_data.triggered.connect(functools.partial(Menu.load_exp_data, self))  # 加载实验数据
-        self.ui.show_guides.triggered.connect(functools.partial(Menu.show_guides, self))  # 显示参考线
-        self.ui.reset_cal.triggered.connect(lambda: self.ui.page2_cal_grid.setDisabled(False))  # 重置计算按钮
-        self.ui.exit_project.triggered.connect(self.print_memory)  # 退出项目
-
-        # ------------------------------- 第一页 -------------------------------
-        # 元素选择 - 下拉框
-        self.ui.atomic_num.activated.connect(functools.partial(Page1.atom_changed, self))  # 原子序数
-        self.ui.atomic_symbol.activated.connect(functools.partial(Page1.atom_changed, self))  # 元素符号
-        self.ui.atomic_name.activated.connect(functools.partial(Page1.atom_changed, self))  # 元素名称
-        self.ui.atomic_ion.activated.connect(functools.partial(Page1.atom_ion_changed, self))  # 离化度
-        # 按钮
-        self.ui.add_configuration.clicked.connect(functools.partial(Page1.add_configuration, self))  # 添加组态
-        self.ui.load_in36.clicked.connect(functools.partial(Page1.load_in36, self))  # 加载in36文件
-        self.ui.load_in2.clicked.connect(functools.partial(Page1.load_in2, self))  # 加载in2文件
-        self.ui.preview_in36.clicked.connect(functools.partial(Page1.preview_in36, self))  # 预览in36
-        self.ui.preview_in2.clicked.connect(functools.partial(Page1.preview_in2, self))  # 预览in2
-        self.ui.configuration_move_down.clicked.connect(functools.partial(Page1.configuration_move_down, self))  # 组态下移
-        self.ui.configuration_move_up.clicked.connect(functools.partial(Page1.configuration_move_up, self))  # 组态上移
-        self.ui.run_cowan.clicked.connect(functools.partial(Page1.run_cowan, self))  # 运行Cowan
-        # 单选框
-        self.ui.auto_write_in36.clicked.connect(functools.partial(Page1.auto_write_in36, self))  # 自动生成in36
-        self.ui.manual_write_in36.clicked.connect(functools.partial(Page1.manual_write_in36, self))  # 手动输入in36
-        self.ui.gauss.clicked.connect(  # 线状谱展宽成gauss
-            lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_gauss)))
-        self.ui.crossP.clicked.connect(  # 线状谱展宽成crossP
-            lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_P)))
-        self.ui.crossNP.clicked.connect(  # 线状谱展宽成crossNP
-            lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_NP)))
-        # 输入框
-        self.ui.in2_11_e.valueChanged.connect(functools.partial(Page1.in2_11_e_value_changed, self))  # in2 11 e
-        # 右键菜单
-        self.ui.in36_configuration_view.customContextMenuRequested.connect(
-            functools.partial(Page1.in36_configuration_view_right_menu, self))  # 组态显示卡的右键菜单
-        self.ui.run_history_list.customContextMenuRequested.connect(
-            functools.partial(Page1.run_history_list_right_menu, self))  # 运行历史
-        self.ui.selection_list.customContextMenuRequested.connect(
-            functools.partial(Page1.selection_list_right_menu, self))  # 叠加离子
-        # 双击操作
-        self.ui.run_history_list.itemDoubleClicked.connect(functools.partial(Page1.load_history, self))  # 加载库中的项目
-        # 数字选择框
-        self.ui.update_offect.clicked.connect(functools.partial(Page1.re_widen, self))  # 偏移
-
-        # ------------------------------- 第二页 -------------------------------
-        # 按钮
-        self.ui.page2_plot_spectrum.clicked.connect(functools.partial(Page2.plot_spectrum, self))  # 绘制模拟谱
-        self.ui.page2_load_exp_data.clicked.connect(functools.partial(Page2.load_exp_data, self))  # 加载实验数据
-        self.ui.page2_cal_grid.clicked.connect(functools.partial(Page2.cal_grid, self))  # 计算网格
-        self.ui.recoder.clicked.connect(functools.partial(Page2.st_resolution_recoder, self))  # 记录
-        self.ui.plot_exp_2.clicked.connect(functools.partial(Page2.plot_exp, self))  # 绘制实验谱
-        self.ui.load_space_time.clicked.connect(functools.partial(Page2.load_space_time, self))  # 批量加载时空分辨光谱
-        self.ui.choose_peaks.clicked.connect(functools.partial(Page2.choose_peaks, self))  # 选择峰位置
-        # 复选框
-        self.ui.show_peaks.toggled.connect(functools.partial(Page2.plot_spectrum, self))
-        # 单击操作
-        self.ui.page2_grid_list.itemSelectionChanged.connect(functools.partial(Page2.grid_list_clicked, self))  # 网格列表
-        # 双击操作
-        self.ui.st_resolution_table.itemDoubleClicked.connect(
-            functools.partial(Page2.st_resolution_clicked, self))  # 加载库中的项目
-        # 列表
-        self.ui.page2_selection_list.itemChanged.connect(functools.partial(Page2.selection_list_changed, self))  # 选择列表
-        # 右键菜单
-        self.ui.st_resolution_table.customContextMenuRequested.connect(
-            functools.partial(Page2.st_resolution_right_menu, self))  # 时空分辨表格的右键菜单
-
-        # ------------------------------- 第三页 -------------------------------
-        # 按钮
-        self.ui.td_by_t.clicked.connect(functools.partial(Page3.plot_by_times, self))  # 绘制模拟谱
-        self.ui.td_by_s.clicked.connect(functools.partial(Page3.plot_by_locations, self))  # 绘制模拟谱
-        self.ui.td_by_st.clicked.connect(functools.partial(Page3.plot_by_space_time, self))  # 绘制模拟谱
-
-        # ------------------------------- 第四页 -------------------------------
-        # 按钮
-        self.ui.pushButton.clicked.connect(functools.partial(Page4.plot_example, self))  # 绘制模拟谱
-        # 下拉框
-        self.ui.comboBox.activated.connect(functools.partial(Page4.comboBox_changed, self))  # 选择列表
-        # tree view
-        self.ui.treeWidget.itemClicked.connect(functools.partial(Page4.tree_item_changed, self))  # 选择列表
-
     @staticmethod
     def print_memory(self):
         print('{:>22} {:>15.2f} [GB]'.format('总大小：',
@@ -635,8 +587,8 @@ class MainWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication([])
-    # window = LoginWindow()  # 启动登陆页面
+    window = LoginWindow()  # 启动登陆页面
     # window = MainWindow(Path('F:/Cowan/Test'), False)  # 启动主界面
-    window = MainWindow(Path('F:/Cowan/Ge_old'), False)  # 启动主界面
+    # window = MainWindow(Path('F:/Cowan/Ge_old'), False)  # 启动主界面
     window.show()
     app.exec()

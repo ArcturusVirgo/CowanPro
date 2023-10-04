@@ -143,9 +143,14 @@ class UpdatePage1(MainWindow):
         elif self.ui.gauss.isChecked():
             self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_gauss))
 
+    def update_xrange(self):
+        pass
+
 
 class UpdatePage2(MainWindow):
     def update_exp_sim_figure(self):
+        if self.simulate is None:
+            return
         if self.simulate.temperature is None or self.simulate.electron_density is None:
             return
         if self.ui.show_peaks.isChecked():
@@ -203,6 +208,8 @@ class UpdatePage2(MainWindow):
             self.ui.st_resolution_table.setItem(i, 4, item5)
 
     def update_temperature_density(self):
+        if self.simulate is None:
+            return
         if self.simulate.temperature is None or self.simulate.electron_density is None:
             return
         self.ui.page2_temperature.setValue(self.simulate.temperature)
@@ -213,6 +220,8 @@ class UpdatePage2(MainWindow):
         self.ui.page2_density_index.setValue(index)
 
     def update_characteristic_peaks(self):
+        if self.simulate is None:
+            return
         if self.simulate.characteristic_peaks is None:
             self.ui.peaks_label.setText('未指定')
         self.ui.peaks_label.setText(f'{len(self.simulate.characteristic_peaks)}个')
