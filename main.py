@@ -144,9 +144,10 @@ class MainWindow(QMainWindow):
         self.v_line = None
 
         # 第一页使用
-        self.atom: Optional[Atom] = None
-        self.in36: Optional[In36] = None
-        self.in2: Optional[In2] = None
+        self.atom: Optional[Atom] = Atom(1, 0)
+        self.in36: Optional[In36] = In36()
+        self.in36.atom = copy.deepcopy(self.atom)
+        self.in2: Optional[In2] = In2()
         self.expdata_1: Optional[ExpData] = None
 
         self.cowan_lists = CowanList()
