@@ -879,8 +879,9 @@ class Page2(MainWindow):
                 pass
             else:
                 self.expdata_2.set_range(self.info['x_range'])
-            self.simulate.load_exp_data(Path(file_name))
-            self.space_time_resolution.add_st((tim, (loc, '0', '0')), self.simulate)
+            simulate = SimulateSpectral()
+            simulate.load_exp_data(Path(file_name))
+            self.space_time_resolution.add_st((tim, (loc, '0', '0')), simulate)
 
         # -------------------------- 更新页面 --------------------------
         # 第二页
