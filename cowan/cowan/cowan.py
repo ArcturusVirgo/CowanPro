@@ -1559,15 +1559,9 @@ class SpaceTimeResolution:
         # 模拟光谱数据对象 列表
         self.simulate_spectral_dict = {}
 
-        self.change_by_time_path = (
-            PROJECT_PATH().joinpath('figure/change/by_time.html').as_posix()
-        )
-        self.change_by_location_path = (
-            PROJECT_PATH().joinpath('figure/change/by_location.html').as_posix()
-        )
-        self.change_by_space_time_path = (
-            PROJECT_PATH().joinpath('figure/change/by_space_time.html').as_posix()
-        )
+        self.change_by_time_path = (PROJECT_PATH().joinpath('figure/change/by_time.html').as_posix())
+        self.change_by_location_path = (PROJECT_PATH().joinpath('figure/change/by_location.html').as_posix())
+        self.change_by_space_time_path = (PROJECT_PATH().joinpath('figure/change/by_space_time.html').as_posix())
 
     # 添加一个位置时间
     def add_st(self, st: tuple, simulate_spectral):
