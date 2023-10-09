@@ -17,14 +17,14 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
 from PySide6.QtWebEngineWidgets import QWebEngineView
-from PySide6.QtWidgets import (QApplication, QComboBox, QDoubleSpinBox, QFrame,
-    QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
-    QLabel, QLineEdit, QListWidget, QListWidgetItem,
-    QMainWindow, QMenu, QMenuBar, QPushButton,
-    QRadioButton, QSizePolicy, QSpacerItem, QSpinBox,
-    QStackedWidget, QStatusBar, QTabWidget, QTableWidget,
-    QTableWidgetItem, QToolButton, QTreeWidget, QTreeWidgetItem,
-    QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDoubleSpinBox,
+    QFrame, QGridLayout, QGroupBox, QHBoxLayout,
+    QHeaderView, QLabel, QLineEdit, QListWidget,
+    QListWidgetItem, QMainWindow, QMenu, QMenuBar,
+    QPushButton, QRadioButton, QSizePolicy, QSpacerItem,
+    QSpinBox, QStackedWidget, QStatusBar, QTabWidget,
+    QTableWidget, QTableWidgetItem, QToolButton, QTreeWidget,
+    QTreeWidgetItem, QVBoxLayout, QWidget)
 
 class Ui_main_window(object):
     def setupUi(self, main_window):
@@ -63,6 +63,8 @@ class Ui_main_window(object):
         self.export_data.setObjectName(u"export_data")
         self.set_xrange = QAction(main_window)
         self.set_xrange.setObjectName(u"set_xrange")
+        self.reset_xrange = QAction(main_window)
+        self.reset_xrange.setObjectName(u"reset_xrange")
         self.centralwidget = QWidget(main_window)
         self.centralwidget.setObjectName(u"centralwidget")
         self.centralwidget.setEnabled(True)
@@ -1728,6 +1730,7 @@ class Ui_main_window(object):
 
         self.groupBox = QGroupBox(self.page_2)
         self.groupBox.setObjectName(u"groupBox")
+        self.groupBox.setMinimumSize(QSize(300, 0))
         self.groupBox.setMaximumSize(QSize(450, 16777215))
         self.verticalLayout = QVBoxLayout(self.groupBox)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -1819,6 +1822,25 @@ class Ui_main_window(object):
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_19)
+
+        self.horizontalLayout_29 = QHBoxLayout()
+        self.horizontalLayout_29.setObjectName(u"horizontalLayout_29")
+        self.page2_cowan_obj_update = QPushButton(self.groupBox)
+        self.page2_cowan_obj_update.setObjectName(u"page2_cowan_obj_update")
+
+        self.horizontalLayout_29.addWidget(self.page2_cowan_obj_update)
+
+        self.pushButton_2 = QPushButton(self.groupBox)
+        self.pushButton_2.setObjectName(u"pushButton_2")
+
+        self.horizontalLayout_29.addWidget(self.pushButton_2)
+
+        self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_29.addItem(self.horizontalSpacer_14)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_29)
 
         self.st_resolution_table = QTableWidget(self.groupBox)
         if (self.st_resolution_table.columnCount() < 5):
@@ -1989,10 +2011,20 @@ class Ui_main_window(object):
 
         self.verticalLayout_8.addWidget(self.treeWidget)
 
-        self.pushButton = QPushButton(self.groupBox_7)
-        self.pushButton.setObjectName(u"pushButton")
+        self.horizontalLayout_28 = QHBoxLayout()
+        self.horizontalLayout_28.setObjectName(u"horizontalLayout_28")
+        self.page4_con_contribution = QPushButton(self.groupBox_7)
+        self.page4_con_contribution.setObjectName(u"page4_con_contribution")
 
-        self.verticalLayout_8.addWidget(self.pushButton)
+        self.horizontalLayout_28.addWidget(self.page4_con_contribution)
+
+        self.page4_ion_contribution = QPushButton(self.groupBox_7)
+        self.page4_ion_contribution.setObjectName(u"page4_ion_contribution")
+
+        self.horizontalLayout_28.addWidget(self.page4_ion_contribution)
+
+
+        self.verticalLayout_8.addLayout(self.horizontalLayout_28)
 
 
         self.horizontalLayout_13.addWidget(self.groupBox_7)
@@ -2013,6 +2045,11 @@ class Ui_main_window(object):
         self.webEngineView_2.setUrl(QUrl(u"about:blank"))
 
         self.verticalLayout_5.addWidget(self.webEngineView_2)
+
+        self.page4_consider_popular = QCheckBox(self.groupBox_8)
+        self.page4_consider_popular.setObjectName(u"page4_consider_popular")
+
+        self.verticalLayout_5.addWidget(self.page4_consider_popular)
 
 
         self.horizontalLayout_13.addWidget(self.groupBox_8)
@@ -2047,6 +2084,7 @@ class Ui_main_window(object):
         self.menu.addAction(self.exit_project)
         self.menu_2.addAction(self.load_exp_data)
         self.menu_2.addAction(self.set_xrange)
+        self.menu_2.addAction(self.reset_xrange)
         self.menu_3.addAction(self.show_guides)
         self.menu_3.addAction(self.reset_cal)
         self.menu_4.addAction(self.export_data)
@@ -2076,6 +2114,7 @@ class Ui_main_window(object):
         self.reset_cal.setText(QCoreApplication.translate("main_window", u"\u91cd\u7f6e\u8ba1\u7b97\u6309\u94ae", None))
         self.export_data.setText(QCoreApplication.translate("main_window", u"\u5bfc\u51fa\u6570\u636e", None))
         self.set_xrange.setText(QCoreApplication.translate("main_window", u"\u8bbe\u7f6e\u6ce2\u957f\u8303\u56f4", None))
+        self.reset_xrange.setText(QCoreApplication.translate("main_window", u"\u91cd\u7f6e\u6ce2\u957f\u8303\u56f4", None))
 
         __sortingEnabled = self.navigation.isSortingEnabled()
         self.navigation.setSortingEnabled(False)
@@ -2310,6 +2349,8 @@ class Ui_main_window(object):
         self.st_space_z.setText(QCoreApplication.translate("main_window", u"0", None))
         self.recoder.setText(QCoreApplication.translate("main_window", u"\u8bb0\u5f55", None))
         self.load_space_time.setText(QCoreApplication.translate("main_window", u"\u6279\u91cf\u52a0\u8f7d", None))
+        self.page2_cowan_obj_update.setText(QCoreApplication.translate("main_window", u"\u66f4\u65b0cowan\u5bf9\u8c61", None))
+        self.pushButton_2.setText(QCoreApplication.translate("main_window", u"PushButton", None))
         ___qtablewidgetitem3 = self.st_resolution_table.horizontalHeaderItem(0)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("main_window", u"\u65f6\u95f4", None));
         ___qtablewidgetitem4 = self.st_resolution_table.horizontalHeaderItem(1)
@@ -2332,8 +2373,10 @@ class Ui_main_window(object):
         self.label_22.setText(QCoreApplication.translate("main_window", u"\u65f6\u95f4\u9009\u62e9", None))
         self.td_by_s.setText(QCoreApplication.translate("main_window", u"\u7ed8\u5236", None))
         self.groupBox_7.setTitle(QCoreApplication.translate("main_window", u"GroupBox", None))
-        self.pushButton.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u7ec4\u6001\u7684\u8d21\u732e", None))
+        self.page4_con_contribution.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u7ec4\u6001\u7684\u8d21\u732e", None))
+        self.page4_ion_contribution.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u79bb\u5b50\u7684\u8d21\u732e", None))
         self.groupBox_8.setTitle(QCoreApplication.translate("main_window", u"GroupBox", None))
+        self.page4_consider_popular.setText(QCoreApplication.translate("main_window", u"\u8003\u8651\u5e03\u5c45", None))
         self.menu.setTitle(QCoreApplication.translate("main_window", u"\u6587\u4ef6", None))
         self.menu_2.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))
         self.menu_3.setTitle(QCoreApplication.translate("main_window", u"\u5de5\u5177", None))

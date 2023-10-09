@@ -159,6 +159,9 @@ class ExpData:
         self.data = self.data[(self.data['wavelength'] < self.x_range[1]) &
                               (self.data['wavelength'] > self.x_range[0])]
 
+    def reset_range(self):
+        self.set_range(self.init_xrange)
+
     def __read_file(self):
         """
         根据路径读入实验数据
@@ -615,13 +618,7 @@ class CalData:
 
 
 class WidenAll:
-    def __init__(
-            self,
-            name,
-            init_data,
-            exp_data: ExpData,
-            n=None,
-    ):
+    def __init__(self, name, init_data, exp_data: ExpData, n=None, ):
         self.name = name
         self.init_data = init_data.copy()
         self.exp_data = exp_data
@@ -752,13 +749,7 @@ class WidenAll:
 
 
 class WidenPart:
-    def __init__(
-            self,
-            name,
-            init_data,
-            exp_data: ExpData,
-            n=None,
-    ):
+    def __init__(self, name, init_data, exp_data: ExpData, n=None, ):
         self.name = name
         self.init_data = init_data.copy()
         self.exp_data = exp_data
@@ -769,7 +760,7 @@ class WidenPart:
 
         self.plot_path_list = {}
 
-        self.widen_data: Optional[pd.DataFrame] = None
+        # self.widen_data: Optional[pd.DataFrame] = None
         self.grouped_widen_data: Optional[Dict[str, pd.DataFrame]] = None
 
     def widen_by_group(self, temperature=25.6):
@@ -1097,7 +1088,7 @@ class SimulateSpectral:
         fig = go.Figure(data=data, layout=layout)
         plot(fig, filename=self.plot_path, auto_open=False)
 
-    def plot_example_html(self, add_list):
+    def plot_con_contribution_html(self, add_list):
         """
         绘制各个组态的贡献
         Args:
@@ -1139,6 +1130,47 @@ class SimulateSpectral:
                                 )
                             )
                         height += 1.2
+        layout = go.Layout(
+            margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
+            xaxis=go.layout.XAxis(range=self.exp_data.x_range),
+            # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
+        )
+        fig = go.Figure(data=trace, layout=layout)
+        plot(fig, filename=self.example_path, auto_open=False)
+
+    def plot_ion_contribution_html(self, add_list, with_popular):
+        height = 0
+        trace = []
+
+        if with_popular:  # 如果考虑离子丰度
+            temp_popular = self.abundance
+        else:
+            temp_popular = [1 for _ in range(len(self.abundance))]
+        for i, cowan_ in enumerate(self.cowan_list):
+            if add_list[i][0]:
+                x = cowan_.cal_data.widen_all.widen_data['wavelength'].values
+                y = cowan_.cal_data.widen_all.widen_data['cross_P'].values * temp_popular[i]
+                if with_popular:  # 如果考虑丰度
+                    trace.append(
+                        go.Scatter(
+                            x=x,
+                            y=y,
+                            mode='lines',
+                            name='',
+                            hovertext=cowan_.name,
+                        )
+                    )
+                else:  # 不考虑丰度
+                    trace.append(
+                        go.Scatter(
+                            x=x,
+                            y=y / y.max() + height,
+                            mode='lines',
+                            name='',
+                            hovertext=cowan_.name,
+                        )
+                    )
+                height += 1.2
         layout = go.Layout(
             margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
             xaxis=go.layout.XAxis(range=self.exp_data.x_range),

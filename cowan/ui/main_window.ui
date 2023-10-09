@@ -3954,6 +3954,12 @@
           </item>
           <item>
            <widget class="QGroupBox" name="groupBox">
+            <property name="minimumSize">
+             <size>
+              <width>300</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="maximumSize">
              <size>
               <width>450</width>
@@ -4106,6 +4112,37 @@
                   <string>批量加载</string>
                  </property>
                 </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_29">
+               <item>
+                <widget class="QPushButton" name="page2_cowan_obj_update">
+                 <property name="text">
+                  <string>更新cowan对象</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButton_2">
+                 <property name="text">
+                  <string>PushButton</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_14">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </item>
@@ -4360,11 +4397,22 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="pushButton">
-             <property name="text">
-              <string>查看各组态的贡献</string>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout_28">
+             <item>
+              <widget class="QPushButton" name="page4_con_contribution">
+               <property name="text">
+                <string>查看各组态的贡献</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="page4_ion_contribution">
+               <property name="text">
+                <string>查看各离子的贡献</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>
@@ -4396,6 +4444,13 @@
               <url>
                <string>about:blank</string>
               </url>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="page4_consider_popular">
+             <property name="text">
+              <string>考虑布居</string>
              </property>
             </widget>
            </item>
@@ -4433,6 +4488,7 @@
     </property>
     <addaction name="load_exp_data"/>
     <addaction name="set_xrange"/>
+    <addaction name="reset_xrange"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -4524,6 +4580,11 @@
   <action name="set_xrange">
    <property name="text">
     <string>设置波长范围</string>
+   </property>
+  </action>
+  <action name="reset_xrange">
+   <property name="text">
+    <string>重置波长范围</string>
    </property>
   </action>
  </widget>

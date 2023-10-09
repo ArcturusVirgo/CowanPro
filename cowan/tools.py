@@ -1,4 +1,5 @@
 import matplotlib
+from PySide6.QtCore import Qt
 
 
 def rainbow_color(x):
@@ -18,3 +19,20 @@ def rainbow_color(x):
         int(rgba[2] * 255),
         int(rgba[3] * 255),
     )
+
+
+def get_configuration_add_list(self):
+    add_example = []
+    for i in range(self.ui.treeWidget.topLevelItemCount()):
+        parent = self.ui.treeWidget.topLevelItem(i)
+        if parent.checkState(0) == Qt.Checked:
+            add_example.append([True, []])
+        else:
+            add_example.append([False, []])
+        for j in range(parent.childCount()):
+            child = parent.child(j)
+            if child.checkState(0) == Qt.Checked:
+                add_example[i][1].append(True)
+            else:
+                add_example[i][1].append(False)
+    return add_example

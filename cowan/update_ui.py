@@ -1,14 +1,14 @@
 import functools
+import warnings
 
-import matplotlib
-import numpy as np
 import pandas as pd
-from PySide6.QtCore import Qt, QUrl
+from PySide6.QtCore import QUrl
 from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import QTableWidgetItem, QListWidgetItem, QTreeWidgetItem
 
 from .cowan import SUBSHELL_SEQUENCE, ANGULAR_QUANTUM_NUM_NAME
 from .tools import rainbow_color
+from .custom_thread import *
 from main import MainWindow
 
 
@@ -146,6 +146,36 @@ class UpdatePage1(MainWindow):
     def update_xrange(self):
         pass
 
+    def update_page(self):
+        # ----- 原子信息 -----
+        if self.atom.num == 1 and self.atom.ion == 0:
+            warnings.warn('原子信息未初始化', UserWarning)
+            return
+        functools.partial(UpdatePage1.update_atom, self)()
+        # ----- in36 -------
+        functools.partial(UpdatePage1.update_in36, self)()
+        # ----- in2 -----
+        functools.partial(UpdatePage1.update_in2, self)()
+        if self.cowan is None:
+            warnings.warn('Cowan未进行首次计算', UserWarning)
+            return
+        # ----- 偏移量 -----
+        self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
+        # ----- 实验数据 -----
+        functools.partial(UpdatePage1.update_exp_figure, self)()
+        # ----- 线状谱和展宽 -----
+        functools.partial(UpdatePage1.update_line_figure, self)()
+        functools.partial(UpdatePage1.update_widen_figure, self)()
+        self.ui.gauss.setEnabled(True)  # 将展宽的选择框设为可用
+        self.ui.crossP.setEnabled(True)
+        self.ui.crossNP.setEnabled(True)
+        # ----- 历史数据 -----
+        self.ui.cowan_now_name.setText(f'当前计算：{self.cowan.name}')
+        # 更新历史记录列表
+        functools.partial(UpdatePage1.update_history_list, self)()
+        # 更新选择列表
+        functools.partial(UpdatePage1.update_selection_list, self)()
+
 
 class UpdatePage2(MainWindow):
     def update_exp_sim_figure(self):
@@ -165,6 +195,9 @@ class UpdatePage2(MainWindow):
         self.ui.page2_add_spectrum_web.load(QUrl.fromLocalFile(self.expdata_2.plot_path))
 
     def update_grid(self):
+        if self.simulated_grid is None:
+            warnings.warn('simulated_grid is None')
+            return
         self.ui.page2_grid_list.clear()
         self.ui.page2_grid_list.setRowCount(self.simulated_grid.ne_num)
         self.ui.page2_grid_list.setColumnCount(self.simulated_grid.t_num)
@@ -226,6 +259,24 @@ class UpdatePage2(MainWindow):
             self.ui.peaks_label.setText('未指定')
         self.ui.peaks_label.setText(f'{len(self.simulate.characteristic_peaks)}个')
 
+    def update_page(self):
+        if not self.expdata_2:
+            warnings.warn('第二页实验数据未加载', UserWarning)
+            return
+        # ----- 实验数据的文件名 -----
+        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.as_posix())
+        # ----- 实验数据 -----
+        functools.partial(UpdatePage2.update_exp_figure, self)()
+        # ----- 第二页的密度温度 -----
+        functools.partial(UpdatePage2.update_temperature_density, self)()
+        functools.partial(UpdatePage2.update_exp_sim_figure, self)()
+        # ----- 时空分辨表格 -----
+        functools.partial(UpdatePage2.update_space_time_table, self)()
+        # ----- 更新谱峰个数 -----
+        functools.partial(UpdatePage2.update_characteristic_peaks, self)()
+        # 更新网格
+        functools.partial(UpdatePage2.update_grid, self)()
+
 
 class UpdatePage3(MainWindow):
     def update_space_time_combobox(self):
@@ -258,24 +309,33 @@ class UpdatePage4(MainWindow):
         self.ui.comboBox.addItems(temp_list)
 
     def update_treeview(self):
-        for c in self.simulate_page4.cowan_list:
-            c.cal_data.widen_part.widen_by_group()
+        def task():
+            for c in self.simulate_page4.cowan_list:
+                c.cal_data.widen_part.widen_by_group()
 
-            parents = QTreeWidgetItem()
-            parents.setText(0, c.name.replace('_', '+'))
-            parents.setCheckState(0, Qt.Checked)
-            self.ui.treeWidget.addTopLevelItem(parents)
+                parents = QTreeWidgetItem()
+                parents.setText(0, c.name.replace('_', '+'))
+                parents.setCheckState(0, Qt.Checked)
 
-            for example in c.cal_data.widen_part.grouped_widen_data:
-                child = QTreeWidgetItem()
-                child.setCheckState(0, Qt.Checked)
-                index_low, index_high = map(int, example.split('_'))
-                child.setText(0, f'{index_low},{index_high} => {c.in36.get_configuration_name(index_low, index_high)}')
-                if c.cal_data.widen_part.grouped_widen_data[example]['cross_P'].max() == 0:
-                    child.setBackground(0, QBrush(QColor(255, 0, 0)))
-                    child.setCheckState(0, Qt.Unchecked)
-                parents.addChild(child)
+                for example in c.cal_data.widen_part.grouped_widen_data:
+                    child = QTreeWidgetItem()
+                    child.setCheckState(0, Qt.Checked)
+                    index_low, index_high = map(int, example.split('_'))
+                    child.setText(0,
+                                  f'{index_low},{index_high} => {c.in36.get_configuration_name(index_low, index_high)}')
+                    if c.cal_data.widen_part.grouped_widen_data[example]['cross_P'].max() == 0:
+                        child.setBackground(0, QBrush(QColor(255, 0, 0)))
+                        child.setCheckState(0, Qt.Unchecked)
+                    parents.addChild(child)
+
+                self.ui.treeWidget.addTopLevelItem(parents)
+
+        self.task_thread = ProgressThread(dialog_title='正在加载...')
+        self.task_thread.set_run(task)
+        self.task_thread.start()
 
     def update_exp_figure(self):
         self.simulate_page4.plot_html()
         self.ui.webEngineView.load(QUrl.fromLocalFile(self.simulate_page4.plot_path))
+
+
