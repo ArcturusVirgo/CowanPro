@@ -5,8 +5,8 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜索" href="search.html" /><link rel="next" title="cowan package" href="cowan.html" /><link rel="prev" title="CowanPro" href="modules.html" />
 
-    <!-- Generated with Sphinx 7.2.2 and Furo 2023.08.19 -->
-        <title>main program - CowanPro 0.0.0 文档</title>
+    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
+        <title>main program - CowanPro 0.0.1 文档</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">CowanPro 0.0.0 文档</div></a>
+      <a href="index.html"><div class="brand">CowanPro 0.0.1 文档</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -146,7 +146,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">CowanPro 0.0.0 文档</span>
+  <span class="sidebar-brand-text">CowanPro 0.0.1 文档</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="搜索" name="q" aria-label="搜索">
@@ -160,6 +160,7 @@
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">main program</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="cowan.html">cowan package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of cowan package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="cowan.cowan.html">cowan package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cowan.ui.html">ui package</a></li>
 </ul>
 </li>
 </ul>
@@ -198,9 +199,9 @@
           </label>
         </div>
         <article role="main">
-          <section id="main-program">
-<h1>main program<a class="headerlink" href="#main-program" title="Link to this heading">#</a></h1>
-<dl class="py class" id="module-main">
+          <section id="module-main">
+<span id="main-program"></span><h1>main program<a class="headerlink" href="#module-main" title="Link to this heading">#</a></h1>
+<dl class="py class">
 <dt class="sig sig-object py" id="main.LoginWindow">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">main.</span></span><span class="sig-name descname"><span class="pre">LoginWindow</span></span><a class="headerlink" href="#main.LoginWindow" title="Link to this definition">#</a></dt>
 <dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">QWidget</span></code></p>
@@ -271,6 +272,11 @@
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="main.MainWindow.closeEvent">
+<span class="sig-name descname"><span class="pre">closeEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PySide6.QtGui.QCloseEvent</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#main.MainWindow.closeEvent" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="main.MainWindow.init">
 <span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.MainWindow.init" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -283,6 +289,11 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="main.MainWindow.load_project">
 <span class="sig-name descname"><span class="pre">load_project</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.MainWindow.load_project" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="main.MainWindow.print_memory">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">print_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.MainWindow.print_memory" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -397,9 +408,11 @@
 </li>
 <li><a class="reference internal" href="#main.MainWindow"><code class="docutils literal notranslate"><span class="pre">MainWindow</span></code></a><ul>
 <li><a class="reference internal" href="#main.MainWindow.bind_slot"><code class="docutils literal notranslate"><span class="pre">MainWindow.bind_slot()</span></code></a></li>
+<li><a class="reference internal" href="#main.MainWindow.closeEvent"><code class="docutils literal notranslate"><span class="pre">MainWindow.closeEvent()</span></code></a></li>
 <li><a class="reference internal" href="#main.MainWindow.init"><code class="docutils literal notranslate"><span class="pre">MainWindow.init()</span></code></a></li>
 <li><a class="reference internal" href="#main.MainWindow.load_Ge"><code class="docutils literal notranslate"><span class="pre">MainWindow.load_Ge()</span></code></a></li>
 <li><a class="reference internal" href="#main.MainWindow.load_project"><code class="docutils literal notranslate"><span class="pre">MainWindow.load_project()</span></code></a></li>
+<li><a class="reference internal" href="#main.MainWindow.print_memory"><code class="docutils literal notranslate"><span class="pre">MainWindow.print_memory()</span></code></a></li>
 <li><a class="reference internal" href="#main.MainWindow.save_project"><code class="docutils literal notranslate"><span class="pre">MainWindow.save_project()</span></code></a></li>
 <li><a class="reference internal" href="#main.MainWindow.staticMetaObject"><code class="docutils literal notranslate"><span class="pre">MainWindow.staticMetaObject</span></code></a></li>
 <li><a class="reference internal" href="#main.MainWindow.test"><code class="docutils literal notranslate"><span class="pre">MainWindow.test()</span></code></a></li>
@@ -422,7 +435,7 @@
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=9649c7f5"></script>
+</div><script src="_static/documentation_options.js?v=848ffbef"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=32e29ea5"></script>

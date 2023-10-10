@@ -15,6 +15,17 @@ from .update_ui import *
 
 class Menu(MainWindow):
     def load_exp_data(self):
+        """
+        第一页，加载实验数据
+
+        Notes:
+            1. 选择实验数据文件
+            2. 将实验数据文件复制到项目路径下
+            3. 更新实验数据范围
+            4. 更新运行历史的实验数据
+            5. 更新页面
+
+        """
         path, types = QFileDialog.getOpenFileName(self, '请选择实验数据', PROJECT_PATH().as_posix(),
                                                   '数据文件(*.txt *.csv)')
         path = Path(path)
@@ -44,6 +55,10 @@ class Menu(MainWindow):
         self.ui.exp_web.load(QUrl.fromLocalFile(self.expdata_1.plot_path))
 
     def show_guides(self):
+        """
+        显示参考线
+
+        """
         if self.v_line is None:
             x, y = self.ui.exp_web.mapToGlobal(self.ui.exp_web.pos()).toTuple()
             self.v_line = VerticalLine(x, y - 100, self.window().height() - 100)
@@ -55,6 +70,10 @@ class Menu(MainWindow):
             self.ui.show_guides.setText('显示参考线')
 
     def export_data(self):
+        """
+        导出数据
+
+        """
         def save_simulate_data(sim):
             exp_wavelength = sim.exp_data.data['wavelength']
             exp_intensity = sim.exp_data.data['intensity']
@@ -114,6 +133,10 @@ class Menu(MainWindow):
         cowan_info.to_excel(path.joinpath('cowan_info.xlsx'), index=False)
 
     def set_xrange(self):
+        """
+        设置波长范围
+
+        """
         def update_xrange():
             def task():
                 self.task_thread.progress.emit(0, '准备开始')
@@ -212,6 +235,10 @@ class Menu(MainWindow):
         dialog.exec()
 
     def reset_xrange(self):
+        """
+        重置波长范围
+
+        """
         def task():
             self.info['x_range'] = None
             widen_temperature = self.ui.widen_temp.value()
@@ -281,10 +308,9 @@ class Page1(MainWindow):
     def atom_changed(self, index):
         """
         当选择的元素改变时
-        Args:
-            index:
 
-        Returns:
+        Args:
+            index: 原子下拉框的序号
 
         """
         self.atom = Atom(index + 1, 0)
@@ -296,9 +322,7 @@ class Page1(MainWindow):
         """
         当离化度改变时
         Args:
-            index:
-
-        Returns:
+            index: 离子下拉框的序号
 
         """
         self.atom = Atom(self.ui.atomic_num.currentIndex() + 1, index)
@@ -309,7 +333,6 @@ class Page1(MainWindow):
     def add_configuration(self):
         """
         添加组态
-        Returns:
 
         """
         # 如果是自动添加
@@ -336,6 +359,10 @@ class Page1(MainWindow):
         functools.partial(UpdatePage1.update_in36_configuration, self)()
 
     def load_in36(self):
+        """
+        加载in36文件
+
+        """
         path, types = QFileDialog.getOpenFileName(self, '请选择in36文件', PROJECT_PATH().as_posix(), '')
         if path == '':
             return
@@ -350,6 +377,10 @@ class Page1(MainWindow):
         functools.partial(UpdatePage1.update_in36, self)()
 
     def load_in2(self):
+        """
+        加载in2文件
+
+        """
         path, types = QFileDialog.getOpenFileName(
             self, '请选择in2文件', PROJECT_PATH().as_posix(), ''
         )
@@ -361,6 +392,10 @@ class Page1(MainWindow):
         functools.partial(UpdatePage1.update_in2, self)()
 
     def preview_in36(self):
+        """
+        预览in36
+
+        """
         dialog = QDialog()
         dialog.resize(1000, 500)
         text_browser = QTextBrowser(dialog)
@@ -381,6 +416,10 @@ class Page1(MainWindow):
         dialog.exec()
 
     def preview_in2(self):
+        """
+        预览in2
+
+        """
         dialog = QDialog()
         dialog.resize(1000, 500)
         text_browser = QTextBrowser(dialog)
@@ -401,6 +440,10 @@ class Page1(MainWindow):
         dialog.exec()
 
     def configuration_move_up(self):
+        """
+        选中组态上移
+
+        """
         index = self.ui.in36_configuration_view.currentIndex().row()
         if 1 <= index <= len(self.in36.configuration_card):
             self.in36.configuration_move(index, 'up')
@@ -416,6 +459,10 @@ class Page1(MainWindow):
         )
 
     def configuration_move_down(self):
+        """
+        选中组态下移
+
+        """
         index = self.ui.in36_configuration_view.currentIndex().row()
         if 0 <= index <= len(self.in36.configuration_card) - 2:
             self.in36.configuration_move(index, 'down')
@@ -433,10 +480,9 @@ class Page1(MainWindow):
     def in2_11_e_value_changed(self, value):
         """
         同步 in2 的斯莱特系数
-        Args:
-            value:
 
-        Returns:
+        Args:
+            value: 斯莱特系数 的值
 
         """
         self.ui.in2_11_a.setValue(value)
@@ -446,7 +492,6 @@ class Page1(MainWindow):
     def auto_write_in36(self):
         """
         自动添加组态
-        Returns:
 
         """
         self.ui.high_configuration.setEnabled(True)
@@ -456,7 +501,6 @@ class Page1(MainWindow):
     def manual_write_in36(self):
         """
         手动添加组态
-        Returns:
 
         """
         self.ui.configuration_edit.setEnabled(True)
@@ -464,7 +508,18 @@ class Page1(MainWindow):
         self.ui.high_configuration.setEnabled(False)
 
     def in36_configuration_view_right_menu(self, *args):
+        """
+        组态输入区右键菜单
+
+        Args:
+            *args:
+
+        """
         def del_configuration():
+            """
+            删除组态
+
+            """
             index = self.ui.in36_configuration_view.currentIndex().row()
             if index < len(self.in36.configuration_card):
                 self.in36.del_configuration(index)
@@ -494,7 +549,15 @@ class Page1(MainWindow):
         right_menu.popup(QCursor.pos())
 
     def run_cowan(self):
+        """
+        运行 Cowan
+
+        """
         def cowan_complete():
+            """
+            Cowan 运行完成后的操作
+
+            """
             # 等待运行结束
             cowan_run.wait()
             # 关闭进度条
@@ -528,6 +591,13 @@ class Page1(MainWindow):
             self.ui.statusbar.showMessage('展宽完成！')
 
         def update_progress(val: str):
+            """
+            更新进度条
+
+            Args:
+                val: 进度值
+
+            """
             if val == '0':
                 progressDialog.set_label_text('正在计算RCN...')
                 progressDialog.set_value(0)
@@ -572,7 +642,20 @@ class Page1(MainWindow):
         progressDialog.show()
 
     def run_history_list_right_menu(self, *args):
+        """
+        运行历史列表右键菜单
+
+        Args:
+            *args:
+
+        Returns:
+
+        """
         def clear_history():
+            """
+            清空历史记录
+
+            """
             self.cowan_lists.clear_history()
 
             # -------------------------- 更新页面 --------------------------
@@ -603,7 +686,18 @@ class Page1(MainWindow):
         right_menu.popup(QCursor.pos())
 
     def selection_list_right_menu(self, *args):
+        """
+        选择列表右键菜单
+
+        Args:
+            *args:
+
+        """
         def del_selection():
+            """
+            删除选择列表中的项
+
+            """
             index = self.ui.selection_list.currentIndex().row()
             self.cowan_lists.del_cowan(index)
 
@@ -625,10 +719,9 @@ class Page1(MainWindow):
     def load_history(self, *args):
         """
         双击运行历史
+
         Args:
             *args:
-
-        Returns:
 
         """
         index = self.ui.run_history_list.currentIndex().row()
@@ -656,6 +749,10 @@ class Page1(MainWindow):
         functools.partial(UpdatePage1.update_widen_figure, self)()
 
     def re_widen(self):
+        """
+        重新展宽
+
+        """
         self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
         self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
         self.cowan.cal_data.widen_all.fwhm_value = self.ui.widen_fwhm.value()
@@ -676,6 +773,13 @@ class Page1(MainWindow):
         functools.partial(UpdatePage1.update_history_list, self)()
 
     def get_in36_control_card(self, in36_obj: In36):
+        """
+        将数据存在 in36 对象中
+
+        Args:
+            in36_obj: in36 对象
+
+        """
         v0 = '{:>1}'.format(self.ui.in36_1.text())
         v1 = '{:>1}'.format(self.ui.in36_2.text())
         v2 = '{:>1}'.format(self.ui.in36_3.text())
@@ -706,8 +810,7 @@ class Page1(MainWindow):
 
     def get_in2_control_card(self, in2_obj: In2):
         """
-        将数据存在 page1_in2 对象中
-        Returns:
+        将数据存在 in2 对象中
 
         """
         v0 = '{:>5}'.format(self.ui.in2_1.text())
@@ -748,6 +851,13 @@ class Page1(MainWindow):
 
 class Page2(MainWindow):
     def selection_list_changed(self, *args):
+        """
+        选择列表改变时
+
+        Args:
+            *args:
+
+        """
         for i in range(self.ui.page2_selection_list.count()):
             # 取出列表项
             item = self.ui.page2_selection_list.item(i)
@@ -759,7 +869,6 @@ class Page2(MainWindow):
     def load_exp_data(self):
         """
         加载实验数据
-        Returns:
 
         """
         path, types = QFileDialog.getOpenFileName(self, '请选择实验数据', PROJECT_PATH().as_posix(),
@@ -776,7 +885,6 @@ class Page2(MainWindow):
     def plot_exp(self):
         """
         导入实验数据后，绘制实验数据
-        Returns:
 
         """
         if self.expdata_2 is None:
@@ -789,10 +897,9 @@ class Page2(MainWindow):
     def plot_spectrum(self, *args):
         """
         绘制叠加光谱
+
         Args:
             *args:
-
-        Returns:
 
         """
         if self.expdata_2 is None:
@@ -812,12 +919,30 @@ class Page2(MainWindow):
         functools.partial(UpdatePage2.update_exp_sim_figure, self)()
 
     def cal_grid(self):
+        """
+        计算网格
+
+        """
         # 函数定义开始↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
         def update_progress_bar(progress):
+            """
+            更新进度条
+
+            Args:
+                progress: 进度值
+
+            """
             progressDialog.set_label_text('计算进度：')
             progressDialog.set_value(int(progress))
 
         def update_ui(*args):
+            """
+            计算完成后的操作
+
+            Args:
+                *args:
+
+            """
             simulated_grid_run.wait()
             simulated_grid_run.update_origin()
             self.simulate.del_cowan_list()
@@ -866,7 +991,6 @@ class Page2(MainWindow):
     def grid_list_clicked(self):
         """
         点击网格，加载对应温度密度的模拟光谱
-        Returns:
 
         """
         item = self.ui.page2_grid_list.currentItem()
@@ -886,7 +1010,6 @@ class Page2(MainWindow):
     def st_resolution_recoder(self):
         """
         记录时空分辨光谱
-        Returns:
 
         """
         st_time = self.ui.st_time.text()
@@ -912,6 +1035,10 @@ class Page2(MainWindow):
         functools.partial(UpdatePage4.update_space_time_combobox, self)()
 
     def load_space_time(self):
+        """
+        批量导入时空分辨光谱
+
+        """
         path = QFileDialog.getExistingDirectory(
             self, '请选择实验数据所在的文件夹', PROJECT_PATH().as_posix()
         )
@@ -936,10 +1063,9 @@ class Page2(MainWindow):
     def st_resolution_clicked(self, *args):
         """
         加载时空分辨光谱，更新相似度网格
+
         Args:
             *args:
-
-        Returns:
 
         """
 
@@ -982,7 +1108,18 @@ class Page2(MainWindow):
             self.ui.st_resolution_table.item(index, i).setBackground(QColor(255, 255, 0))
 
     def st_resolution_right_menu(self, *args):
+        """
+        时空分辨光谱右键菜单
+
+        Args:
+            *args:
+
+        """
         def del_st_item():
+            """
+           删除时空分辨光谱
+
+            """
             index = self.ui.st_resolution_table.currentIndex().row()
             key = list(self.space_time_resolution.simulate_spectral_dict.keys())[index]
             self.space_time_resolution.del_st(key)
@@ -1009,6 +1146,10 @@ class Page2(MainWindow):
         right_menu.popup(QCursor.pos())
 
     def choose_peaks(self):
+        """
+        选择特征波长
+
+        """
         def add_data():
             if self.expdata_2 is None:
                 QMessageBox.warning(self, '警告', '请先导入实验数据！')
@@ -1109,7 +1250,15 @@ class Page2(MainWindow):
         dialog.show()
 
     def show_abu(self):
+        """
+        显示丰度
+
+        """
         def update_ui():
+            """
+            更新界面
+
+            """
             ax.clear()
             if checkbox.isChecked():
                 temper = self.ui.page2_temperature.value()
@@ -1156,6 +1305,10 @@ class Page2(MainWindow):
         widget.exec()
 
     def cowan_obj_update(self):
+        """
+        更新 cowan 对象，重新模拟时空分辨光谱
+
+        """
         def task():
             sum_num = len(self.space_time_resolution.simulate_spectral_dict.keys())
             progressing = 0
@@ -1178,6 +1331,10 @@ class Page2(MainWindow):
 
 class Page3(MainWindow):
     def plot_by_times(self):
+        """
+        绘制温度密度随时间变化的图
+
+        """
         temp = self.ui.location_select.currentText().strip('(').strip(')')
         x, y, z = temp.split(',')
         x, y, z = x.strip(), y.strip(), z.strip()
@@ -1186,6 +1343,10 @@ class Page3(MainWindow):
         self.ui.webEngineView_3.load(QUrl.fromLocalFile(self.space_time_resolution.change_by_time_path))
 
     def plot_by_locations(self):
+        """
+        绘制温度密度随位置变化的图
+
+        """
         t = self.ui.time_select.currentText()
 
         self.space_time_resolution.plot_change_by_location(t)
@@ -1194,6 +1355,10 @@ class Page3(MainWindow):
         )
 
     def plot_by_space_time(self):
+        """
+        绘制温度密度随时间位置变化的二维图
+
+        """
         variable_index = self.ui.variable_select.currentIndex()
 
         self.space_time_resolution.plot_change_by_space_time(variable_index)
@@ -1204,6 +1369,12 @@ class Page3(MainWindow):
 
 class Page4(MainWindow):
     def comboBox_changed(self, index):
+        """
+        在下拉框选择时空分辨光谱时
+        Args:
+            index: 下拉框当前选择索引
+
+        """
         # 设置树状列表
         self.ui.treeWidget.clear()
         temp_list = []
@@ -1219,9 +1390,7 @@ class Page4(MainWindow):
 
     def plot_con_contribution(self):
         """
-        画图
-
-        Returns:
+        绘制各个组态的贡献
 
         """
         add_example = get_configuration_add_list(self)
@@ -1234,6 +1403,10 @@ class Page4(MainWindow):
         self.simulate_page4.del_cowan_list()
 
     def plot_ion_contribution(self):
+        """
+        绘制各个离子的贡献
+
+        """
         add_example = get_configuration_add_list(self)
         for cowan_, _ in self.cowan_lists:
             if cowan_.cal_data.widen_part.grouped_widen_data is None:
@@ -1245,6 +1418,15 @@ class Page4(MainWindow):
 
     @staticmethod
     def tree_item_changed(self, item, column):
+        """
+        树状列表项改变时
+
+        Args:
+            self:
+            item:
+            column:
+
+        """
         if item.parent() is None:
             if item.checkState(0) == Qt.Checked:
                 for i in range(item.childCount()):

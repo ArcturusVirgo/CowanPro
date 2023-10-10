@@ -9,6 +9,14 @@ cowan package
 
    cowan.cowan
 
+ui package
+------------------------
+
+.. toctree::
+   :maxdepth: 2
+
+   cowan.ui
+
 constant module
 ---------------------
 
@@ -45,6 +53,15 @@ update\_ui module
 -----------------------
 
 .. automodule:: cowan.update_ui
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+custom\_thread module
+-----------------------
+
+.. automodule:: cowan.custom_thread
    :members:
    :undoc-members:
    :show-inheritance:

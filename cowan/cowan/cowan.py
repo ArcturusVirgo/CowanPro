@@ -34,6 +34,11 @@ class Atom:
             ion: 离化度（剥离的电子数目）
 
         Notes:
+            1. 使用 get_base_configuration 获取基组态
+            2. 使用 arouse_electron 激发电子
+            3. 使用 get_configuration 获取当前的电子组态
+            4. 使用 revert_to_ground_state 将原子状态重置为基态
+            5. goto 2
 
         """
         self.num = num  # 原子序数
@@ -62,17 +67,12 @@ class Atom:
             electron_arrangement[key] = value
         return electron_arrangement
 
-    def revert_to_ground_state(self):
-        """
-        将原子的状态重置为基态
-
-        Returns:
-
-        """
-        self.electron_arrangement = self.get_base_electron_arrangement()
-
     def get_base_configuration(self):
-        self.electron_arrangement = self.get_base_electron_arrangement()
+        """
+        将电子组态重置为基态，并且 获取基组态字符串
+
+        """
+        self.revert_to_ground_state()
         return self.get_configuration()
 
     def get_configuration(self) -> str:
@@ -129,21 +129,28 @@ class Atom:
         if self.electron_arrangement[low_name] == 0:
             self.electron_arrangement.pop(low_name)
 
+    def revert_to_ground_state(self):
+        """
+        将原子的状态重置为基态
+
+        """
+        self.electron_arrangement = self.get_base_electron_arrangement()
+
 
 class ExpData:
     def __init__(self, filepath: Path):
         """
-        实验数据对象，一般附属于 Cowan、SimulateSpectral 等对象
+        实验数据对象，一般附属于 Cowan、SimulateSpectral 对象
 
         Args:
-            filepath: 实验数据的路径
+            filepath: 实验数据所在的路径
         """
-        self.plot_path = (PROJECT_PATH() / 'figure/exp.html').as_posix()
-        self.filepath: Path = filepath
+        self.plot_path = (PROJECT_PATH() / 'figure/exp.html').as_posix()  # 实验谱线的绘图路径
+        self.filepath: Path = filepath  # 实验数据的路径
 
-        self.data: Optional[pd.DataFrame] = None
-        self.init_xrange = None
-        self.x_range: Optional[List[float]] = None
+        self.data: Optional[pd.DataFrame] = None  # 实验数据
+        self.init_xrange = None  # 原始的波长范围
+        self.x_range: Optional[List[float]] = None  # 实验数据的波长范围
 
         self.__read_file()
 
@@ -160,13 +167,15 @@ class ExpData:
                               (self.data['wavelength'] > self.x_range[0])]
 
     def reset_range(self):
+        """
+        重置实验数据的波长范围
+
+        """
         self.set_range(self.init_xrange)
 
     def __read_file(self):
         """
         根据路径读入实验数据
-
-        Returns:
 
         """
         filetype = self.filepath.suffix[1:]
@@ -186,8 +195,6 @@ class ExpData:
     def plot_html(self):
         """
         绘制实验谱线
-
-        Returns:
 
         """
         trace1 = go.Scatter(x=self.data['wavelength'], y=self.data['intensity'], mode='lines')
@@ -217,6 +224,8 @@ class In36:
     def read_from_file(self, path: Path):
         """
         读取已经编写号的in36文件
+
+        自动更新原子对象，组态卡，控制卡
 
         Args:
             path (Path): in36文件的路径
@@ -252,6 +261,13 @@ class In36:
         self.atom = Atom(num=num, ion=ion)
 
     def set_atom(self, atom: Atom):
+        """
+        设置原子对象
+
+        Args:
+            atom (Atom): 原子对象
+
+        """
         self.atom = copy.deepcopy(atom)
 
     def add_configuration(self, configuration: str):
@@ -259,7 +275,7 @@ class In36:
         向 in36 文件的组态卡添加组态（会自动剔除重复的组态）
 
         Args:
-            configuration(str): 要添加的组态
+            configuration (str): 要添加的组态
         """
         if self.configuration_card:  # 如果组态卡不为空
             temp_list = list(zip(*list(zip(*self.configuration_card))[0]))[-1]
@@ -281,8 +297,6 @@ class In36:
             index: 要移动的组态的索引
             opt: 操作名称 up 或 down
 
-        Returns:
-
         """
         if opt == 'up':
             if 1 <= index <= len(self.configuration_card):
@@ -295,14 +309,12 @@ class In36:
         else:
             raise ValueError('opt must be "up" or "down"')
 
-    def del_configuration(self, index):
+    def del_configuration(self, index: int):
         """
         删除 in36 组态卡中的组态
 
         Args:
-            index: 要删除的组态的索引
-
-        Returns:
+            index (int): 要删除的组态的索引
 
         """
         self.configuration_card.pop(index)
@@ -373,12 +385,10 @@ class In36:
 
     def save(self, path: Path):
         """
-        生成 in36 文件
+        保存为 in36 文件
 
         Args:
-            path: 生成 in36 文件的路径
-
-        Returns:
+            path (Path): 生成的 in36 文件的路径
 
         """
         with open(path, 'w', encoding='utf-8') as f:
@@ -411,7 +421,7 @@ class In36:
 class In2:
     def __init__(self):
         """
-        in2 对象，一般附属于 Cowan 对象
+        in2 对象，附属于 Cowan 对象
 
         Args:
 
@@ -424,10 +434,10 @@ class In2:
         """
         读取 in2 文件
 
+        更新输入卡
+
         Args:
             path: in2文件的路径
-
-        Returns:
 
         """
         with open(path, 'r') as f:
@@ -463,8 +473,6 @@ class In2:
         Args:
             path: 要保存的文件夹
 
-        Returns:
-
         """
         with open(path, 'w', encoding='utf-8') as f:
             f.write(self.get_text())
@@ -472,6 +480,15 @@ class In2:
 
 class Cowan:
     def __init__(self, in36, in2, name, exp_data, coupling_mode=1):
+        """
+        Cowan 对象，用于管理 in36、in2、exp_data 对象
+        Args:
+            in36: in36对象
+            in2: in2对象
+            name: Cowan的名称
+            exp_data: 对应的实验数据
+            coupling_mode: 耦合模式，1是L-S耦合 2是j-j耦合
+        """
         self.in36: In36 = copy.deepcopy(in36)
         self.in2: In2 = copy.deepcopy(in2)
         self.name: str = name
@@ -487,6 +504,12 @@ class CowanThread(QtCore.QThread):
     all_completed = Signal(str)
 
     def __init__(self, old_cowan: Cowan):
+        """
+        用于多线程计算的 cowan 对象
+
+        Args:
+            old_cowan: 原始的 cowan 对象
+        """
         super().__init__()
         self.old_cowan = old_cowan
         self.in36: In36 = old_cowan.in36
@@ -500,8 +523,9 @@ class CowanThread(QtCore.QThread):
 
     def run(self):
         """
-        运行 Cowan 程序，创建 cal_data 对象
-        Returns:
+        运行 Cowan 程序
+
+        创建 cal_data 对象
 
         """
         self.__get_ready()
@@ -525,6 +549,12 @@ class CowanThread(QtCore.QThread):
         self.all_completed.emit('completed')
 
     def __get_ready(self):
+        """
+        运行 Cowan 程序前的准备工作
+
+        创建运行文件夹，复制运行文件，保存 in36、in2 文件
+
+        """
         if self.run_path.exists():
             shutil.rmtree(self.run_path)
         shutil.copytree(PROJECT_PATH() / 'bin', self.run_path)
@@ -532,6 +562,10 @@ class CowanThread(QtCore.QThread):
         self.in2.save(self.run_path / 'in2')
 
     def __edit_ing11(self):
+        """
+        在Cowan运行过程中，编辑文件，调整耦合模式
+
+        """
         with open('./out2ing', 'r', encoding='utf-8') as f:
             text = f.read()
         text = f'    {self.coupling_mode}{text[5:]}'
@@ -541,6 +575,10 @@ class CowanThread(QtCore.QThread):
             f.write(text)
 
     def update_origin(self):
+        """
+        更新原始的 cowan 对象
+
+        """
         self.old_cowan.in36 = self.in36
         self.old_cowan.in2 = self.in2
         self.old_cowan.name = self.name
@@ -552,6 +590,13 @@ class CowanThread(QtCore.QThread):
 
 class CalData:
     def __init__(self, name, exp_data: ExpData):
+        """
+        计算结果对象，附属于 Cowan 对象
+
+        Args:
+            name: Cowan的名称
+            exp_data: 对应的实验数据
+        """
         self.name = name
         self.exp_data = exp_data
         self.filepath = (PROJECT_PATH() / f'cal_result/{name}/spectra.dat').as_posix()
@@ -564,24 +609,25 @@ class CalData:
         self.read_file()
 
     def read_file(self):
+        """
+        读取Cowan程序计算的结果
+
+        产生两个展宽对象：widen_all、widen_part
+
+        """
         self.init_data = pd.read_csv(
             self.filepath,
             sep='\s+',
-            names=[
-                'energy_l',
-                'energy_h',
-                'wavelength_ev',
-                'intensity',
-                'index_l',
-                'index_h',
-                'J_l',
-                'J_h',
-            ],
+            names=['energy_l', 'energy_h', 'wavelength_ev', 'intensity', 'index_l', 'index_h', 'J_l', 'J_h', ],
         )
         self.widen_all = WidenAll(self.name, self.init_data, self.exp_data)
         self.widen_part = WidenPart(self.name, self.init_data, self.exp_data)
 
     def plot_line(self):
+        """
+        绘制线状谱
+
+        """
         temp_data = self.__get_line_data(self.init_data[['wavelength_ev', 'intensity']])
         trace1 = go.Scatter(
             x=temp_data['wavelength'], y=temp_data['intensity'], mode='lines'
@@ -596,6 +642,15 @@ class CalData:
         plot(fig, filename=self.plot_path, auto_open=False)
 
     def __get_line_data(self, origin_data):
+        """
+        将计算结果转换为线状谱
+
+        Args:
+            origin_data: 读取进来的原始数据
+
+        Returns:
+            转化后的数据
+        """
         temp_data = origin_data.copy()
         temp_data['wavelength'] = 1239.85 / temp_data['wavelength_ev']
         temp_data = temp_data[
@@ -619,6 +674,15 @@ class CalData:
 
 class WidenAll:
     def __init__(self, name, init_data, exp_data: ExpData, n=None, ):
+        """
+        整体展宽对象，附属于 CalData 对象
+
+        Args:
+            name: CalData的名称
+            init_data: 计算的原始数据
+            exp_data: 实验数据
+            n: 展宽时的点的个数，如果为None，则使用实验数据的波长
+        """
         self.name = name
         self.init_data = init_data.copy()
         self.exp_data = exp_data
@@ -635,15 +699,18 @@ class WidenAll:
 
     def widen(self, temperature: float, only_p=True):
         """
-            列标题依次为：energy_l, energy_h, wavelength_ev, intensity, index_l, index_h, J_l, J_h
-            分别代表：下态能量，上态能量，波长，强度，下态序号，上态序号，下态J值，上态J值
+        展宽
+
+        列标题依次为：energy_l, energy_h, wavelength_ev, intensity, index_l, index_h, J_l, J_h
+        分别代表：下态能量，上态能量，波长，强度，下态序号，上态序号，下态J值，上态J值
 
         Args:
-            only_p: 只计算含有布局的
             temperature (float): 等离子体温度
+            only_p: 只计算包含能级布局的数据
         Returns:
             返回一个DataFrame，包含了展宽后的数据
             列标题为：wavelength, gaussian, cross-NP, cross-P
+            如果only_p为True，则没有cross-NP列和gaussian列
         """
         self.only_p = only_p
 
@@ -708,12 +775,25 @@ class WidenAll:
         self.widen_data = result
 
     def plot_widen(self):
+        """
+        绘制展宽后的谱线
+
+        """
         if not self.only_p:
             self.__plot_html(self.widen_data, self.plot_path_gauss, 'wavelength', 'gauss')
             self.__plot_html(self.widen_data, self.plot_path_cross_NP, 'wavelength', 'cross_NP')
         self.__plot_html(self.widen_data, self.plot_path_cross_P, 'wavelength', 'cross_P')
 
     def __plot_html(self, data, path, x_name, y_name):
+        """
+        绘制html文件
+        Args:
+            data: 数据
+            path: 要保存的路径
+            x_name: x的列名
+            y_name: y的列名
+
+        """
         trace1 = go.Scatter(x=data[x_name], y=data[y_name], mode='lines')
         data = [trace1]
         layout = go.Layout(
@@ -733,6 +813,20 @@ class WidenAll:
             population: np.array,
             new_J: np.array,
     ):
+        """
+        展宽时的复杂计算
+        Args:
+            wave:
+            new_intensity:
+            fwhmgauss:
+            new_wavelength:
+            population:
+            new_J:
+
+        Returns:
+            展宽后的数据，为一个元组，依次为：gauss, cross_NP, cross_P
+            如果only_p为True，则前两个元素为-1
+        """
         uu = ((new_intensity * population / (2 * new_J + 1)) * 2 * fwhmgauss / (
                 2 * np.pi * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)))
         if self.only_p:
@@ -745,11 +839,27 @@ class WidenAll:
             return tt.sum(), ss.sum(), uu.sum()
 
     def fwhmgauss(self, wavelength: float):
+        """
+        高斯展宽的半高宽
+        Args:
+            wavelength (float): 波长
+
+        Returns:
+            返回高斯展宽的半高宽
+        """
         return self.fwhm_value
 
 
 class WidenPart:
     def __init__(self, name, init_data, exp_data: ExpData, n=None, ):
+        """
+        按组态展宽对象，附属于 CalData 对象
+        Args:
+            name: 名称
+            init_data: 原始数据
+            exp_data: 对应的实验数据
+            n: 展宽时的点的个数，如果为None，则使用实验数据的波长
+        """
         self.name = name
         self.init_data = init_data.copy()
         self.exp_data = exp_data
@@ -765,14 +875,15 @@ class WidenPart:
 
     def widen_by_group(self, temperature=25.6):
         """
-        返回一个字典，包含了按跃迁正例分组后的展宽数据，例如
-        {'1-2': pd.DataFrame, '1-3': pd.DataFrame, ...}
-        pd.DataFrame的列标题为：wavelength, gaussian, cross-NP, cross-P
+        按组态进行展宽
+
         Args:
             temperature: 展宽时的温度
 
         Returns:
-
+            返回一个字典，包含了按跃迁正例分组后的展宽数据，例如
+            {'1-2': pd.DataFrame, '1-3': pd.DataFrame, ...}
+            pd.DataFrame的列标题为：wavelength, gaussian, cross-NP, cross-P
         """
         temp_data = {}
         # 按照跃迁正例展宽
@@ -793,15 +904,18 @@ class WidenPart:
 
     def __widen(self, temperature: float, temp_data: pd.DataFrame, only_p=True):
         """
-            列标题依次为：energy_l, energy_h, wavelength_ev, intensity, index_l, index_h, J_l, J_h
-            分别代表：下态能量，上态能量，波长，强度，下态序号，上态序号，下态J值，上态J值
+        展宽
+
         Args:
-            temp_data:
-            only_p: 只计算含有布局的
             temperature (float): 等离子体温度
+            temp_data: 展宽的原始数据
+                列标题依次为：energy_l, energy_h, wavelength_ev, intensity, index_l, index_h, J_l, J_h
+                分别代表：下态能量，上态能量，波长，强度，下态序号，上态序号，下态J值，上态J值
+            only_p: 只计算含有布局的
         Returns:
             返回一个DataFrame，包含了展宽后的数据
             列标题为：wavelength, gaussian, cross-NP, cross-P
+            如果only_p为True，则没有cross-NP列和gaussian列
         """
         self.only_p = only_p
 
@@ -870,10 +984,24 @@ class WidenPart:
         return result
 
     def plot_widen_by_group(self):
+        """
+        绘制按组态展宽后的谱线
+
+        """
         for key, value in self.grouped_widen_data.items():
             self.__plot_html(value, self.plot_path_list[key], 'wavelength', 'cross_P')
 
     def __plot_html(self, data, path, x_name, y_name):
+        """
+        绘制html文件
+
+        Args:
+            data: 要绘制的数据
+            path: 生成的文件的路径
+            x_name: x轴的列名
+            y_name: y轴的列名
+
+        """
         trace1 = go.Scatter(x=data[x_name], y=data[y_name], mode='lines')
         data = [trace1]
         layout = go.Layout(
@@ -893,6 +1021,20 @@ class WidenPart:
             population: np.array,
             new_J: np.array,
     ):
+        """
+                展宽时的复杂计算
+                Args:
+                    wave:
+                    new_intensity:
+                    fwhmgauss:
+                    new_wavelength:
+                    population:
+                    new_J:
+
+                Returns:
+                    展宽后的数据，为一个元组，依次为：gauss, cross_NP, cross_P
+                    如果only_p为True，则前两个元素为-1
+        """
         uu = ((new_intensity * population / (2 * new_J + 1)) * 2 * fwhmgauss / (
                 2 * np.pi * ((new_wavelength - wave) ** 2 + np.power(2 * fwhmgauss, 2) / 4)))
         if self.only_p:
@@ -905,11 +1047,22 @@ class WidenPart:
             return tt.sum(), ss.sum(), uu.sum()
 
     def fwhmgauss(self, wavelength: float):
+        """
+        高斯展宽的半高宽
+        Args:
+            wavelength (float): 波长
+
+        Returns:
+            返回高斯展宽的半高宽
+        """
         return self.fwhm_value
 
 
 class CowanList:
     def __init__(self):
+        """
+        用于存储 cowan 对象
+        """
         self.chose_cowan: List[str] = []  # 用于存储 cowan 对象在历史列表中的索引
         self.add_or_not: List[bool] = []  # cowan 对象是否被添加
 
@@ -917,8 +1070,10 @@ class CowanList:
 
     def add_cowan(self, key):
         """
-        添加 cowan 对象，如果了列表中已经存在就删除再添加
-        Returns:
+        从历史记录中 添加 cowan 对象，如果列表中已经存在就删除再添加
+
+        Args:
+            key: 要添加的 cowan 对象的名称（name属性）
 
         """
         if key in self.chose_cowan:
@@ -927,50 +1082,66 @@ class CowanList:
         self.add_or_not.append(True)
 
     def del_cowan(self, key):
+        """
+        删除 cowan 对象
+
+        Args:
+            key: 要删除的 cowan 对象的名称（name属性）
+
+        """
         index = self.chose_cowan.index(key)
         self.chose_cowan.pop(index)
         self.add_or_not.pop(index)
 
     def add_history(self, cowan: Cowan):
         """
-        添加 cowan 对象，如果了列表中已经存在，就删除再添加
-        如果它存在于叠加列表中，就更新叠加列表
-        Args:
-            cowan:
+        向历史记录中添加 cowan 对象，如果了已经存在，就删除再添加
+        如果它存在于已选择的列表中，就就删除再添加
 
-        Returns:
+        Args:
+            cowan: 要添加的 cowan 对象
 
         """
-
         if cowan.name in self.cowan_run_history.keys():
             self.cowan_run_history.pop(cowan.name)
         self.cowan_run_history[cowan.name] = copy.deepcopy(cowan)
+        # 如果它存在于已选择的列表中，就更新它
         if cowan.name in self.chose_cowan:
-            index = self.chose_cowan.index(cowan.name)
-            self.chose_cowan.pop(index)
-            self.add_or_not.pop(index)
-            self.chose_cowan.append(cowan.name)
-            self.add_or_not.append(True)
+            self.add_cowan(cowan.name)
 
     def clear_history(self):
+        """
+        清空历史记录
+
+        如果它存在于已选择的列表中，就不进行删除操作
+
+        """
         keys = list(self.cowan_run_history.keys())
         for key in keys:
             if key not in self.chose_cowan:
                 self.cowan_run_history.pop(key)
 
     def update_exp_data(self, exp_data: ExpData):
+        """
+        更新所有cowan对象中的exp_data对象
+
+        Args:
+            exp_data: 要更新的exp_data对象
+
+        """
         for cowan in self.cowan_run_history.values():
             cowan.exp_data = exp_data
 
     def __getitem__(self, index):
         return self.cowan_run_history[self.chose_cowan[index]], self.add_or_not[index]
 
-    def __setitem__(self):
-        pass
-
 
 class SimulateSpectral:
     def __init__(self):
+        """
+        模拟光谱对象，储存于 SpaceTimeResolution 对象中
+
+        """
         self.cowan_list: Optional[List[Cowan]] = None  # 用于存储 cowan 对象
         self.add_or_not: Optional[List[bool]] = None  # cowan 对象是否被添加
         self.exp_data: Optional[ExpData] = None  # 实验光谱数据
@@ -990,9 +1161,23 @@ class SimulateSpectral:
         )
 
     def load_exp_data(self, path: Path):
+        """
+        读取实验光谱数据
+
+        Args:
+            path: 实验光谱数据的路径
+
+        """
         self.exp_data = ExpData(path)
 
     def init_cowan_list(self, cowan_lists: CowanList):
+        """
+        初始化 cowan_list 和 add_or_not，便于后面的计算
+
+        Args:
+            cowan_lists: cowan 对象列表
+
+        """
         temp_list = []
         for key in cowan_lists.chose_cowan:
             temp_list.append(cowan_lists.cowan_run_history[key])
@@ -1000,17 +1185,20 @@ class SimulateSpectral:
         self.add_or_not = copy.deepcopy(cowan_lists.add_or_not)
 
     def del_cowan_list(self):
+        """
+        删除 cowan_list 和 add_or_not，节省内存
+
+        """
         self.cowan_list = None
         self.add_or_not = None
 
     def get_simulate_data(self, temperature, electron_density):
         """
         获取模拟光谱
-        Args:
-            temperature:
-            electron_density:
 
-        Returns:
+        Args:
+            temperature: 等离子体温度
+            electron_density: 等离子体电子密度
 
         """
         if self.cowan_list is None or self.add_or_not is None:
@@ -1019,7 +1207,7 @@ class SimulateSpectral:
         self.temperature = temperature
         self.electron_density = electron_density
         # 获取各种离子的丰度
-        self.__update_abundance(temperature, electron_density)
+        self.__choose_abundance(temperature, electron_density)
         for cowan, flag in zip(self.cowan_list, self.add_or_not):
             if flag:
                 cowan.cal_data.widen_all.widen(temperature)
@@ -1046,7 +1234,6 @@ class SimulateSpectral:
     def plot_html(self, show_point=False):
         """
         绘制叠加光谱
-        Returns:
 
         """
         x1 = self.exp_data.data['wavelength']
@@ -1091,11 +1278,10 @@ class SimulateSpectral:
     def plot_con_contribution_html(self, add_list):
         """
         绘制各个组态的贡献
+
         Args:
-            add_list: [[T, [F, T, F, ...]], [T, [F, T, F, ...]], ...]
-
-
-        Returns:
+            add_list: 组态选择列表，具体形式如下：
+                [[T, [F, T, F, ...]], [T, [F, T, F, ...]], ...]
 
         """
         height = 0
@@ -1139,6 +1325,15 @@ class SimulateSpectral:
         plot(fig, filename=self.example_path, auto_open=False)
 
     def plot_ion_contribution_html(self, add_list, with_popular):
+        """
+        绘制各个离子的贡献
+
+        Args:
+            add_list: 组态选择列表，具体形式如下：
+                [[T, [F, T, F, ...]], [T, [F, T, F, ...]], ...]
+            with_popular: 是否考虑布局
+
+        """
         height = 0
         trace = []
 
@@ -1180,17 +1375,16 @@ class SimulateSpectral:
         plot(fig, filename=self.example_path, auto_open=False)
 
     # 计算离子丰度
-    def __update_abundance(self, temperature, electron_density):
+    def __choose_abundance(self, temperature, electron_density):
         """
-            将所需要的离子丰度挑选出来
+        将所需要的离子丰度挑选出来
+
         Args:
-            temperature:
-            electron_density:
-
-        Returns:
+            temperature: 等离子体温度
+            electron_density: 等离子体电子密度
 
         """
-        all_abundance = self.__cal_abundance2(temperature, electron_density)
+        all_abundance = self.get_abu(temperature, electron_density)
         # print(len(all_abundance))
         temp_abundance = []
         for c in self.cowan_list:
@@ -1198,9 +1392,22 @@ class SimulateSpectral:
             temp_abundance.append(all_abundance[ion])
         self.abundance = temp_abundance
 
+    def get_abu(self, t, e):
+        """
+        获取离子丰度
+
+        Args:
+            t: 等离子体温度
+            e: 等离子体电子密度
+
+        Returns:
+            返回一个列表，每个元素为对应离子的丰度
+        """
+        return self.__cal_abundance2(t, e)
+
     def __cal_abundance1(self, temperature, electron_density) -> np.ndarray:
         """
-            计算各种离子的丰度（用我自己的方法）
+        计算各种离子的丰度（用我自己的方法）
 
         Args:
             temperature: 等离子体温度，单位是ev
@@ -1225,18 +1432,16 @@ class SimulateSpectral:
         abundance = self.__calculate_a_over_S(ratio)
         return abundance
 
-    def get_abu(self, t, e):
-        return self.__cal_abundance2(t, e)
-
     def __cal_abundance2(self, temperature, electron_density):
         """
         使用fortran程序中的方法计算离子丰度
+
         Args:
-            temperature:
-            electron_density:
+            temperature: 等离子体温度，单位是ev
+            electron_density: 等离子体粒子数密度
 
         Returns:
-
+            返回一个列表，每个元素为对应离子的丰度
         """
         atomic_num = self.cowan_list[0].in36.atom.num
         ion_num = np.array([i for i in range(atomic_num)])
@@ -1272,7 +1477,8 @@ class SimulateSpectral:
 
     def __get_outermost_num(self, ion: int):
         """
-            获取离子的最外层电子数
+        获取离子的最外层电子数
+
         Args:
             ion: 离化度，0为原子，1为1次离化，2为2次离化，以此类推
 
@@ -1290,7 +1496,7 @@ class SimulateSpectral:
     @staticmethod
     def __calculate_a_over_S(a_ratios):
         """
-            已知a1/a2, a2/a3, ..., a_n-1/a_n，计算a1/S, a2/S, ..., a_n/S，其中S=a1+a2+...+a_n
+        已知a1/a2, a2/a3, ..., a_n-1/a_n，计算a1/S, a2/S, ..., a_n/S，其中S=a1+a2+...+a_n
 
         Args:
             a_ratios: a1/a2, a2/a3, ..., a_n-1/a_n
@@ -1311,8 +1517,11 @@ class SimulateSpectral:
 
         return a_over_S
 
-    # 计算光谱相似度
     def get_spectrum_similarity(self):
+        """
+        获取光谱相似度，直接存储在 self.spectrum_similarity 中
+
+        """
         if len(self.characteristic_peaks) == 0:
             self.spectrum_similarity = self.spectrum_similarity1(
                 self.exp_data.data[['wavelength', 'intensity']],
@@ -1331,8 +1540,6 @@ class SimulateSpectral:
         Args:
             fax:
             fbx:
-
-        Returns:
 
         """
         x, y1, y2 = self.get_y1y2(fax, fbx)
@@ -1375,8 +1582,6 @@ class SimulateSpectral:
         Args:
             fax: 实验数据
             fbx: 计算数据
-
-        Returns:
 
         """
         # 拿到一维的数据
@@ -1429,8 +1634,6 @@ class SimulateSpectral:
             fax:
             fbx:
 
-        Returns:
-
         """
         x, y1, y2 = self.get_y1y2(fax, fbx)
         exp_wavelength_indexes = []
@@ -1479,6 +1682,14 @@ class SimulateSpectral:
 
 class SimulateGrid:
     def __init__(self, temperature, density, simulate):
+        """
+        用于存储模拟光谱的网格数据
+
+        Args:
+            temperature: 温度范围 [开始 结束 个数]
+            density: 密度范围 [开始底数 开始指数 结束底数 结束指数 个数]
+            simulate: 要模拟的simulate对象
+        """
         super().__init__()
         self.task = 'cal'
         self.update_exp = None
@@ -1503,6 +1714,14 @@ class SimulateGrid:
         self.grid_data = {}
 
     def change_task(self, task, *args):
+        """
+        切换任务
+
+        Args:
+            task: 任务名称 'cal' 计算网格数据 'update' 更新网格数据
+            *args: 在更新网格时，需要传入一个实验光谱对象
+
+        """
         if task in ['cal', 'update']:
             self.task = task
         if task == 'update':
@@ -1515,6 +1734,12 @@ class SimulateGridThread(QtCore.QThread):
     up_end = Signal(str)  #
 
     def __init__(self, old_grid: SimulateGrid):
+        """
+        用于多线程模拟光谱的网格数据
+
+        Args:
+            old_grid: 旧的网格数据对象
+        """
         super().__init__()
         self.old_grid = old_grid
         self.task = old_grid.task
@@ -1532,13 +1757,30 @@ class SimulateGridThread(QtCore.QThread):
         self.grid_data = old_grid.grid_data
 
     def run(self):
+        """
+        多线程运行的主函数
+
+        """
         if self.task == 'cal':
             self.cal_grid()
         elif self.task == 'update':
             self.update_similarity(self.update_exp)
 
     def cal_grid(self):
+        """
+        计算网格数据
+
+        """
+
         def callback(t, ne, f):
+            """
+            回调函数，用于更新进度条以及获取结果
+            Args:
+                t: 温度（用作键值对）
+                ne: 密度（用作键值对）
+                f: 函数对象（用于获取结果）
+
+            """
             nonlocal current_progress
             current_progress += 1
             temp_cowan = f.result()
@@ -1566,6 +1808,13 @@ class SimulateGridThread(QtCore.QThread):
         #         self.grid_data[(temperature, density)] = copy.deepcopy(self.simulate)
 
     def update_similarity(self, exp_obj):
+        """
+        更新网格数据的相似度
+
+        Args:
+            exp_obj: 实验光谱对象
+
+        """
         for key, value in self.grid_data.items():
             self.simulate = copy.deepcopy(value)
             self.simulate.exp_data = copy.deepcopy(exp_obj)
@@ -1574,6 +1823,10 @@ class SimulateGridThread(QtCore.QThread):
         self.up_end.emit(0)
 
     def update_origin(self):
+        """
+        更新原始的网格数据
+
+        """
         self.old_grid.task = self.task
         self.old_grid.update_exp = self.update_exp
         self.old_grid.simulate = self.simulate
@@ -1588,6 +1841,9 @@ class SimulateGridThread(QtCore.QThread):
 
 class SpaceTimeResolution:
     def __init__(self):
+        """
+        用于存储空间时间分辨光谱
+        """
         # 模拟光谱数据对象 列表
         self.simulate_spectral_dict = {}
 
@@ -1595,21 +1851,30 @@ class SpaceTimeResolution:
         self.change_by_location_path = (PROJECT_PATH().joinpath('figure/change/by_location.html').as_posix())
         self.change_by_space_time_path = (PROJECT_PATH().joinpath('figure/change/by_space_time.html').as_posix())
 
-    # 添加一个位置时间
     def add_st(self, st: tuple, simulate_spectral):
+        """
+        添加一个位置时间的是按分辨光谱
+
+        Args:
+            st: 时间位置，格式为 (t，(x, y, z)) 类型为字符串
+            simulate_spectral: 模拟光谱数据对象
+
+        """
         temp = copy.deepcopy(simulate_spectral)
-        temp.cowan_list = None
-        temp.add_or_not = None
+        temp.del_cowan_list()
         self.simulate_spectral_dict[st] = temp
 
-    # 删除一个位置时间
     def del_st(self, st):
         self.simulate_spectral_dict.pop(st)
 
-    def run(self):
-        pass
-
     def plot_change_by_time(self, location: Tuple[str, str, str]):
+        """
+        绘制温度和电子密度随时间变化的图像（在指定的位置处）
+
+        Args:
+            location: 位置
+
+        """
         times = []
         for key, value in self.simulate_spectral_dict.items():
             if key[1] == location:
@@ -1618,12 +1883,8 @@ class SpaceTimeResolution:
         temperature = []
         electron_density = []
         for time in times:
-            temperature.append(
-                self.simulate_spectral_dict[(str(time), location)].temperature
-            )
-            electron_density.append(
-                self.simulate_spectral_dict[(str(time), location)].electron_density
-            )
+            temperature.append(self.simulate_spectral_dict[(str(time), location)].temperature)
+            electron_density.append(self.simulate_spectral_dict[(str(time), location)].electron_density)
 
         trace1 = go.Scatter(x=times, y=temperature, mode='lines')
         trace2 = go.Scatter(x=times, y=electron_density, mode='lines', yaxis='y2')
@@ -1637,6 +1898,13 @@ class SpaceTimeResolution:
         plot(fig, filename=self.change_by_time_path, auto_open=False)
 
     def plot_change_by_location(self, time):
+        """
+        绘制温度和电子密度随位置变化的图像（在指定的时间处）
+
+        Args:
+            time: 时间
+
+        """
         x_s = []
         for key, value in self.simulate_spectral_dict.items():
             if key[0] == time:
@@ -1647,12 +1915,8 @@ class SpaceTimeResolution:
         electron_density = {}
 
         for x in x_s:
-            temperature[(x, 0, 0)] = self.simulate_spectral_dict[
-                (time, (str(x), '0', '0'))
-            ].temperature
-            electron_density[(x, 0, 0)] = self.simulate_spectral_dict[
-                (time, (str(x), '0', '0'))
-            ].electron_density
+            temperature[(x, 0, 0)] = self.simulate_spectral_dict[(time, (str(x), '0', '0'))].temperature
+            electron_density[(x, 0, 0)] = self.simulate_spectral_dict[(time, (str(x), '0', '0'))].electron_density
 
         def fun(xx, yy=0, zz=0):
             return temperature[(xx, yy, zz)], electron_density[(xx, yy, zz)]
@@ -1669,6 +1933,13 @@ class SpaceTimeResolution:
         plot(fig, filename=self.change_by_location_path, auto_open=False)
 
     def plot_change_by_space_time(self, var_index):
+        """
+        绘制温度和电子密度随位置和时间变化的图像
+
+        Args:
+            var_index: 选择是温度还是时间 0：温度 1：密度
+
+        """
         spaces = []
         times = []
         for key in self.simulate_spectral_dict:
