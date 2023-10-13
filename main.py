@@ -175,6 +175,7 @@ class MainWindow(QMainWindow):
 
         # self.test()
         # self.load_Ge()
+        # self.cal_ave_wave()
 
     def init(self):
         # 设置窗口标题
@@ -215,10 +216,11 @@ class MainWindow(QMainWindow):
         self.ui.navigation.currentRowChanged.connect(self.ui.stackedWidget.setCurrentIndex)
 
         # ------------------------------- 菜单栏 -------------------------------
+        #  导出组态平均波长
+        self.ui.export_configuration_average_wavelength.triggered.connect(
+            functools.partial(Menu.export_con_ave_wave, self))
         # 保存项目
         self.ui.save_project.triggered.connect(self.save_project)
-        # 加载实验数据
-        self.ui.load_exp_data.triggered.connect(functools.partial(Menu.load_exp_data, self))
         # 显示参考线
         self.ui.show_guides.triggered.connect(functools.partial(Menu.show_guides, self))
         # 重置计算按钮
@@ -243,6 +245,8 @@ class MainWindow(QMainWindow):
         # 离化度
         self.ui.atomic_ion.activated.connect(functools.partial(Page1.atom_ion_changed, self))
         # =====>> 按钮
+        # 加载实验数据
+        self.ui.load_exp_data.clicked.connect(functools.partial(Menu.load_exp_data, self))
         # 添加组态
         self.ui.add_configuration.clicked.connect(functools.partial(Page1.add_configuration, self))
         # 加载in36文件
@@ -451,6 +455,51 @@ class MainWindow(QMainWindow):
         # --------------- 第四页
         functools.partial(UpdatePage4.update_space_time_combobox, self)()
 
+    def cal_ave_wave(self):
+        SET_PROJECT_PATH(Path(r'F:/Cowan/Ni'))
+        self.expdata_1 = ExpData(PROJECT_PATH() / './0.4mm_30ns.csv')
+        data_frames = {}
+        for path in PROJECT_PATH().joinpath('cal_result').iterdir():
+            if 'Ni' not in path.name:
+                continue
+            self.in36 = In36()
+            self.in36.read_from_file(path / f'in36')
+            self.atom = copy.deepcopy(self.in36.atom)
+            self.in2 = In2()
+            self.in2.read_from_file(path / f'in2')
+            name = path.name
+            self.cowan = Cowan(self.in36, self.in2, name, self.expdata_1, 1)
+            self.cowan.cal_data = CalData(name, self.expdata_1)
+            self.cowan.cal_data.widen_all.widen(25.6, False)
+            self.cowan_lists.add_history(self.cowan)
+            ave_w = self.cowan.cal_data.get_average_wavelength()
+            temp_1 = []
+            temp_2 = []
+            temp_3 = []
+            temp_4 = []
+            names = ['下态序号', '上态序号', '跃迁名称', '平均波长(nm)']
+            for key, value in ave_w.items():
+                a = int(key.split('_')[0])
+                b = int(key.split('_')[1])
+                c = self.cowan.in36.get_configuration_name(a, b)
+                d = value
+                temp_1.append(a)
+                temp_2.append(b)
+                temp_3.append(c)
+                temp_4.append(d)
+            data_frames[self.cowan.name] = (
+                pd.DataFrame({names[0]: temp_1, names[1]: temp_2, names[2]: temp_3, names[3]: temp_4}))
+            print(f'加载{self.cowan.name}')
+        self.cowan_lists.chose_cowan = list(self.cowan_lists.cowan_run_history.keys())
+        self.cowan_lists.add_or_not = [True for _ in range(len(self.cowan_lists.chose_cowan))]
+        with pd.ExcelWriter('tb.xlsx', ) as writer:
+            for key, value in data_frames.items():
+                if key == 'Ni_12':
+                    name = 'Ni_11_extra'
+                else:
+                    name = key
+                value.to_excel(writer, sheet_name=name, index=False)
+
     def save_project(self):
         def task():
             obj_info = shelve.open(PROJECT_PATH().joinpath('.cowan/obj_info').as_posix())
@@ -543,5 +592,6 @@ if __name__ == '__main__':
     window = LoginWindow()  # 启动登陆页面
     # window = MainWindow(Path('F:/Cowan/Test'), False)  # 启动主界面
     # window = MainWindow(Path('F:/Cowan/Ge_new'), False)  # 启动主界面
+    # window = MainWindow(Path('F:/Cowan/Ni'), False)  # 启动主界面
     window.show()
     app.exec()

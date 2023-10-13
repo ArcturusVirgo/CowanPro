@@ -41,8 +41,6 @@ class Ui_main_window(object):
         self.actionjiazai.setObjectName(u"actionjiazai")
         self.action_2 = QAction(main_window)
         self.action_2.setObjectName(u"action_2")
-        self.load_exp_data = QAction(main_window)
-        self.load_exp_data.setObjectName(u"load_exp_data")
         self.action_4 = QAction(main_window)
         self.action_4.setObjectName(u"action_4")
         self.choose_project_path = QAction(main_window)
@@ -65,6 +63,8 @@ class Ui_main_window(object):
         self.set_xrange.setObjectName(u"set_xrange")
         self.reset_xrange = QAction(main_window)
         self.reset_xrange.setObjectName(u"reset_xrange")
+        self.export_configuration_average_wavelength = QAction(main_window)
+        self.export_configuration_average_wavelength.setObjectName(u"export_configuration_average_wavelength")
         self.centralwidget = QWidget(main_window)
         self.centralwidget.setObjectName(u"centralwidget")
         self.centralwidget.setEnabled(True)
@@ -1409,12 +1409,26 @@ class Ui_main_window(object):
         self.widget_2.setObjectName(u"widget_2")
         self.verticalLayout_2 = QVBoxLayout(self.widget_2)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.horizontalLayout_30 = QHBoxLayout()
+        self.horizontalLayout_30.setObjectName(u"horizontalLayout_30")
         self.label = QLabel(self.widget_2)
         self.label.setObjectName(u"label")
         sizePolicy2.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
         self.label.setSizePolicy(sizePolicy2)
 
-        self.verticalLayout_2.addWidget(self.label)
+        self.horizontalLayout_30.addWidget(self.label)
+
+        self.horizontalSpacer_15 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_30.addItem(self.horizontalSpacer_15)
+
+        self.load_exp_data = QPushButton(self.widget_2)
+        self.load_exp_data.setObjectName(u"load_exp_data")
+
+        self.horizontalLayout_30.addWidget(self.load_exp_data)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_30)
 
         self.exp_web = QWebEngineView(self.widget_2)
         self.exp_web.setObjectName(u"exp_web")
@@ -2082,16 +2096,16 @@ class Ui_main_window(object):
         self.menubar.addAction(self.menu_4.menuAction())
         self.menu.addAction(self.save_project)
         self.menu.addAction(self.exit_project)
-        self.menu_2.addAction(self.load_exp_data)
         self.menu_2.addAction(self.set_xrange)
         self.menu_2.addAction(self.reset_xrange)
         self.menu_3.addAction(self.show_guides)
         self.menu_3.addAction(self.reset_cal)
         self.menu_4.addAction(self.export_data)
+        self.menu_4.addAction(self.export_configuration_average_wavelength)
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -2103,7 +2117,6 @@ class Ui_main_window(object):
         self.action.setText(QCoreApplication.translate("main_window", u"\u9000\u51fa", None))
         self.actionjiazai.setText(QCoreApplication.translate("main_window", u"jiazai ", None))
         self.action_2.setText(QCoreApplication.translate("main_window", u"\u52a0\u8f7d\u9879\u76ee", None))
-        self.load_exp_data.setText(QCoreApplication.translate("main_window", u"\u52a0\u8f7d\u5b9e\u9a8c\u6570\u636e", None))
         self.action_4.setText(QCoreApplication.translate("main_window", u"\u4fdd\u5b58\u4e3a", None))
         self.choose_project_path.setText(QCoreApplication.translate("main_window", u"\u8bf7\u9009\u62e9\u9879\u76ee\u8def\u5f84", None))
         self.show_guides.setText(QCoreApplication.translate("main_window", u"\u663e\u793a\u53c2\u8003\u7ebf", None))
@@ -2115,6 +2128,7 @@ class Ui_main_window(object):
         self.export_data.setText(QCoreApplication.translate("main_window", u"\u5bfc\u51fa\u6570\u636e", None))
         self.set_xrange.setText(QCoreApplication.translate("main_window", u"\u8bbe\u7f6e\u6ce2\u957f\u8303\u56f4", None))
         self.reset_xrange.setText(QCoreApplication.translate("main_window", u"\u91cd\u7f6e\u6ce2\u957f\u8303\u56f4", None))
+        self.export_configuration_average_wavelength.setText(QCoreApplication.translate("main_window", u"\u5bfc\u51fa\u7ec4\u6001\u5e73\u5747\u6ce2\u957f", None))
 
         __sortingEnabled = self.navigation.isSortingEnabled()
         self.navigation.setSortingEnabled(False)
@@ -2319,6 +2333,7 @@ class Ui_main_window(object):
         self.groupBox_5.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97\u5386\u53f2", None))
         self.groupBox_6.setTitle(QCoreApplication.translate("main_window", u"\u5e93", None))
         self.label.setText(QCoreApplication.translate("main_window", u"\u5b9e\u9a8c\u8c31", None))
+        self.load_exp_data.setText(QCoreApplication.translate("main_window", u"\u52a0\u8f7d\u5b9e\u9a8c\u5149\u8c31", None))
         self.label_3.setText(QCoreApplication.translate("main_window", u"\u8f6e\u5ed3", None))
         self.gauss.setText(QCoreApplication.translate("main_window", u"gauss", None))
         self.crossP.setText(QCoreApplication.translate("main_window", u"cross-P", None))

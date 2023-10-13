@@ -623,10 +623,27 @@ class CalData:
         self.widen_all = WidenAll(self.name, self.init_data, self.exp_data)
         self.widen_part = WidenPart(self.name, self.init_data, self.exp_data)
 
+    def get_average_wavelength(self):
+        """
+        获取平均波长
+
+        Returns:
+            返回当前离化度的各个组态的平均波长，数据格式为字典
+            键为组态序号（str），值为平均波长（float）
+        """
+        temp_data = {}
+        # 按照跃迁正例分开
+        data_grouped = self.init_data.groupby(by=['index_l', 'index_h'])
+        for index in data_grouped.groups.keys():
+            temp_group = pd.DataFrame(data_grouped.get_group(index))
+            intensity = temp_group['intensity'].values
+            wavelength = 1239.85 / temp_group['wavelength_ev'].values
+            temp_data[f'{index[0]}_{index[1]}'] = (intensity * wavelength).sum() / intensity.sum()
+        return temp_data
+
     def plot_line(self):
         """
         绘制线状谱
-
         """
         temp_data = self.__get_line_data(self.init_data[['wavelength_ev', 'intensity']])
         trace1 = go.Scatter(

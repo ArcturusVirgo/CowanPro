@@ -89,7 +89,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page">
        <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,4">
@@ -3457,17 +3457,41 @@
          <widget class="QWidget" name="widget_2" native="true">
           <layout class="QVBoxLayout" name="verticalLayout_2">
            <item>
-            <widget class="QLabel" name="label">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>实验谱</string>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout_30">
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>实验谱</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_15">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="load_exp_data">
+               <property name="text">
+                <string>加载实验光谱</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <widget class="QWebEngineView" name="exp_web">
@@ -4486,7 +4510,6 @@
     <property name="title">
      <string>计算</string>
     </property>
-    <addaction name="load_exp_data"/>
     <addaction name="set_xrange"/>
     <addaction name="reset_xrange"/>
    </widget>
@@ -4502,6 +4525,7 @@
      <string>导出</string>
     </property>
     <addaction name="export_data"/>
+    <addaction name="export_configuration_average_wavelength"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
@@ -4525,11 +4549,6 @@
   <action name="action_2">
    <property name="text">
     <string>加载项目</string>
-   </property>
-  </action>
-  <action name="load_exp_data">
-   <property name="text">
-    <string>加载实验数据</string>
    </property>
   </action>
   <action name="action_4">
@@ -4585,6 +4604,11 @@
   <action name="reset_xrange">
    <property name="text">
     <string>重置波长范围</string>
+   </property>
+  </action>
+  <action name="export_configuration_average_wavelength">
+   <property name="text">
+    <string>导出组态平均波长</string>
    </property>
   </action>
  </widget>

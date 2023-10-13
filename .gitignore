@@ -1,8 +1,9 @@
-/venv
+/venv/
 /.idea
 __pycache__/
 /tests
+/temp_file
+/docs
 
 projects.json
 
-temp_file/

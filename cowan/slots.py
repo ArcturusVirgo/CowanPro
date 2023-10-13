@@ -74,6 +74,7 @@ class Menu(MainWindow):
         导出数据
 
         """
+
         def save_simulate_data(sim):
             exp_wavelength = sim.exp_data.data['wavelength']
             exp_intensity = sim.exp_data.data['intensity']
@@ -137,6 +138,7 @@ class Menu(MainWindow):
         设置波长范围
 
         """
+
         def update_xrange():
             def task():
                 self.task_thread.progress.emit(0, '准备开始')
@@ -239,6 +241,7 @@ class Menu(MainWindow):
         重置波长范围
 
         """
+
         def task():
             self.info['x_range'] = None
             widen_temperature = self.ui.widen_temp.value()
@@ -302,6 +305,38 @@ class Menu(MainWindow):
         self.task_thread = ProgressThread(dialog_title='正在重置范围...', range_=(0, 100))
         self.task_thread.set_run(task)
         self.task_thread.start()
+
+    def export_con_ave_wave(self):
+        path = QFileDialog.getExistingDirectory(self, '选择存储路径', PROJECT_PATH().as_posix())
+        if path == '':
+            return
+        path = Path(path)
+
+        data_frames = {}
+        names = ['下态序号', '上态序号', '跃迁名称', '平均波长(nm)']
+        for cowan_, _ in self.cowan_lists:
+            ave_w = cowan_.cal_data.get_average_wavelength()
+            temp_1 = []
+            temp_2 = []
+            temp_3 = []
+            temp_4 = []
+            for key, value in ave_w.items():
+                temp_1.append(int(key.split('_')[0]))
+                temp_2.append(int(key.split('_')[1]))
+                temp_3.append(
+                    self.cowan.in36.get_configuration_name(
+                        int(key.split('_')[0]),
+                        int(key.split('_')[1])
+                    )
+                )
+                temp_4.append(value)
+            data_frames[self.cowan.name] = (
+                pd.DataFrame({names[0]: temp_1, names[1]: temp_2, names[2]: temp_3, names[3]: temp_4}))
+            # 存储
+            with pd.ExcelWriter('组态平均波长.xlsx', ) as writer:
+                for key, value in data_frames.items():
+                    value.to_excel(writer, sheet_name=key, index=False)
+        self.ui.statusbar.showMessage('导出成功！')
 
 
 class Page1(MainWindow):
@@ -515,6 +550,7 @@ class Page1(MainWindow):
             *args:
 
         """
+
         def del_configuration():
             """
             删除组态
@@ -553,6 +589,7 @@ class Page1(MainWindow):
         运行 Cowan
 
         """
+
         def cowan_complete():
             """
             Cowan 运行完成后的操作
@@ -651,6 +688,7 @@ class Page1(MainWindow):
         Returns:
 
         """
+
         def clear_history():
             """
             清空历史记录
@@ -693,6 +731,7 @@ class Page1(MainWindow):
             *args:
 
         """
+
         def del_selection():
             """
             删除选择列表中的项
@@ -923,6 +962,7 @@ class Page2(MainWindow):
         计算网格
 
         """
+
         # 函数定义开始↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
         def update_progress_bar(progress):
             """
@@ -1115,6 +1155,7 @@ class Page2(MainWindow):
             *args:
 
         """
+
         def del_st_item():
             """
            删除时空分辨光谱
@@ -1150,6 +1191,7 @@ class Page2(MainWindow):
         选择特征波长
 
         """
+
         def add_data():
             if self.expdata_2 is None:
                 QMessageBox.warning(self, '警告', '请先导入实验数据！')
@@ -1254,6 +1296,7 @@ class Page2(MainWindow):
         显示丰度
 
         """
+
         def update_ui():
             """
             更新界面
@@ -1309,6 +1352,7 @@ class Page2(MainWindow):
         更新 cowan 对象，重新模拟时空分辨光谱
 
         """
+
         def task():
             sum_num = len(self.space_time_resolution.simulate_spectral_dict.keys())
             progressing = 0
