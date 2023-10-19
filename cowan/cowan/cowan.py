@@ -4,6 +4,7 @@
 
 import copy
 import functools
+import itertools
 import os
 import shutil
 import subprocess
@@ -521,6 +522,8 @@ class CowanThread(QtCore.QThread):
         self.cal_data: Optional[CalData] = old_cowan.cal_data
         self.run_path = old_cowan.run_path
 
+        self.finished.connect(self.update_origin)
+
     def run(self):
         """
         运行 Cowan 程序
@@ -688,6 +691,44 @@ class CalData:
         temp = pd.DataFrame({'wavelength': lambda_, 'intensity': strength})
         return temp
 
+    def set_delta_lambda(self, delta_lambda: float):
+        """
+        设置展宽时的波长偏移量
+
+        Args:
+            delta_lambda: 波长偏移量，单位为 nm
+        """
+        self.widen_all.delta_lambda = delta_lambda
+        self.widen_part.delta_lambda = delta_lambda
+
+    def set_fwhm(self, fwhm: float):
+        """
+        设置展宽时的半高宽
+
+        Args:
+            fwhm: 半高宽，单位为 nm
+        """
+        self.widen_all.fwhm_value = fwhm
+        self.widen_part.fwhm_value = fwhm
+
+    def get_delta_lambda(self):
+        """
+        获取展宽时的波长偏移量
+
+        Returns:
+            波长偏移量，单位为 nm
+        """
+        return self.widen_all.delta_lambda
+
+    def get_fwhm(self):
+        """
+        获取展宽时的半高宽
+
+        Returns:
+            半高宽，单位为 nm
+        """
+        return self.widen_all.fwhm_value
+
 
 class WidenAll:
     def __init__(self, name, init_data, exp_data: ExpData, n=None, ):
@@ -750,10 +791,8 @@ class WidenAll:
             ]
         if self.n is None:
             wave = 1239.85 / np.array(self.exp_data.data['wavelength'].values)
-            print('使用的是实验数据的波长')
         else:
             wave = 1239.85 / np.linspace(min_wavelength_nm, max_wavelength_nm, self.n)
-            print('使用的是自定义的波长')
         result = pd.DataFrame()
         result['wavelength'] = 1239.85 / wave
 
@@ -1161,6 +1200,7 @@ class SimulateSpectral:
         """
         self.cowan_list: Optional[List[Cowan]] = None  # 用于存储 cowan 对象
         self.add_or_not: Optional[List[bool]] = None  # cowan 对象是否被添加
+        # self.offset_list: Optional[List[float]] = None  # cowan 对象的偏移量
         self.exp_data: Optional[ExpData] = None  # 实验光谱数据
         self.spectrum_similarity = None  # 光谱相似度
         self.temperature = None  # 模拟的等离子体温度
@@ -1199,15 +1239,17 @@ class SimulateSpectral:
         for key in cowan_lists.chose_cowan:
             temp_list.append(cowan_lists.cowan_run_history[key])
         self.cowan_list = copy.deepcopy(temp_list)
-        self.add_or_not = copy.deepcopy(cowan_lists.add_or_not)
+        self.add_or_not = cowan_lists.add_or_not
+        # self.offset_list = [cowan.cal_data.get_delta_lambda() for cowan in self.cowan_list]
 
     def del_cowan_list(self):
         """
-        删除 cowan_list 和 add_or_not，节省内存
+        删除 cowan_list，节省内存
 
         """
         self.cowan_list = None
-        self.add_or_not = None
+        # self.add_or_not = None
+        # self.offset_list = None
 
     def get_simulate_data(self, temperature, electron_density):
         """
@@ -1773,6 +1815,8 @@ class SimulateGridThread(QtCore.QThread):
 
         self.grid_data = old_grid.grid_data
 
+        self.finished.connect(self.update_origin)
+
     def run(self):
         """
         多线程运行的主函数
@@ -1855,6 +1899,55 @@ class SimulateGridThread(QtCore.QThread):
         self.old_grid.ne_list = self.ne_list
         self.old_grid.grid_data = self.grid_data
 
+# 尝试
+# class SimulateOfOffset(SimulateSpectral, QtCore.QThread):
+#     def __init__(self, old_simulate: SimulateSpectral):
+#         super().__init__()
+#         self.old_simulate = old_simulate
+#         self.cowan_list = old_simulate.cowan_list
+#         self.add_or_not = old_simulate.add_or_not
+#         self.exp_data = old_simulate.exp_data
+#         self.temperature = old_simulate.temperature
+#         self.electron_density = old_simulate.electron_density
+#         # ===================================
+#         self.offset_cal_dict = {}
+#         self.offset_config = {}
+#         self.sim_data = None
+#
+#         self.finished.connect(self.update_origin)
+#
+#     def set_offset_config(self, offsets):
+#         """
+#
+#         Args:
+#             offsets: 示例如下
+#                 {'Al_4': [-1, 1, 10], 'Al_5': [-1, 1, 10], ...}
+#
+#         Returns:
+#
+#         """
+#         self.offset_config = offsets
+#
+#     def run(self):
+#         def calculate_all_offsets(offsets_list):
+#             all_offsets = list(itertools.product(*offsets_list))
+#             return all_offsets
+#         params = []
+#         for key, value in self.offset_config.items():
+#             params.append(np.linspace(value[0], value[1], value[2]))
+#
+#
+#
+#         # # 设置偏移量，开始计算
+#         # for cowan in self.cowan_list:
+#         #     cowan.offset = params[cowan.name]
+#         # self.get_simulate_data(temperature=self.temperature, electron_density=self.electron_density)
+#
+#     def update_origin(self):
+#         pass
+#
+#         # self.old_simulate.cowan_list = old_simulate.cowan_list
+#
 
 class SpaceTimeResolution:
     def __init__(self):

@@ -792,10 +792,12 @@ class Page1(MainWindow):
         重新展宽
 
         """
-        self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
-        self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
-        self.cowan.cal_data.widen_all.fwhm_value = self.ui.widen_fwhm.value()
-        self.cowan.cal_data.widen_part.fwhm_value = self.ui.widen_fwhm.value()
+        self.cowan.cal_data.set_delta_lambda(self.ui.offset.value())
+        # self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
+        # self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
+        self.cowan.cal_data.set_fwhm(self.ui.widen_fwhm.value())
+        # self.cowan.cal_data.widen_all.fwhm_value = self.ui.widen_fwhm.value()
+        # self.cowan.cal_data.widen_part.fwhm_value = self.ui.widen_fwhm.value()
         widen_temperature = self.ui.widen_temp.value()
         self.cowan.cal_data.widen_all.widen(widen_temperature, False)
         # self.cowan.cal_data.widen_part.widen_by_group(temperature=widen_temperature)
