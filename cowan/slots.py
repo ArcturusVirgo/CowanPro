@@ -333,7 +333,7 @@ class Menu(MainWindow):
             data_frames[self.cowan.name] = (
                 pd.DataFrame({names[0]: temp_1, names[1]: temp_2, names[2]: temp_3, names[3]: temp_4}))
             # 存储
-            with pd.ExcelWriter('组态平均波长.xlsx', ) as writer:
+            with pd.ExcelWriter(path.joinpath('组态平均波长.xlsx'), ) as writer:
                 for key, value in data_frames.items():
                     value.to_excel(writer, sheet_name=key, index=False)
         self.ui.statusbar.showMessage('导出成功！')
