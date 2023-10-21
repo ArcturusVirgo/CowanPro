@@ -349,6 +349,7 @@ class Page1(MainWindow):
 
         """
         self.atom = Atom(index + 1, 0)
+        self.in36.set_atom(self.atom)
 
         # ----------------------------- 更新页面 -----------------------------
         functools.partial(UpdatePage1.update_atom, self)()
@@ -361,6 +362,7 @@ class Page1(MainWindow):
 
         """
         self.atom = Atom(self.ui.atomic_num.currentIndex() + 1, index)
+        self.in36.set_atom(self.atom)
 
         # ----------------------------- 更新页面 -----------------------------
         functools.partial(UpdatePage1.update_atom_ion, self)()
