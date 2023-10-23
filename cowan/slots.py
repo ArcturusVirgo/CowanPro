@@ -765,7 +765,8 @@ class Page1(MainWindow):
 
             """
             index = self.ui.selection_list.currentIndex().row()
-            self.cowan_lists.del_cowan(index)
+            temp_name = self.cowan_lists.chose_cowan[index]
+            self.cowan_lists.del_cowan(temp_name)
 
             # -------------------------- 更新页面 --------------------------
             functools.partial(UpdatePage1.update_selection_list, self)()
