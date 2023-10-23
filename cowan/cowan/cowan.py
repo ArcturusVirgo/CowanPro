@@ -1785,7 +1785,8 @@ class SimulateSpectral:
             PROJECT_PATH().joinpath('figure/part/example.html').as_posix()
         )
         # 实验谱线 对象
-        self.exp_data.update_path()
+        if self.exp_data is not None:
+            self.exp_data.update_path()
 
 
 class SimulateGrid:
