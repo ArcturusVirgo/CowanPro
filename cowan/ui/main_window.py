@@ -1422,6 +1422,11 @@ class Ui_main_window(object):
 
         self.horizontalLayout_30.addItem(self.horizontalSpacer_15)
 
+        self.redraw_exp_data = QPushButton(self.widget_2)
+        self.redraw_exp_data.setObjectName(u"redraw_exp_data")
+
+        self.horizontalLayout_30.addWidget(self.redraw_exp_data)
+
         self.load_exp_data = QPushButton(self.widget_2)
         self.load_exp_data.setObjectName(u"load_exp_data")
 
@@ -2333,6 +2338,7 @@ class Ui_main_window(object):
         self.groupBox_5.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97\u5386\u53f2", None))
         self.groupBox_6.setTitle(QCoreApplication.translate("main_window", u"\u5e93", None))
         self.label.setText(QCoreApplication.translate("main_window", u"\u5b9e\u9a8c\u8c31", None))
+        self.redraw_exp_data.setText(QCoreApplication.translate("main_window", u"\u91cd\u65b0\u7ed8\u5236", None))
         self.load_exp_data.setText(QCoreApplication.translate("main_window", u"\u52a0\u8f7d\u5b9e\u9a8c\u5149\u8c31", None))
         self.label_3.setText(QCoreApplication.translate("main_window", u"\u8f6e\u5ed3", None))
         self.gauss.setText(QCoreApplication.translate("main_window", u"gauss", None))

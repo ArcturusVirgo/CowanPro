@@ -3485,6 +3485,13 @@
               </spacer>
              </item>
              <item>
+              <widget class="QPushButton" name="redraw_exp_data">
+               <property name="text">
+                <string>重新绘制</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="load_exp_data">
                <property name="text">
                 <string>加载实验光谱</string>

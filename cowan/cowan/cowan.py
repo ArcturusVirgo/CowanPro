@@ -8,6 +8,7 @@ import itertools
 import os
 import shutil
 import subprocess
+import warnings
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import Optional, List, Dict, Tuple
@@ -208,6 +209,9 @@ class ExpData:
         fig = go.Figure(data=data, layout=layout)
 
         plot(fig, filename=self.plot_path, auto_open=False)
+
+    def update_path(self):
+        self.plot_path = (PROJECT_PATH() / 'figure/exp.html').as_posix()  # 实验谱线的绘图路径
 
 
 class In36:
@@ -499,6 +503,12 @@ class Cowan:
         self.cal_data: Optional[CalData] = None
         self.run_path = PROJECT_PATH() / f'cal_result/{self.name}'
 
+    def update_path(self):
+        # 更新当前对象的
+        self.run_path = PROJECT_PATH() / f'cal_result/{self.name}'
+        # 更新cal对象的
+        self.cal_data.update_path()
+
 
 class CowanThread(QtCore.QThread):
     sub_complete = Signal(str)
@@ -729,6 +739,13 @@ class CalData:
         """
         return self.widen_all.fwhm_value
 
+    def update_path(self):
+        # cal对象的
+        self.filepath = (PROJECT_PATH() / f'cal_result/{self.name}/spectra.dat').as_posix()
+        self.plot_path = (PROJECT_PATH() / f'figure/line/{self.name}.html').as_posix()
+        # widen对象的
+        self.widen_all.update_path()
+
 
 class WidenAll:
     def __init__(self, name, init_data, exp_data: ExpData, n=None, ):
@@ -791,8 +808,10 @@ class WidenAll:
             ]
         if self.n is None:
             wave = 1239.85 / np.array(self.exp_data.data['wavelength'].values)
+            print('exp_wavelength')
         else:
             wave = 1239.85 / np.linspace(min_wavelength_nm, max_wavelength_nm, self.n)
+            print('new_wavelength')
         result = pd.DataFrame()
         result['wavelength'] = 1239.85 / wave
 
@@ -904,6 +923,11 @@ class WidenAll:
             返回高斯展宽的半高宽
         """
         return self.fwhm_value
+
+    def update_path(self):
+        self.plot_path_gauss = (PROJECT_PATH() / f'figure/gauss/{self.name}.html').as_posix()
+        self.plot_path_cross_NP = (PROJECT_PATH() / f'figure/cross_NP/{self.name}.html').as_posix()
+        self.plot_path_cross_P = (PROJECT_PATH() / f'figure/cross_P/{self.name}.html').as_posix()
 
 
 class WidenPart:
@@ -1581,6 +1605,10 @@ class SimulateSpectral:
         获取光谱相似度，直接存储在 self.spectrum_similarity 中
 
         """
+        if self.exp_data.data['wavelength'].max() < self.sim_data['wavelength'].min() and \
+                self.sim_data['wavelength'].max() < self.exp_data.data['wavelength'].min():
+            warnings.warn('实验波长与模拟波长不匹配！！！')
+            return
         if len(self.characteristic_peaks) == 0:
             self.spectrum_similarity = self.spectrum_similarity1(
                 self.exp_data.data[['wavelength', 'intensity']],
@@ -1737,6 +1765,12 @@ class SimulateSpectral:
         y1 = y1 / max(y1)
         y2 = y2 / max(y2)
         return x, y1, y2
+
+    def update_path(self):
+        self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()
+        self.example_path = (
+            PROJECT_PATH().joinpath('figure/part/example.html').as_posix()
+        )
 
 
 class SimulateGrid:
@@ -1898,6 +1932,7 @@ class SimulateGridThread(QtCore.QThread):
         self.old_grid.t_list = self.t_list
         self.old_grid.ne_list = self.ne_list
         self.old_grid.grid_data = self.grid_data
+
 
 # 尝试
 # class SimulateOfOffset(SimulateSpectral, QtCore.QThread):
@@ -2090,3 +2125,8 @@ class SpaceTimeResolution:
         )
         fig = go.Figure(data=data, layout=layout)
         plot(fig, filename=self.change_by_space_time_path, auto_open=False)
+
+    def update_path(self):
+        self.change_by_time_path = (PROJECT_PATH().joinpath('figure/change/by_time.html').as_posix())
+        self.change_by_location_path = (PROJECT_PATH().joinpath('figure/change/by_location.html').as_posix())
+        self.change_by_space_time_path = (PROJECT_PATH().joinpath('figure/change/by_space_time.html').as_posix())

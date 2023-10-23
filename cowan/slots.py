@@ -1,3 +1,4 @@
+import numpy as np
 from PySide6.QtGui import QAction, QCursor
 from PySide6.QtWebEngineCore import QWebEngineSettings, QWebEnginePage
 from PySide6.QtWidgets import QFileDialog, QDialog, QTextBrowser, QMenu, QMessageBox, QListWidget, QPushButton, \
@@ -14,46 +15,6 @@ from .update_ui import *
 
 
 class Menu(MainWindow):
-    def load_exp_data(self):
-        """
-        第一页，加载实验数据
-
-        Notes:
-            1. 选择实验数据文件
-            2. 将实验数据文件复制到项目路径下
-            3. 更新实验数据范围
-            4. 更新运行历史的实验数据
-            5. 更新页面
-
-        """
-        path, types = QFileDialog.getOpenFileName(self, '请选择实验数据', PROJECT_PATH().as_posix(),
-                                                  '数据文件(*.txt *.csv)')
-        path = Path(path)
-        # 将实验数据复制到项目路径下
-        if 'csv' in path.name:
-            new_path = PROJECT_PATH() / f'exp_data.csv'
-        elif 'txt' in path.name:
-            new_path = PROJECT_PATH() / f'exp_data.txt'
-        else:
-            raise Exception('文件格式错误')
-        # 将实验数据拷贝至项目文件夹下
-        try:
-            shutil.copyfile(path, new_path)
-        except shutil.SameFileError:
-            pass
-
-        # 更新实验数据
-        self.expdata_1 = ExpData(new_path)
-        if self.info['x_range'] is None:
-            pass
-        else:
-            self.expdata_1.set_range(self.info['x_range'])
-        # 更新运行历史的实验数据
-        self.cowan_lists.update_exp_data(self.expdata_1)
-        self.expdata_1.plot_html()
-        # 更新页面
-        self.ui.exp_web.load(QUrl.fromLocalFile(self.expdata_1.plot_path))
-
     def show_guides(self):
         """
         显示参考线
@@ -140,6 +101,18 @@ class Menu(MainWindow):
         """
 
         def update_xrange():
+            def get_min_step(data: np.ndarray):
+                # 如果实验光谱有重复的波长就有问题
+                step_list = (data[1:] - data[:-1])
+                step_list = np.sort(step_list)
+                min_step = 0.01
+                for temp_step in step_list:
+                    if temp_step == 0.0:
+                        continue
+                    min_step = temp_step
+                    break
+                return min_step
+
             def task():
                 self.task_thread.progress.emit(0, '准备开始')
                 x_range = [min_input.value(), max_input.value()]
@@ -152,9 +125,13 @@ class Menu(MainWindow):
                 self.task_thread.progress.emit(20, '重新展宽页面上的Cowan')
                 if self.cowan is not None:
                     # 设置范围
+                    min_step = get_min_step(self.cowan.exp_data.data['wavelength'].values)
+                    num = int((x_range[1] - x_range[0]) / min_step)
                     self.cowan.exp_data.set_range(x_range)
                     self.cowan.cal_data.widen_all.exp_data.set_range(x_range)
+                    self.cowan.cal_data.widen_all.n = num
                     self.cowan.cal_data.widen_part.exp_data.set_range(x_range)
+                    self.cowan.cal_data.widen_part.n = num
                     # 重新展宽
                     self.cowan.cal_data.widen_all.widen(widen_temperature, False)
                 # 设置各个 Cowan
@@ -165,10 +142,10 @@ class Menu(MainWindow):
                     cowan_.exp_data.set_range(x_range)
                     cowan_.cal_data.widen_all.exp_data.set_range(x_range)
                     cowan_.cal_data.widen_part.exp_data.set_range(x_range)
+                    # 如果实验光谱有重复的波长就有问题
+                    min_step = get_min_step(cowan_.exp_data.data['wavelength'].values)
                     # 更新展宽参数
-                    num = int((x_range[1] - x_range[0]) / (
-                        min(self.expdata_1.data['wavelength'].values[1:] - self.expdata_1.data['wavelength'].values[
-                                                                           :-1])))
+                    num = int((x_range[1] - x_range[0]) / min_step)
                     cowan_.cal_data.widen_all.n = num
                     cowan_.cal_data.widen_part.n = num
                     # 重新展宽
@@ -340,6 +317,54 @@ class Menu(MainWindow):
 
 
 class Page1(MainWindow):
+
+    def load_exp_data(self):
+        """
+        第一页，加载实验数据
+
+        Notes:
+            1. 选择实验数据文件
+            2. 将实验数据文件复制到项目路径下
+            3. 更新实验数据范围
+            4. 更新运行历史的实验数据
+            5. 更新页面
+
+        """
+        path, types = QFileDialog.getOpenFileName(self, '请选择实验数据', PROJECT_PATH().as_posix(),
+                                                  '数据文件(*.txt *.csv)')
+        path = Path(path)
+        # 将实验数据复制到项目路径下
+        if 'csv' in path.name:
+            new_path = PROJECT_PATH() / f'exp_data.csv'
+        elif 'txt' in path.name:
+            new_path = PROJECT_PATH() / f'exp_data.txt'
+        else:
+            raise Exception('文件格式错误')
+        # 将实验数据拷贝至项目文件夹下
+        try:
+            shutil.copyfile(path, new_path)
+        except shutil.SameFileError:
+            pass
+
+        # 更新实验数据
+        self.expdata_1 = ExpData(new_path)
+        if self.info['x_range'] is None:
+            pass
+        else:
+            self.expdata_1.set_range(self.info['x_range'])
+        # 更新运行历史的实验数据
+        self.cowan_lists.update_exp_data(self.expdata_1)
+        self.expdata_1.plot_html()
+        # 更新页面
+        self.ui.exp_web.load(QUrl.fromLocalFile(self.expdata_1.plot_path))
+
+    def redraw_exp_data(self):
+        """
+        重绘实验数据
+
+        """
+        functools.partial(UpdatePage1.update_exp_figure, self)()
+
     def atom_changed(self, index):
         """
         当选择的元素改变时

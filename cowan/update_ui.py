@@ -198,11 +198,15 @@ class UpdatePage2(MainWindow):
         if self.simulated_grid is None:
             warnings.warn('simulated_grid is None')
             return
+        if len(self.simulated_grid.grid_data) == 0:
+            warnings.warn('simulated_grid.grid_data is None')
+            return
         self.ui.page2_grid_list.clear()
         self.ui.page2_grid_list.setRowCount(self.simulated_grid.ne_num)
         self.ui.page2_grid_list.setColumnCount(self.simulated_grid.t_num)
         self.ui.page2_grid_list.setHorizontalHeaderLabels(self.simulated_grid.t_list)
         self.ui.page2_grid_list.setVerticalHeaderLabels(self.simulated_grid.ne_list)
+        # self.simulated_grid.grid_data 是一个字典
         sim_max = max(
             self.simulated_grid.grid_data.values(), key=lambda x: x.spectrum_similarity
         ).spectrum_similarity
