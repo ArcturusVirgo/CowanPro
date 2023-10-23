@@ -160,6 +160,9 @@ class UpdatePage1(MainWindow):
             warnings.warn('Cowan未进行首次计算', UserWarning)
             return
         # ----- 偏移量 -----
+        if self.cowan.cal_data is None:
+            warnings.warn('Cowan.cal_data 未初始化', UserWarning)
+            return
         self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
         # ----- 实验数据 -----
         functools.partial(UpdatePage1.update_exp_figure, self)()
