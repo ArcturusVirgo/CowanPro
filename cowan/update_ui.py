@@ -229,6 +229,9 @@ class UpdatePage2(MainWindow):
         for i, (key, value) in enumerate(self.space_time_resolution.simulate_spectral_dict.items()):
             item1 = QTableWidgetItem(key[0])
             item2 = QTableWidgetItem(f'({key[1][0]}, {key[1][1]}, {key[1][2]})')
+            if '-' in key[0] and '-' in key[1][0] and key[0] == key[1][0]:
+                item1.setBackground(QBrush(QColor(255, 0, 0)))
+                item2.setBackground(QBrush(QColor(255, 0, 0)))
             if value.temperature is not None and value.electron_density is not None:
                 item3 = QTableWidgetItem('{:.3f}'.format(value.temperature))
                 item4 = QTableWidgetItem('{:.3e}'.format(value.electron_density))
@@ -237,6 +240,7 @@ class UpdatePage2(MainWindow):
                 item3.setBackground(QBrush(QColor(255, 0, 0)))
                 item4 = QTableWidgetItem('None')
                 item4.setBackground(QBrush(QColor(255, 0, 0)))
+
             item5 = QTableWidgetItem(value.exp_data.filepath.name)
             self.ui.st_resolution_table.setItem(i, 0, item1)
             self.ui.st_resolution_table.setItem(i, 1, item2)

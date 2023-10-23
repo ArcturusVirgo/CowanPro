@@ -508,6 +508,8 @@ class Cowan:
         self.run_path = PROJECT_PATH() / f'cal_result/{self.name}'
         # 更新cal对象的
         self.cal_data.update_path()
+        # 更新exp对象的
+        self.exp_data.update_path()
 
 
 class CowanThread(QtCore.QThread):
@@ -1212,6 +1214,14 @@ class CowanList:
         for cowan in self.cowan_run_history.values():
             cowan.exp_data = exp_data
 
+    def update_path(self):
+        """
+        更新所有cowan对象中的路径
+
+        """
+        for cowan in self.cowan_run_history.values():
+            cowan.update_path()
+
     def __getitem__(self, index):
         return self.cowan_run_history[self.chose_cowan[index]], self.add_or_not[index]
 
@@ -1767,10 +1777,13 @@ class SimulateSpectral:
         return x, y1, y2
 
     def update_path(self):
+        # 当前对象
         self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()
         self.example_path = (
             PROJECT_PATH().joinpath('figure/part/example.html').as_posix()
         )
+        # 实验谱线 对象
+        self.exp_data.update_path()
 
 
 class SimulateGrid:
@@ -1990,7 +2003,7 @@ class SpaceTimeResolution:
         用于存储空间时间分辨光谱
         """
         # 模拟光谱数据对象 列表
-        self.simulate_spectral_dict = {}
+        self.simulate_spectral_dict:List[str:SimulateSpectral] = {}
 
         self.change_by_time_path = (PROJECT_PATH().joinpath('figure/change/by_time.html').as_posix())
         self.change_by_location_path = (PROJECT_PATH().joinpath('figure/change/by_location.html').as_posix())
@@ -2127,6 +2140,12 @@ class SpaceTimeResolution:
         plot(fig, filename=self.change_by_space_time_path, auto_open=False)
 
     def update_path(self):
+        # 当前项目
         self.change_by_time_path = (PROJECT_PATH().joinpath('figure/change/by_time.html').as_posix())
         self.change_by_location_path = (PROJECT_PATH().joinpath('figure/change/by_location.html').as_posix())
         self.change_by_space_time_path = (PROJECT_PATH().joinpath('figure/change/by_space_time.html').as_posix())
+
+        # sim 对象
+        for key, value in self.simulate_spectral_dict.items():
+            value.update_path()
+

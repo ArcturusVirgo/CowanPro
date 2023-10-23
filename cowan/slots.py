@@ -307,7 +307,8 @@ class Menu(MainWindow):
                     )
                 )
                 temp_4.append(value)
-            data_frames[self.cowan.name] = (
+            # 将数据放在DataFrame中
+            data_frames[cowan_.name] = (
                 pd.DataFrame({names[0]: temp_1, names[1]: temp_2, names[2]: temp_3, names[3]: temp_4}))
             # 存储
             with pd.ExcelWriter(path.joinpath('组态平均波长.xlsx'), ) as writer:
@@ -1113,10 +1114,16 @@ class Page2(MainWindow):
             self, '请选择实验数据所在的文件夹', PROJECT_PATH().as_posix()
         )
         path = Path(path)
-        for file_name in path.iterdir():
-            loc, tim = file_name.stem.split('_')
-            loc = loc.strip('mm')
-            tim = tim.strip('ns')
+        for i, file_name in enumerate(path.iterdir()):
+            if 'csv' not in file_name.suffix:
+                continue
+            if '_' in file_name.stem:
+                loc, tim = file_name.stem.split('_')
+                loc = loc.strip('mm')
+                tim = tim.strip('ns')
+            else:
+                loc = f'-{i + 1}'
+                tim = f'-{i + 1}'
             self.expdata_2 = ExpData(file_name)
             if self.info['x_range'] is None:
                 pass

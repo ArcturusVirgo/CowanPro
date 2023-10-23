@@ -541,6 +541,7 @@ class MainWindow(QMainWindow):
         self.task_thread.start()
 
     def load_project(self):
+        # 读取初始化文件
         obj_info = shelve.open(PROJECT_PATH().joinpath('.cowan/obj_info').as_posix())
         try:
             obj_info['atom']
@@ -552,23 +553,33 @@ class MainWindow(QMainWindow):
         self.in36 = obj_info['in36']
         self.in2 = obj_info['in2']
         self.expdata_1 = obj_info['expdata_1']
-        self.expdata_1.update_path()  # 更新路径
         self.cowan = obj_info['cowan']
-        self.cowan.update_path()  # 更新路径
         self.cowan_lists = obj_info['cowan_lists']
         self.info = obj_info['info']
         # 第二页
         self.expdata_2 = obj_info['expdata_2']
-        self.expdata_2.update_path()  # 更新路径
         self.simulate = obj_info['simulate']
-        self.simulate.update_path()  # 更新路径
         self.simulated_grid = obj_info['simulated_grid']
         self.space_time_resolution = obj_info['space_time_resolution']
-        self.space_time_resolution.update_path()  # 更新路径
         # 第四页
         self.simulate_page4 = obj_info['simulate_page4']
-        self.simulate_page4.update_path()  # 更新路径
         obj_info.close()
+
+        #  更新路径 =================================================
+        if self.expdata_1 is not None:
+            self.expdata_1.update_path()  # 更新路径
+        if self.cowan is not None:
+            self.cowan.update_path()  # 更新路径
+        if self.cowan_lists is not None:
+            self.cowan_lists.update_path()  # 更新路径
+        if self.expdata_2 is not None:
+            self.expdata_2.update_path()  # 更新路径
+        if self.simulate is not None:
+            self.simulate.update_path()  # 更新路径
+        if self.space_time_resolution is not None:
+            self.space_time_resolution.update_path()  # 更新路径
+        if self.simulate_page4 is not None:
+            self.simulate_page4.update_path()  # 更新路径
 
         # 更新界面
         # 第一页 =================================================
