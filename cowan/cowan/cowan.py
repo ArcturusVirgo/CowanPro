@@ -507,9 +507,11 @@ class Cowan:
         # 更新当前对象的
         self.run_path = PROJECT_PATH() / f'cal_result/{self.name}'
         # 更新cal对象的
-        self.cal_data.update_path()
+        if self.cal_data is not None:
+            self.cal_data.update_path()
         # 更新exp对象的
-        self.exp_data.update_path()
+        if self.exp_data is not None:
+            self.exp_data.update_path()
 
 
 class CowanThread(QtCore.QThread):
@@ -2003,7 +2005,7 @@ class SpaceTimeResolution:
         用于存储空间时间分辨光谱
         """
         # 模拟光谱数据对象 列表
-        self.simulate_spectral_dict:List[str:SimulateSpectral] = {}
+        self.simulate_spectral_dict: List[str:SimulateSpectral] = {}
 
         self.change_by_time_path = (PROJECT_PATH().joinpath('figure/change/by_time.html').as_posix())
         self.change_by_location_path = (PROJECT_PATH().joinpath('figure/change/by_location.html').as_posix())
@@ -2148,4 +2150,3 @@ class SpaceTimeResolution:
         # sim 对象
         for key, value in self.simulate_spectral_dict.items():
             value.update_path()
-
