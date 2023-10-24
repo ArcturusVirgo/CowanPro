@@ -94,6 +94,8 @@ class Menu(MainWindow):
         cowan_info = pd.DataFrame(cowan_info, columns=['名称', '耦合模式', '偏移量', '半高全宽'])
         cowan_info.to_excel(path.joinpath('cowan_info.xlsx'), index=False)
 
+        self.ui.statusbar.showMessage('数据导出完成！')
+
     def set_xrange(self):
         """
         设置波长范围
@@ -105,12 +107,13 @@ class Menu(MainWindow):
                 # 如果实验光谱有重复的波长就有问题
                 step_list = (data[1:] - data[:-1])
                 step_list = np.sort(step_list)
-                min_step = 0.01
+                min_step = 0.005
                 for temp_step in step_list:
                     if temp_step == 0.0:
                         continue
-                    min_step = temp_step
-                    break
+                    if min_step > temp_step:
+                        min_step = temp_step
+                        break
                 return min_step
 
             def task():
@@ -126,12 +129,9 @@ class Menu(MainWindow):
                 if self.cowan is not None:
                     # 设置范围
                     min_step = get_min_step(self.cowan.exp_data.data['wavelength'].values)
-                    num = int((x_range[1] - x_range[0]) / min_step)
+                    num = abs(int((x_range[1] - x_range[0]) / min_step))
                     self.cowan.exp_data.set_range(x_range)
-                    self.cowan.cal_data.widen_all.exp_data.set_range(x_range)
-                    self.cowan.cal_data.widen_all.n = num
-                    self.cowan.cal_data.widen_part.exp_data.set_range(x_range)
-                    self.cowan.cal_data.widen_part.n = num
+                    self.cowan.set_xrange(x_range, num)
                     # 重新展宽
                     self.cowan.cal_data.widen_all.widen(widen_temperature, False)
                 # 设置各个 Cowan
@@ -140,14 +140,11 @@ class Menu(MainWindow):
                                                    f'重新展宽{cowan_.name}')
                     # 设置范围
                     cowan_.exp_data.set_range(x_range)
-                    cowan_.cal_data.widen_all.exp_data.set_range(x_range)
-                    cowan_.cal_data.widen_part.exp_data.set_range(x_range)
                     # 如果实验光谱有重复的波长就有问题
                     min_step = get_min_step(cowan_.exp_data.data['wavelength'].values)
                     # 更新展宽参数
-                    num = int((x_range[1] - x_range[0]) / min_step)
-                    cowan_.cal_data.widen_all.n = num
-                    cowan_.cal_data.widen_part.n = num
+                    num = abs(int((x_range[1] - x_range[0]) / min_step))
+                    cowan_.set_xrange(x_range, num)
                     # 重新展宽
                     cowan_.cal_data.widen_all.widen(widen_temperature, False)
                 # 设置第二页的实验谱线
@@ -314,6 +311,7 @@ class Menu(MainWindow):
             with pd.ExcelWriter(path.joinpath('组态平均波长.xlsx'), ) as writer:
                 for key, value in data_frames.items():
                     value.to_excel(writer, sheet_name=key, index=False)
+
         self.ui.statusbar.showMessage('导出成功！')
 
 
@@ -634,6 +632,7 @@ class Page1(MainWindow):
 
             # -------------------------- 展宽 --------------------------
             self.cowan.cal_data.widen_all.widen(temperature=25.6, only_p=False)  # 整体展宽
+            self.cowan.set_xrange(self.info['x_range'], )
             # self.cowan.cal_data.widen_part.widen_by_group(widen_temperature)  # 部分展宽
             # -------------------------- 添加到运行历史 --------------------------
             self.cowan_lists.add_history(self.cowan)
@@ -1452,6 +1451,7 @@ class Page4(MainWindow):
     def comboBox_changed(self, index):
         """
         在下拉框选择时空分辨光谱时
+
         Args:
             index: 下拉框当前选择索引
 

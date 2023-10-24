@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'login_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.2
+## Created by: Qt User Interface Compiler version 6.5.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -85,7 +85,7 @@ class Ui_login_window(object):
 
         self.project_name = QLineEdit(self.page_2)
         self.project_name.setObjectName(u"project_name")
-        self.project_name.setEnabled(False)
+        self.project_name.setEnabled(True)
 
         self.verticalLayout_3.addWidget(self.project_name)
 
@@ -98,6 +98,7 @@ class Ui_login_window(object):
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.project_path = QLineEdit(self.page_2)
         self.project_path.setObjectName(u"project_path")
+        self.project_path.setEnabled(False)
 
         self.horizontalLayout_3.addWidget(self.project_path)
 

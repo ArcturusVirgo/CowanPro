@@ -84,6 +84,7 @@ class UpdatePage1(MainWindow):
         """
         更新in36控制卡输入区
         更新in36组态输入区
+
         Returns:
 
         """
@@ -102,14 +103,25 @@ class UpdatePage1(MainWindow):
             else:
                 eval(f'self.ui.{n}').setText(self.in2.input_card[i].strip(' '))
 
-    def update_history_list(self, high_light_index=None):
+    def update_cowan_info(self):
+        if self.cowan is None:
+            warnings.warn('Cowan 未进行首次计算', UserWarning)
+            return
+        self.ui.cowan_now_name.setText(f'当前计算：{self.cowan.name}')
+
+        if self.cowan.cal_data is None:
+            warnings.warn('Cowan.cal_data 未初始化', UserWarning)
+            return
+        if self.cowan.cal_data.widen_all is None:  # 需要到该对象！！！
+            warnings.warn('Cowan.cal_data.widen_all 未初始化', UserWarning)
+            return
+        self.ui.offset.setValue(self.cowan.cal_data.get_delta_lambda())
+        self.ui.widen_fwhm.setValue(self.cowan.cal_data.get_fwhm())
+
+    def update_history_list(self):
         self.ui.run_history_list.clear()
-        # if high_light_index == -1:
-        #     high_light_index = len(self.cowan_lists.cowan_run_history) - 1
         for i, (name, cowan) in enumerate(self.cowan_lists.cowan_run_history.items()):
             item = QListWidgetItem(cowan.name)
-            # if i == high_light_index:
-            #     item.setBackground(QBrush(QColor(255, 0, 0)))
             self.ui.run_history_list.addItem(item)
 
     def update_selection_list(self):
@@ -125,15 +137,35 @@ class UpdatePage1(MainWindow):
             self.ui.page2_selection_list.addItem(item)
 
     def update_exp_figure(self):
+        if self.expdata_1 is None:
+            warnings.warn('expdata_1 is None')
+            return
         self.expdata_1.plot_html()
         self.ui.exp_web.load(QUrl.fromLocalFile(self.expdata_1.plot_path))
 
     def update_line_figure(self):
+        if self.cowan is None:
+            warnings.warn('Cowan未进行首次计算', UserWarning)
+            return
+        if self.cowan.cal_data is None:
+            warnings.warn('Cowan.cal_data 未初始化', UserWarning)
+            return
+
         self.cowan.cal_data.plot_line()
         # 加载线状谱
         self.ui.web_cal_line.load(QUrl.fromLocalFile(self.cowan.cal_data.plot_path))
 
     def update_widen_figure(self):
+        if self.cowan is None:
+            warnings.warn('Cowan 未进行首次计算', UserWarning)
+            return
+        if self.cowan.cal_data is None:
+            warnings.warn('Cowan.cal_data 未初始化', UserWarning)
+            return
+        if self.cowan.cal_data.widen_all is None:
+            warnings.warn('Cowan.cal_data.widen_all 未初始化', UserWarning)
+            return
+
         self.cowan.cal_data.widen_all.plot_widen()
 
         if self.ui.crossP.isChecked():
@@ -143,37 +175,20 @@ class UpdatePage1(MainWindow):
         elif self.ui.gauss.isChecked():
             self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_gauss))
 
-    def update_xrange(self):
-        pass
-
     def update_page(self):
         # ----- 原子信息 -----
-        if self.atom.num == 1 and self.atom.ion == 0:
-            warnings.warn('原子信息未初始化', UserWarning)
-            return
         functools.partial(UpdatePage1.update_atom, self)()
         # ----- in36 -------
         functools.partial(UpdatePage1.update_in36, self)()
         # ----- in2 -----
         functools.partial(UpdatePage1.update_in2, self)()
-        if self.cowan is None:
-            warnings.warn('Cowan未进行首次计算', UserWarning)
-            return
-        # ----- 偏移量 -----
-        if self.cowan.cal_data is None:
-            warnings.warn('Cowan.cal_data 未初始化', UserWarning)
-            return
-        self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
-        # ----- 实验数据 -----
+        # ----- 偏移量与半高全宽与名字 -----
+        functools.partial(UpdatePage1.update_cowan_info, self)()
+        # ----- 实验数据画图 -----
         functools.partial(UpdatePage1.update_exp_figure, self)()
         # ----- 线状谱和展宽 -----
         functools.partial(UpdatePage1.update_line_figure, self)()
         functools.partial(UpdatePage1.update_widen_figure, self)()
-        self.ui.gauss.setEnabled(True)  # 将展宽的选择框设为可用
-        self.ui.crossP.setEnabled(True)
-        self.ui.crossNP.setEnabled(True)
-        # ----- 历史数据 -----
-        self.ui.cowan_now_name.setText(f'当前计算：{self.cowan.name}')
         # 更新历史记录列表
         functools.partial(UpdatePage1.update_history_list, self)()
         # 更新选择列表
@@ -181,11 +196,21 @@ class UpdatePage1(MainWindow):
 
 
 class UpdatePage2(MainWindow):
+    def update_page2_exp_data_path(self):
+        if self.expdata_2 is None:
+            warnings.warn('第二页实验数据未加载', UserWarning)
+            return
+        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.as_posix())
+
     def update_exp_sim_figure(self):
         if self.simulate is None:
+            warnings.warn('simulate obj is None')
             return
         if self.simulate.temperature is None or self.simulate.electron_density is None:
+            warnings.warn('simulate.temperature or simulate.electron_density is None')
             return
+
+        # 更新路径
         if self.ui.show_peaks.isChecked():
             self.simulate.plot_html(show_point=True)
         else:
@@ -193,6 +218,9 @@ class UpdatePage2(MainWindow):
         self.ui.page2_add_spectrum_web.load(QUrl.fromLocalFile(self.simulate.plot_path))
 
     def update_exp_figure(self):
+        if self.expdata_2 is None:
+            warnings.warn('第二页实验数据未加载', UserWarning)
+            return
         # 更新界面
         self.expdata_2.plot_html()
         self.ui.page2_add_spectrum_web.load(QUrl.fromLocalFile(self.expdata_2.plot_path))
@@ -202,8 +230,9 @@ class UpdatePage2(MainWindow):
             warnings.warn('simulated_grid is None')
             return
         if len(self.simulated_grid.grid_data) == 0:
-            warnings.warn('simulated_grid.grid_data is None')
+            warnings.warn('simulated_grid 字典中没有 sim 对象')
             return
+
         self.ui.page2_grid_list.clear()
         self.ui.page2_grid_list.setRowCount(self.simulated_grid.ne_num)
         self.ui.page2_grid_list.setColumnCount(self.simulated_grid.t_num)
@@ -215,6 +244,9 @@ class UpdatePage2(MainWindow):
         ).spectrum_similarity
         for t in self.simulated_grid.t_list:
             for ne in self.simulated_grid.ne_list:
+                if (t, ne) not in self.simulated_grid.grid_data.keys():
+                    warnings.warn(f'({t}, {ne}) not in self.simulated_grid.grid_data')
+                    continue
                 similarity = self.simulated_grid.grid_data[(t, ne)].spectrum_similarity
                 item = QTableWidgetItem('{:.4f}'.format(similarity))
                 item.setBackground(QBrush(QColor(*rainbow_color(similarity / sim_max))))
@@ -253,9 +285,12 @@ class UpdatePage2(MainWindow):
 
     def update_temperature_density(self):
         if self.simulate is None:
+            warnings.warn('simulate obj is None')
             return
         if self.simulate.temperature is None or self.simulate.electron_density is None:
+            warnings.warn('simulate.temperature or simulate.electron_density is None')
             return
+
         self.ui.page2_temperature.setValue(self.simulate.temperature)
         temp = '{:.2e}'.format(self.simulate.electron_density)
         base = eval(temp.split('e+')[0])
@@ -265,17 +300,16 @@ class UpdatePage2(MainWindow):
 
     def update_characteristic_peaks(self):
         if self.simulate is None:
+            warnings.warn('simulate obj is None')
             return
+
         if self.simulate.characteristic_peaks is None:
             self.ui.peaks_label.setText('未指定')
         self.ui.peaks_label.setText(f'{len(self.simulate.characteristic_peaks)}个')
 
     def update_page(self):
-        if not self.expdata_2:
-            warnings.warn('第二页实验数据未加载', UserWarning)
-            return
         # ----- 实验数据的文件名 -----
-        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.as_posix())
+        functools.partial(UpdatePage2.update_page2_exp_data_path, self)()
         # ----- 实验数据 -----
         functools.partial(UpdatePage2.update_exp_figure, self)()
         # ----- 第二页的密度温度 -----
@@ -346,7 +380,8 @@ class UpdatePage4(MainWindow):
         self.task_thread.start()
 
     def update_exp_figure(self):
+        if self.simulate_page4 is None:
+            warnings.warn('第四页实验数据未加载', UserWarning)
+            return
         self.simulate_page4.plot_html()
         self.ui.webEngineView.load(QUrl.fromLocalFile(self.simulate_page4.plot_path))
-
-

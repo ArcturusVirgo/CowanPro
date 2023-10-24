@@ -1,6 +1,8 @@
 import functools
 import shelve
 import sys
+import warnings
+import traceback
 
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWidgets import QAbstractItemView
@@ -47,7 +49,12 @@ class LoginWindow(QWidget):
         self.init_UI()
 
     def init_UI(self):
-        # 打开并读取文件
+        """
+        打开文件并读取项目列表，加载再界面上
+
+        Returns:
+
+        """
         file_path = self.WORKING_PATH / 'projects.json'
         if not file_path.exists():
             file_path.touch()
@@ -64,25 +71,39 @@ class LoginWindow(QWidget):
         self.ui.back.clicked.connect(self.slot_back)
         self.ui.new_project.clicked.connect(self.slot_new_project)
         self.ui.select_path.clicked.connect(self.slot_select_path)
-        self.ui.project_path.textChanged.connect(self.slot_project_path_changed)
+        # self.ui.project_path.textChanged.connect(self.slot_project_path_changed)
+        self.ui.project_name.textChanged.connect(self.slot_project_name_changed)
         self.ui.project_list.itemDoubleClicked.connect(self.slot_project_path_item_double_clicked)
 
     def slot_create_project(self):
+        """
+        创建项目
+
+        Returns:
+
+        """
         # 创建项目
         name = self.ui.project_name.text()
         path_ = self.ui.project_path.text()
+        # 判断项目名称和路径是否为空
         if name == '' or path_ == '':
-            QMessageBox.critical(self, '错误', '项目名称和路径不能为空！')
+            QMessageBox.critical(self, '错误', '项目名称或路径不能为空！')
             return
+        # 判断项目名称和路径是否已存在
         if name in self.project_data.keys():
             QMessageBox.critical(self, '错误', '项目名称已存在！')
             return
+        # 判断项目路径是否已存在
+        if Path(path_).exists():
+            QMessageBox.critical(self, '错误', '项目路径已存在，请删除后再进行创建！')
+            return
+
         # 获取项目名称和路径
         path_ = path_.replace('/', '\\')
         self.project_data[name] = {'path': path_}
         self.update_project_list()
 
-        # 如果目录不存在，就创建
+        # 将init_file文件夹直接复制为项目文件夹
         path_ = Path(path_)
         old_path = self.WORKING_PATH / 'init_file'
         shutil.copytree(old_path, path_)
@@ -92,36 +113,96 @@ class LoginWindow(QWidget):
         self.main_window.show()
 
     def slot_delete_project(self):
-        # 删除项目
-        key = self.ui.project_list.currentIndex().data()
-        path_ = Path(self.project_data[key]['path'])
-        shutil.rmtree(path_)
+        """
+        删除项目
+
+        Returns:
+
+        """
+        key = self.ui.project_list.currentIndex().data()  # 要删除的项目名称
+        path_ = Path(self.project_data[key]['path'])  # 要删除的项目路径
+        if path_.exists():  # 如果存在就删除
+            shutil.rmtree(path_)
+        else:
+            warnings.warn('项目文件夹不存在！')
         self.project_data.pop(key)
         self.update_project_list()
 
     def slot_back(self):
+        """
+        返回首页
+
+        Returns:
+
+        """
         self.ui.stackedWidget.setCurrentIndex(0)
 
     def slot_new_project(self):
+        """
+        进入项目创建页面
+
+        Returns:
+
+        """
         self.ui.stackedWidget.setCurrentIndex(1)
 
     def slot_select_path(self):
-        self.temp_path = QFileDialog.getExistingDirectory(self, '选择项目路径', './')
+        """
+        选择项目路径
+
+        Returns:
+
+        """
+        self.temp_path = QFileDialog.getExistingDirectory(self, '选择项目路径', './') + '/'
         self.ui.project_path.setText(self.temp_path)
 
-    def slot_project_path_changed(self):
-        name = self.ui.project_path.text().split('/')[-1]
-        if name == '':
-            name = self.ui.project_path.text().split('/')[-2]
-        self.ui.project_name.setText(name)
+    def slot_project_name_changed(self):
+        self.ui.project_path.setText(self.temp_path + self.ui.project_name.text())
+
+    # def slot_project_path_changed(self):
+    #     name = self.ui.project_path.text().split('/')[-1]
+    #     if name == '':
+    #         name = self.ui.project_path.text().split('/')[-2]
+    #     self.ui.project_name.setText(name)
 
     def slot_project_path_item_double_clicked(self, index):
+        """
+        双击项目列表中的项目，打开项目
+
+        Args:
+            index: 双击的序号
+
+        Returns:
+
+        """
         name = index.text()
         path_ = self.project_data[name]['path']
-        path_ = Path(path_)
+        path_ = Path(path_)  # 项目路径
+        # 如果项目文件不存在，就删除项目
+        if not path_.exists():
+            reply = QMessageBox.question(self, 'Warning', '项目路径不存在，是否删除该项目？', QMessageBox.Yes,
+                                         QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                self.project_data.pop(name)
+                self.update_project_list()
+            return
+
         self.hide()
-        self.main_window = MainWindow(path_, True)
-        self.main_window.show()
+        # 打开项目
+        try:
+            self.main_window = MainWindow(path_, True)
+        except Exception as e:
+            QMessageBox.critical(self, '错误', f'{e}')
+            print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            traceback.print_exc()
+            print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+        # 如果窗口对象没有创建成功
+        if self.main_window is None:
+            self.show()
+            QMessageBox.critical(self, '错误', f'项目打开失败，请联系管理员解决！')
+            return
+        else:
+            self.main_window.show()
 
     def update_project_list(self):
         self.ui.project_list.clear()
@@ -564,22 +645,6 @@ class MainWindow(QMainWindow):
         # 第四页
         self.simulate_page4 = obj_info['simulate_page4']
         obj_info.close()
-
-        #  更新路径 =================================================
-        if self.expdata_1 is not None:
-            self.expdata_1.update_path()  # 更新路径
-        if self.cowan is not None:
-            self.cowan.update_path()  # 更新路径
-        if self.cowan_lists is not None:
-            self.cowan_lists.update_path()  # 更新路径
-        if self.expdata_2 is not None:
-            self.expdata_2.update_path()  # 更新路径
-        if self.simulate is not None:
-            self.simulate.update_path()  # 更新路径
-        if self.space_time_resolution is not None:
-            self.space_time_resolution.update_path()  # 更新路径
-        if self.simulate_page4 is not None:
-            self.simulate_page4.update_path()  # 更新路径
 
         # 更新界面
         # 第一页 =================================================

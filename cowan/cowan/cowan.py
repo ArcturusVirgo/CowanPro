@@ -150,6 +150,7 @@ class ExpData:
         self.plot_path = (PROJECT_PATH() / 'figure/exp.html').as_posix()  # 实验谱线的绘图路径
         self.filepath: Path = filepath  # 实验数据的路径
 
+        # self.init_data: Optional[pd.DataFrame] = None  # 原始的实验数据
         self.data: Optional[pd.DataFrame] = None  # 实验数据
         self.init_xrange = None  # 原始的波长范围
         self.x_range: Optional[List[float]] = None  # 实验数据的波长范围
@@ -164,7 +165,11 @@ class ExpData:
             x_range: 波长范围，单位为 nm
 
         """
+        # if self.init_data:
+        #     self.init_data = copy.deepcopy(self.data)
         self.x_range = x_range
+        # self.data = self.init_data[(self.init_data['wavelength'] < self.x_range[1]) &
+        #                            (self.init_data['wavelength'] > self.x_range[0])]
         self.data = self.data[(self.data['wavelength'] < self.x_range[1]) &
                               (self.data['wavelength'] > self.x_range[0])]
 
@@ -191,6 +196,7 @@ class ExpData:
                 temp_data['intensity'].max() - temp_data['intensity'].min())
 
         self.data = temp_data
+        self.init_data = copy.deepcopy(temp_data)
         self.x_range = [self.data['wavelength'].min(), self.data['wavelength'].max()]
         self.init_xrange = copy.deepcopy(self.x_range)
 
@@ -199,6 +205,10 @@ class ExpData:
         绘制实验谱线
 
         """
+        # 更新路径 >>>>>>>>>>>>>>>>>>>>>
+        self.plot_path = (PROJECT_PATH() / 'figure/exp.html').as_posix()  # 实验谱线的绘图路径
+
+        # 绘图 >>>>>>>>>>>>>>>>>>>>>
         trace1 = go.Scatter(x=self.data['wavelength'], y=self.data['intensity'], mode='lines')
         data = [trace1]
         layout = go.Layout(
@@ -209,9 +219,6 @@ class ExpData:
         fig = go.Figure(data=data, layout=layout)
 
         plot(fig, filename=self.plot_path, auto_open=False)
-
-    def update_path(self):
-        self.plot_path = (PROJECT_PATH() / 'figure/exp.html').as_posix()  # 实验谱线的绘图路径
 
 
 class In36:
@@ -503,15 +510,11 @@ class Cowan:
         self.cal_data: Optional[CalData] = None
         self.run_path = PROJECT_PATH() / f'cal_result/{self.name}'
 
-    def update_path(self):
-        # 更新当前对象的
-        self.run_path = PROJECT_PATH() / f'cal_result/{self.name}'
-        # 更新cal对象的
-        if self.cal_data is not None:
-            self.cal_data.update_path()
-        # 更新exp对象的
-        if self.exp_data is not None:
-            self.exp_data.update_path()
+    def set_xrange(self, range_: List[float], num: int):
+        self.cal_data.widen_all.exp_data.set_range(range_)
+        self.cal_data.widen_all.n = num
+        self.cal_data.widen_part.exp_data.set_range(range_)
+        self.cal_data.widen_part.n = num
 
 
 class CowanThread(QtCore.QThread):
@@ -534,7 +537,7 @@ class CowanThread(QtCore.QThread):
         self.coupling_mode = old_cowan.coupling_mode  # 1是L-S耦合 2是j-j耦合
 
         self.cal_data: Optional[CalData] = old_cowan.cal_data
-        self.run_path = old_cowan.run_path
+        self.run_path = PROJECT_PATH() / f'cal_result/{self.name}'
 
         self.finished.connect(self.update_origin)
 
@@ -632,13 +635,29 @@ class CalData:
         产生两个展宽对象：widen_all、widen_part
 
         """
+
+        def get_min_step(data: np.ndarray):
+            # 如果实验光谱有重复的波长就有问题
+            step_list = (data[1:] - data[:-1])
+            step_list = np.sort(step_list)
+            min_step = 0.005
+            for temp_step in step_list:
+                if temp_step == 0.0:
+                    continue
+                if min_step > temp_step:
+                    min_step = temp_step
+                    break
+            return min_step
+
         self.init_data = pd.read_csv(
             self.filepath,
             sep='\s+',
             names=['energy_l', 'energy_h', 'wavelength_ev', 'intensity', 'index_l', 'index_h', 'J_l', 'J_h', ],
         )
-        self.widen_all = WidenAll(self.name, self.init_data, self.exp_data)
-        self.widen_part = WidenPart(self.name, self.init_data, self.exp_data)
+        min_step = get_min_step(self.exp_data.data['wavelength'].values)
+        widen_num = abs(int((self.exp_data.x_range[1] - self.exp_data.x_range[0]) / min_step))
+        self.widen_all = WidenAll(self.name, self.init_data, self.exp_data, n=widen_num)
+        self.widen_part = WidenPart(self.name, self.init_data, self.exp_data, n=widen_num)
 
     def get_average_wavelength(self):
         """
@@ -662,6 +681,11 @@ class CalData:
         """
         绘制线状谱
         """
+        # 更新路径 >>>>>>>>>>>>>>>>>>>>>
+        self.filepath = (PROJECT_PATH() / f'cal_result/{self.name}/spectra.dat').as_posix()
+        self.plot_path = (PROJECT_PATH() / f'figure/line/{self.name}.html').as_posix()
+
+        # 绘图 >>>>>>>>>>>>>>>>>>>>>
         temp_data = self.__get_line_data(self.init_data[['wavelength_ev', 'intensity']])
         trace1 = go.Scatter(
             x=temp_data['wavelength'], y=temp_data['intensity'], mode='lines'
@@ -743,13 +767,6 @@ class CalData:
         """
         return self.widen_all.fwhm_value
 
-    def update_path(self):
-        # cal对象的
-        self.filepath = (PROJECT_PATH() / f'cal_result/{self.name}/spectra.dat').as_posix()
-        self.plot_path = (PROJECT_PATH() / f'figure/line/{self.name}.html').as_posix()
-        # widen对象的
-        self.widen_all.update_path()
-
 
 class WidenAll:
     def __init__(self, name, init_data, exp_data: ExpData, n=None, ):
@@ -812,10 +829,9 @@ class WidenAll:
             ]
         if self.n is None:
             wave = 1239.85 / np.array(self.exp_data.data['wavelength'].values)
-            print('exp_wavelength')
         else:
             wave = 1239.85 / np.linspace(min_wavelength_nm, max_wavelength_nm, self.n)
-            print('new_wavelength')
+            print('    use new wave')
         result = pd.DataFrame()
         result['wavelength'] = 1239.85 / wave
 
@@ -852,12 +868,20 @@ class WidenAll:
             result['cross_NP'] = res[1]
         result['cross_P'] = res[2]
         self.widen_data = result
+        print('{} widen completed! [temperate: {}eV] [delta_lambda: {}nm] [fwhm: {}nm]'.format(
+            self.name, temperature, self.delta_lambda, fwhmgauss(0.0)))
 
     def plot_widen(self):
         """
         绘制展宽后的谱线
 
         """
+        # 更新路径 >>>>>>>>>>>>>>>>>>>>>
+        self.plot_path_gauss = (PROJECT_PATH() / f'figure/gauss/{self.name}.html').as_posix()
+        self.plot_path_cross_NP = (PROJECT_PATH() / f'figure/cross_NP/{self.name}.html').as_posix()
+        self.plot_path_cross_P = (PROJECT_PATH() / f'figure/cross_P/{self.name}.html').as_posix()
+
+        # 绘图 >>>>>>>>>>>>>>>>>>>>>
         if not self.only_p:
             self.__plot_html(self.widen_data, self.plot_path_gauss, 'wavelength', 'gauss')
             self.__plot_html(self.widen_data, self.plot_path_cross_NP, 'wavelength', 'cross_NP')
@@ -927,11 +951,6 @@ class WidenAll:
             返回高斯展宽的半高宽
         """
         return self.fwhm_value
-
-    def update_path(self):
-        self.plot_path_gauss = (PROJECT_PATH() / f'figure/gauss/{self.name}.html').as_posix()
-        self.plot_path_cross_NP = (PROJECT_PATH() / f'figure/cross_NP/{self.name}.html').as_posix()
-        self.plot_path_cross_P = (PROJECT_PATH() / f'figure/cross_P/{self.name}.html').as_posix()
 
 
 class WidenPart:
@@ -1216,14 +1235,6 @@ class CowanList:
         for cowan in self.cowan_run_history.values():
             cowan.exp_data = exp_data
 
-    def update_path(self):
-        """
-        更新所有cowan对象中的路径
-
-        """
-        for cowan in self.cowan_run_history.values():
-            cowan.update_path()
-
     def __getitem__(self, index):
         return self.cowan_run_history[self.chose_cowan[index]], self.add_or_not[index]
 
@@ -1249,9 +1260,7 @@ class SimulateSpectral:
         self.sim_data = None  # 模拟光谱数据
 
         self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()
-        self.example_path = (
-            PROJECT_PATH().joinpath('figure/part/example.html').as_posix()
-        )
+        self.example_path = (PROJECT_PATH().joinpath('figure/part/example.html').as_posix())
 
     def load_exp_data(self, path: Path):
         """
@@ -1284,7 +1293,7 @@ class SimulateSpectral:
 
         """
         self.cowan_list = None
-        # self.add_or_not = None
+        self.add_or_not = None
         # self.offset_list = None
 
     def get_simulate_data(self, temperature, electron_density):
@@ -1309,18 +1318,11 @@ class SimulateSpectral:
         res = pd.DataFrame()
         res['wavelength'] = self.cowan_list[0].cal_data.widen_all.widen_data['wavelength']
         temp = np.zeros(res.shape[0])
-        # temp_np = np.zeros(res.shape[0])
         for cowan, abu, flag in zip(self.cowan_list, self.abundance, self.add_or_not):
             if flag:
                 temp += cowan.cal_data.widen_all.widen_data['cross_P'].values * abu
-                # print(cowan.name, abu)
-                # temp_np += cowan.cal_data.widen_all.widen_data['cross_P'].values
         res['intensity'] = temp
         res['intensity_normalization'] = res['intensity'] / res['intensity'].max()
-        # plt.plot(res['wavelength'].values, temp_np, label='np')
-        # plt.plot(res['wavelength'].values, temp, label='p')
-        # plt.legend()
-        # plt.show()
 
         self.sim_data = res
         self.get_spectrum_similarity()
@@ -1331,6 +1333,10 @@ class SimulateSpectral:
         绘制叠加光谱
 
         """
+        # 更新路径 >>>>>>>>>>>>>>>>>>>>>
+        self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()
+
+        # 绘图 >>>>>>>>>>>>>>>>>>>>>
         x1 = self.exp_data.data['wavelength']
         y1 = self.exp_data.data['intensity_normalization']
         x2 = self.sim_data['wavelength']
@@ -1379,6 +1385,10 @@ class SimulateSpectral:
                 [[T, [F, T, F, ...]], [T, [F, T, F, ...]], ...]
 
         """
+        # 更新路径 >>>>>>>>>>>>>>>>>>>>>
+        self.example_path = (PROJECT_PATH().joinpath('figure/part/example.html').as_posix())
+
+        # 绘图 >>>>>>>>>>>>>>>>>>>>>
         height = 0
         trace = []
         for i, c in enumerate(self.cowan_list):
@@ -1429,6 +1439,10 @@ class SimulateSpectral:
             with_popular: 是否考虑布局
 
         """
+        # 更新路径 >>>>>>>>>>>>>>>>>>>>>
+        self.example_path = (PROJECT_PATH().joinpath('figure/part/example.html').as_posix())
+
+        # 绘图 >>>>>>>>>>>>>>>>>>>>>
         height = 0
         trace = []
 
@@ -1617,10 +1631,14 @@ class SimulateSpectral:
         获取光谱相似度，直接存储在 self.spectrum_similarity 中
 
         """
+        if self.exp_data.data.shape[0] == 0:
+            warnings.warn('实验光谱数据在次波段内为空，无法计算光谱相似度')
+            return
         if self.exp_data.data['wavelength'].max() < self.sim_data['wavelength'].min() and \
                 self.sim_data['wavelength'].max() < self.exp_data.data['wavelength'].min():
             warnings.warn('实验波长与模拟波长不匹配！！！')
             return
+
         if len(self.characteristic_peaks) == 0:
             self.spectrum_similarity = self.spectrum_similarity1(
                 self.exp_data.data[['wavelength', 'intensity']],
@@ -1777,16 +1795,6 @@ class SimulateSpectral:
         y1 = y1 / max(y1)
         y2 = y2 / max(y2)
         return x, y1, y2
-
-    def update_path(self):
-        # 当前对象
-        self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()
-        self.example_path = (
-            PROJECT_PATH().joinpath('figure/part/example.html').as_posix()
-        )
-        # 实验谱线 对象
-        if self.exp_data is not None:
-            self.exp_data.update_path()
 
 
 class SimulateGrid:
@@ -2036,6 +2044,10 @@ class SpaceTimeResolution:
             location: 位置
 
         """
+        # 更新路径 >>>>>>>>>>>>>>>>>
+        self.change_by_time_path = (PROJECT_PATH().joinpath('figure/change/by_time.html').as_posix())
+
+        # 绘图 >>>>>>>>>>>>>>>>>>>>>>>>
         times = []
         for key, value in self.simulate_spectral_dict.items():
             if key[1] == location:
@@ -2066,6 +2078,10 @@ class SpaceTimeResolution:
             time: 时间
 
         """
+        # 更新路径 >>>>>>>>>>>>>>>>>
+        self.change_by_location_path = (PROJECT_PATH().joinpath('figure/change/by_location.html').as_posix())
+
+        # 绘图 >>>>>>>>>>>>>>>>>>>>>>>>
         x_s = []
         for key, value in self.simulate_spectral_dict.items():
             if key[0] == time:
@@ -2101,6 +2117,10 @@ class SpaceTimeResolution:
             var_index: 选择是温度还是时间 0：温度 1：密度
 
         """
+        # 更新路径 >>>>>>>>>>>>>>>>>
+        self.change_by_space_time_path = (PROJECT_PATH().joinpath('figure/change/by_space_time.html').as_posix())
+
+        # 绘图 >>>>>>>>>>>>>>>>>>>>>>>>
         spaces = []
         times = []
         for key in self.simulate_spectral_dict:
@@ -2141,13 +2161,3 @@ class SpaceTimeResolution:
         )
         fig = go.Figure(data=data, layout=layout)
         plot(fig, filename=self.change_by_space_time_path, auto_open=False)
-
-    def update_path(self):
-        # 当前项目
-        self.change_by_time_path = (PROJECT_PATH().joinpath('figure/change/by_time.html').as_posix())
-        self.change_by_location_path = (PROJECT_PATH().joinpath('figure/change/by_location.html').as_posix())
-        self.change_by_space_time_path = (PROJECT_PATH().joinpath('figure/change/by_space_time.html').as_posix())
-
-        # sim 对象
-        for key, value in self.simulate_spectral_dict.items():
-            value.update_path()

@@ -93,7 +93,7 @@
        <item>
         <widget class="QLineEdit" name="project_name">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -107,7 +107,11 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QLineEdit" name="project_path"/>
+          <widget class="QLineEdit" name="project_path">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QToolButton" name="select_path">
