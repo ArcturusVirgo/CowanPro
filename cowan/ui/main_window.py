@@ -1284,7 +1284,12 @@ class Ui_main_window(object):
 
         self.widen_temp = QDoubleSpinBox(self.widget)
         self.widen_temp.setObjectName(u"widen_temp")
-        self.widen_temp.setMinimumSize(QSize(50, 0))
+        sizePolicy6 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.widen_temp.sizePolicy().hasHeightForWidth())
+        self.widen_temp.setSizePolicy(sizePolicy6)
+        self.widen_temp.setMinimumSize(QSize(70, 0))
         self.widen_temp.setSingleStep(0.100000000000000)
         self.widen_temp.setValue(25.600000000000001)
 
@@ -1298,6 +1303,7 @@ class Ui_main_window(object):
         self.widen_fwhm = QDoubleSpinBox(self.widget)
         self.widen_fwhm.setObjectName(u"widen_fwhm")
         self.widen_fwhm.setMinimumSize(QSize(50, 0))
+        self.widen_fwhm.setDecimals(3)
         self.widen_fwhm.setMaximum(10.000000000000000)
         self.widen_fwhm.setSingleStep(0.010000000000000)
         self.widen_fwhm.setValue(0.270000000000000)
@@ -1320,7 +1326,7 @@ class Ui_main_window(object):
 
         self.horizontalLayout_26.addWidget(self.offset)
 
-        self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_13 = QSpacerItem(30, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)
 
         self.horizontalLayout_26.addItem(self.horizontalSpacer_13)
 
@@ -1437,11 +1443,11 @@ class Ui_main_window(object):
 
         self.exp_web = QWebEngineView(self.widget_2)
         self.exp_web.setObjectName(u"exp_web")
-        sizePolicy6 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        sizePolicy6.setHorizontalStretch(0)
-        sizePolicy6.setVerticalStretch(0)
-        sizePolicy6.setHeightForWidth(self.exp_web.sizePolicy().hasHeightForWidth())
-        self.exp_web.setSizePolicy(sizePolicy6)
+        sizePolicy7 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sizePolicy7.setHorizontalStretch(0)
+        sizePolicy7.setVerticalStretch(0)
+        sizePolicy7.setHeightForWidth(self.exp_web.sizePolicy().hasHeightForWidth())
+        self.exp_web.setSizePolicy(sizePolicy7)
         self.exp_web.setUrl(QUrl(u"about:blank"))
 
         self.verticalLayout_2.addWidget(self.exp_web)
@@ -1468,11 +1474,11 @@ class Ui_main_window(object):
         self.crossP = QRadioButton(self.widget_2)
         self.crossP.setObjectName(u"crossP")
         self.crossP.setEnabled(True)
-        sizePolicy7 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        sizePolicy7.setHorizontalStretch(0)
-        sizePolicy7.setVerticalStretch(0)
-        sizePolicy7.setHeightForWidth(self.crossP.sizePolicy().hasHeightForWidth())
-        self.crossP.setSizePolicy(sizePolicy7)
+        sizePolicy8 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        sizePolicy8.setHorizontalStretch(0)
+        sizePolicy8.setVerticalStretch(0)
+        sizePolicy8.setHeightForWidth(self.crossP.sizePolicy().hasHeightForWidth())
+        self.crossP.setSizePolicy(sizePolicy8)
         self.crossP.setAutoFillBackground(False)
         self.crossP.setChecked(True)
 
@@ -1490,8 +1496,8 @@ class Ui_main_window(object):
 
         self.web_cal_widen = QWebEngineView(self.widget_2)
         self.web_cal_widen.setObjectName(u"web_cal_widen")
-        sizePolicy6.setHeightForWidth(self.web_cal_widen.sizePolicy().hasHeightForWidth())
-        self.web_cal_widen.setSizePolicy(sizePolicy6)
+        sizePolicy7.setHeightForWidth(self.web_cal_widen.sizePolicy().hasHeightForWidth())
+        self.web_cal_widen.setSizePolicy(sizePolicy7)
         self.web_cal_widen.setUrl(QUrl(u"about:blank"))
 
         self.verticalLayout_2.addWidget(self.web_cal_widen)
@@ -1505,8 +1511,8 @@ class Ui_main_window(object):
 
         self.web_cal_line = QWebEngineView(self.widget_2)
         self.web_cal_line.setObjectName(u"web_cal_line")
-        sizePolicy6.setHeightForWidth(self.web_cal_line.sizePolicy().hasHeightForWidth())
-        self.web_cal_line.setSizePolicy(sizePolicy6)
+        sizePolicy7.setHeightForWidth(self.web_cal_line.sizePolicy().hasHeightForWidth())
+        self.web_cal_line.setSizePolicy(sizePolicy7)
         self.web_cal_line.setUrl(QUrl(u"about:blank"))
 
         self.verticalLayout_2.addWidget(self.web_cal_line)
@@ -1569,6 +1575,7 @@ class Ui_main_window(object):
 
         self.page2_temperature = QDoubleSpinBox(self.groupBox_3)
         self.page2_temperature.setObjectName(u"page2_temperature")
+        self.page2_temperature.setDecimals(3)
         self.page2_temperature.setMaximum(10000.000000000000000)
         self.page2_temperature.setSingleStep(0.100000000000000)
         self.page2_temperature.setValue(25.600000000000001)
@@ -1582,6 +1589,7 @@ class Ui_main_window(object):
 
         self.page2_density_base = QDoubleSpinBox(self.groupBox_3)
         self.page2_density_base.setObjectName(u"page2_density_base")
+        self.page2_density_base.setDecimals(3)
         self.page2_density_base.setSingleStep(0.100000000000000)
         self.page2_density_base.setValue(1.000000000000000)
 
@@ -1666,12 +1674,14 @@ class Ui_main_window(object):
         self.horizontalLayout_18.setObjectName(u"horizontalLayout_18")
         self.temperature_min = QDoubleSpinBox(self.groupBox_2)
         self.temperature_min.setObjectName(u"temperature_min")
+        self.temperature_min.setDecimals(3)
         self.temperature_min.setValue(20.000000000000000)
 
         self.horizontalLayout_18.addWidget(self.temperature_min)
 
         self.temperature_max = QDoubleSpinBox(self.groupBox_2)
         self.temperature_max.setObjectName(u"temperature_max")
+        self.temperature_max.setDecimals(3)
         self.temperature_max.setValue(50.000000000000000)
 
         self.horizontalLayout_18.addWidget(self.temperature_max)
@@ -1704,6 +1714,7 @@ class Ui_main_window(object):
         self.horizontalLayout_16.setObjectName(u"horizontalLayout_16")
         self.density_min_base = QDoubleSpinBox(self.groupBox_2)
         self.density_min_base.setObjectName(u"density_min_base")
+        self.density_min_base.setDecimals(3)
         self.density_min_base.setValue(1.000000000000000)
 
         self.horizontalLayout_16.addWidget(self.density_min_base)
@@ -1723,6 +1734,7 @@ class Ui_main_window(object):
         self.horizontalLayout_17.setObjectName(u"horizontalLayout_17")
         self.density_max_base = QDoubleSpinBox(self.groupBox_2)
         self.density_max_base.setObjectName(u"density_max_base")
+        self.density_max_base.setDecimals(3)
         self.density_max_base.setValue(1.000000000000000)
 
         self.horizontalLayout_17.addWidget(self.density_max_base)
@@ -1858,6 +1870,12 @@ class Ui_main_window(object):
 
         self.horizontalLayout_29.addItem(self.horizontalSpacer_14)
 
+        self.update_similarity = QCheckBox(self.groupBox)
+        self.update_similarity.setObjectName(u"update_similarity")
+        self.update_similarity.setChecked(False)
+
+        self.horizontalLayout_29.addWidget(self.update_similarity)
+
 
         self.verticalLayout.addLayout(self.horizontalLayout_29)
 
@@ -1895,11 +1913,11 @@ class Ui_main_window(object):
         self.verticalLayout_12.setObjectName(u"verticalLayout_12")
         self.webEngineView_3 = QWebEngineView(self.groupBox_9)
         self.webEngineView_3.setObjectName(u"webEngineView_3")
-        sizePolicy8 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
-        sizePolicy8.setHorizontalStretch(0)
-        sizePolicy8.setVerticalStretch(0)
-        sizePolicy8.setHeightForWidth(self.webEngineView_3.sizePolicy().hasHeightForWidth())
-        self.webEngineView_3.setSizePolicy(sizePolicy8)
+        sizePolicy9 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding)
+        sizePolicy9.setHorizontalStretch(0)
+        sizePolicy9.setVerticalStretch(0)
+        sizePolicy9.setHeightForWidth(self.webEngineView_3.sizePolicy().hasHeightForWidth())
+        self.webEngineView_3.setSizePolicy(sizePolicy9)
         self.webEngineView_3.setUrl(QUrl(u"about:blank"))
 
         self.verticalLayout_12.addWidget(self.webEngineView_3)
@@ -1937,8 +1955,8 @@ class Ui_main_window(object):
         self.verticalLayout_14.setObjectName(u"verticalLayout_14")
         self.webEngineView_5 = QWebEngineView(self.groupBox_11)
         self.webEngineView_5.setObjectName(u"webEngineView_5")
-        sizePolicy8.setHeightForWidth(self.webEngineView_5.sizePolicy().hasHeightForWidth())
-        self.webEngineView_5.setSizePolicy(sizePolicy8)
+        sizePolicy9.setHeightForWidth(self.webEngineView_5.sizePolicy().hasHeightForWidth())
+        self.webEngineView_5.setSizePolicy(sizePolicy9)
         self.webEngineView_5.setUrl(QUrl(u"about:blank"))
 
         self.verticalLayout_14.addWidget(self.webEngineView_5)
@@ -1973,8 +1991,8 @@ class Ui_main_window(object):
         self.verticalLayout_13.setObjectName(u"verticalLayout_13")
         self.webEngineView_4 = QWebEngineView(self.groupBox_10)
         self.webEngineView_4.setObjectName(u"webEngineView_4")
-        sizePolicy8.setHeightForWidth(self.webEngineView_4.sizePolicy().hasHeightForWidth())
-        self.webEngineView_4.setSizePolicy(sizePolicy8)
+        sizePolicy9.setHeightForWidth(self.webEngineView_4.sizePolicy().hasHeightForWidth())
+        self.webEngineView_4.setSizePolicy(sizePolicy9)
         self.webEngineView_4.setUrl(QUrl(u"about:blank"))
 
         self.verticalLayout_13.addWidget(self.webEngineView_4)
@@ -2330,8 +2348,11 @@ class Ui_main_window(object):
         self.configuration_edit.setPlaceholderText(QCoreApplication.translate("main_window", u"\u7535\u5b50\u7ec4\u6001", None))
         self.add_configuration.setText(QCoreApplication.translate("main_window", u"\u6dfb\u52a0", None))
         self.label_24.setText(QCoreApplication.translate("main_window", u"\u5c55\u5bbd\u6e29\u5ea6", None))
+        self.widen_temp.setSuffix(QCoreApplication.translate("main_window", u"eV", None))
         self.label_23.setText(QCoreApplication.translate("main_window", u"FWHM", None))
+        self.widen_fwhm.setSuffix(QCoreApplication.translate("main_window", u"nm", None))
         self.label_10.setText(QCoreApplication.translate("main_window", u"\u504f\u79fb", None))
+        self.offset.setSuffix(QCoreApplication.translate("main_window", u"nm", None))
         self.update_offect.setText(QCoreApplication.translate("main_window", u"\u91cd\u65b0\u5c55\u5bbd", None))
         self.cowan_now_name.setText(QCoreApplication.translate("main_window", u"\u5f53\u524d\u5c55\u793a\uff1a", None))
         self.run_cowan.setText(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))
@@ -2351,12 +2372,16 @@ class Ui_main_window(object):
         self.peaks_label.setText(QCoreApplication.translate("main_window", u"\u672a\u6307\u5b9a", None))
         self.show_abu.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u79bb\u5b50\u7684\u4e30\u5ea6", None))
         self.label_18.setText(QCoreApplication.translate("main_window", u"\u6e29\u5ea6", None))
+        self.page2_temperature.setPrefix("")
+        self.page2_temperature.setSuffix("")
         self.label_19.setText(QCoreApplication.translate("main_window", u"\u5bc6\u5ea6", None))
         self.page2_plot_spectrum.setText(QCoreApplication.translate("main_window", u"\u6a21\u62df", None))
         self.groupBox_4.setTitle(QCoreApplication.translate("main_window", u"\u7f51\u683c\u8ba1\u7b97", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("main_window", u"\u53c2\u6570\u8f93\u5165\u533a", None))
         self.label_16.setText(QCoreApplication.translate("main_window", u"\u6e29\u5ea6\u8303\u56f4", None))
+        self.temperature_num.setSuffix(QCoreApplication.translate("main_window", u"\u4e2a", None))
         self.label_17.setText(QCoreApplication.translate("main_window", u"\u5bc6\u5ea6\u8303\u56f4", None))
+        self.density_num.setSuffix(QCoreApplication.translate("main_window", u"\u4e2a", None))
         self.page2_cal_grid.setText(QCoreApplication.translate("main_window", u"\u5f00\u59cb\u8ba1\u7b97", None))
         self.groupBox.setTitle(QCoreApplication.translate("main_window", u"\u65f6\u7a7a\u5206\u8fa8", None))
         self.label_15.setText(QCoreApplication.translate("main_window", u"\u5b9e\u9a8c\u6570\u636e", None))
@@ -2371,7 +2396,8 @@ class Ui_main_window(object):
         self.recoder.setText(QCoreApplication.translate("main_window", u"\u8bb0\u5f55", None))
         self.load_space_time.setText(QCoreApplication.translate("main_window", u"\u6279\u91cf\u52a0\u8f7d", None))
         self.page2_cowan_obj_update.setText(QCoreApplication.translate("main_window", u"\u66f4\u65b0cowan\u5bf9\u8c61", None))
-        self.pushButton_2.setText(QCoreApplication.translate("main_window", u"PushButton", None))
+        self.pushButton_2.setText(QCoreApplication.translate("main_window", u"\u6d4b\u8bd5\u6309\u94ae", None))
+        self.update_similarity.setText(QCoreApplication.translate("main_window", u"\u66f4\u65b0\u7f51\u683c\u76f8\u4f3c\u5ea6", None))
         ___qtablewidgetitem3 = self.st_resolution_table.horizontalHeaderItem(0)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("main_window", u"\u65f6\u95f4", None));
         ___qtablewidgetitem4 = self.st_resolution_table.horizontalHeaderItem(1)

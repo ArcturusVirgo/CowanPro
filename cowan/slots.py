@@ -1,3 +1,6 @@
+import functools
+import warnings
+
 import numpy as np
 from PySide6.QtGui import QAction, QCursor
 from PySide6.QtWebEngineCore import QWebEngineSettings, QWebEnginePage
@@ -103,78 +106,38 @@ class Menu(MainWindow):
         """
 
         def update_xrange():
-            def get_min_step(data: np.ndarray):
-                # 如果实验光谱有重复的波长就有问题
-                step_list = (data[1:] - data[:-1])
-                step_list = np.sort(step_list)
-                min_step = 0.005
-                for temp_step in step_list:
-                    if temp_step == 0.0:
-                        continue
-                    if min_step > temp_step:
-                        min_step = temp_step
-                        break
-                return min_step
-
             def task():
-                self.task_thread.progress.emit(0, '准备开始')
-                x_range = [min_input.value(), max_input.value()]
-                widen_temperature = self.ui.widen_temp.value()
-                self.info['x_range'] = x_range
-                # 设置第一页的实验谱线
-                self.task_thread.progress.emit(10, '设置第一页的实验谱线')
-                self.expdata_1.set_range(x_range)
-                # 设置 页面上的 Cowan
-                self.task_thread.progress.emit(20, '重新展宽页面上的Cowan')
-                if self.cowan is not None:
-                    # 设置范围
-                    min_step = get_min_step(self.cowan.exp_data.data['wavelength'].values)
-                    num = abs(int((x_range[1] - x_range[0]) / min_step))
-                    self.cowan.exp_data.set_range(x_range)
-                    self.cowan.set_xrange(x_range, num)
-                    # 重新展宽
-                    self.cowan.cal_data.widen_all.widen(widen_temperature, False)
-                # 设置各个 Cowan
-                for i, (cowan_, _) in enumerate(self.cowan_lists):
-                    self.task_thread.progress.emit(20 + int(i / len(self.cowan_lists.chose_cowan) * 40),
-                                                   f'重新展宽{cowan_.name}')
-                    # 设置范围
-                    cowan_.exp_data.set_range(x_range)
-                    # 如果实验光谱有重复的波长就有问题
-                    min_step = get_min_step(cowan_.exp_data.data['wavelength'].values)
-                    # 更新展宽参数
-                    num = abs(int((x_range[1] - x_range[0]) / min_step))
-                    cowan_.set_xrange(x_range, num)
-                    # 重新展宽
-                    cowan_.cal_data.widen_all.widen(widen_temperature, False)
-                # 设置第二页的实验谱线
-                self.task_thread.progress.emit(60, '设置第二页的实验谱线')
-                if self.expdata_2 is not None:
-                    self.expdata_2.set_range(x_range)
-                # 设置叠加谱线
-                self.task_thread.progress.emit(65, '重新模拟当前光谱')
-                if self.simulate is not None:
-                    self.simulate.exp_data.set_range(x_range)
-                    # 重新模拟
-                    self.simulate.init_cowan_list(self.cowan_lists)
-                    temperature = self.ui.page2_temperature.value()
-                    density = (self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value())
-                    self.simulate.get_simulate_data(temperature, density)
-                    self.simulate.del_cowan_list()
-                # 设置实验叠加谱线
-                for i, (key, sim) in enumerate(self.space_time_resolution.simulate_spectral_dict.items()):
-                    self.task_thread.progress.emit(
-                        65 + int(i / len(self.space_time_resolution.simulate_spectral_dict) * 35),
-                        f'重新模拟{key[0]}_{key[1][0]}的光谱')
-                    # 设置范围
-                    sim.exp_data.set_range(x_range)
-                    # 重新模拟
-                    if sim.temperature is None or sim.electron_density is None:
-                        continue
-                    sim.init_cowan_list(self.cowan_lists)
-                    sim.get_simulate_data(sim.temperature, sim.electron_density)
-                    sim.del_cowan_list()
+                self.task_thread.progress.emit(0, 'ready to set range ...')
+                x_range = [min_input.value(), max_input.value(), step_input.value()]
+                num = int((x_range[1] - x_range[0]) / x_range[2])
 
+                # 设置 info --------------------------------
+                self.info['x_range'] = x_range
+                # 设置第一页的实验谱线 --------------------------------
+                self.task_thread.progress.emit(10, 'self.expdata_1 set range ...')
+                if self.expdata_1 is not None:
+                    self.expdata_1.set_xrange(x_range)
+                # 设置 页面上的 Cowan  --------------------------------
+                self.task_thread.progress.emit(20, 'self.cowan set range ...')
+                if self.cowan is not None:
+                    self.cowan.set_xrange(x_range, num)
+                # 设置各个 Cowan  --------------------------------
+                self.task_thread.progress.emit(30, 'self.cowan_lists set range ...')
+                if self.cowan_lists is not None:
+                    self.cowan_lists.set_xrange(x_range, num)
+                # 设置第二页的实验谱线  --------------------------------
+                self.task_thread.progress.emit(40, 'self.expdata_2 set range ...')
+                if self.expdata_2 is not None:
+                    self.expdata_2.set_xrange(x_range)
+                # 设置叠加谱线 --------------------------------
+                self.task_thread.progress.emit(50, 'self.simulate set range ...')
+                if self.simulate is not None:
+                    self.simulate.set_xrange(x_range, num, self.cowan_lists)
+                # 设置实验叠加谱线 --------------------------------
+                self.task_thread.progress.emit(100, 'self.space_time_resolution set range ...')
+                if self.space_time_resolution is not None:
+                    self.space_time_resolution.set_xrange(x_range, num, self.cowan_lists)
+                # 完成 --------------------------------
                 self.ui.statusbar.showMessage('设置范围成功！')
 
             dialog.close()
@@ -182,20 +145,29 @@ class Menu(MainWindow):
             self.task_thread.set_run(task)
             self.task_thread.start()
 
-        if self.expdata_1 is None:
-            QMessageBox.warning(self.ui, '警告', '实验数据未加载！')
-            return
         dialog = QDialog()
-        label = QLabel('请输入范围：')
-        min_input = QDoubleSpinBox()
+        label = QLabel('请输入范围以及最小步长：')
+        # 最大最小值以及步长
+        min_input = QDoubleSpinBox()  # 定义
         max_input = QDoubleSpinBox()
+        step_input = QDoubleSpinBox()
+        spin_box_list = [min_input, max_input, step_input]
+        if self.info['x_range'] is not None:
+            min_input.setValue(self.info['x_range'][0])  # 设置初始值
+            max_input.setValue(self.info['x_range'][1])
+            step_input.setValue(self.info['x_range'][2])
+        else:
+            min_input.setValue(self.expdata_1.x_range[0])  # 设置初始值
+            max_input.setValue(self.expdata_1.x_range[1])
+            step_input.setValue(0.01)
         layout_input = QHBoxLayout()
-        layout_input.addWidget(min_input)
-        layout_input.addWidget(max_input)
+        for spin_box in spin_box_list:
+            spin_box.setSuffix('nm')  # 设置单位
+            spin_box.setDecimals(3)  # 设置精度
+            spin_box.setSingleStep(0.010)  # 设置步长
+            layout_input.addWidget(spin_box)
         ok_btn = QPushButton('确认')
         cancel_btn = QPushButton('取消')
-        min_input.setValue(self.expdata_1.init_xrange[0])
-        max_input.setValue(self.expdata_1.init_xrange[1])
         layout_btn = QHBoxLayout()
         layout_btn.addWidget(ok_btn)
         layout_btn.addWidget(cancel_btn)
@@ -217,62 +189,34 @@ class Menu(MainWindow):
         """
 
         def task():
+            self.task_thread.progress.emit(0, 'ready to reset range ...')
             self.info['x_range'] = None
             widen_temperature = self.ui.widen_temp.value()
+
             # 设置第一页的实验谱线
-            self.task_thread.progress.emit(10, '设置第一页的实验谱线')
-            self.expdata_1.reset_range()
-            # functools.partial(UpdatePage1.update_exp_figure, self)()
+            self.task_thread.progress.emit(10, 'self.expdata_1 reset range ...')
+            if self.expdata_1 is not None:
+                self.expdata_1.reset_xrange()
             # 设置 页面上的 Cowan
-            self.task_thread.progress.emit(20, '重新展宽页面上的Cowan')
+            self.task_thread.progress.emit(20, 'self.cowan reset range ...')
             if self.cowan is not None:
-                # 设置范围
-                self.cowan.exp_data.reset_range()
-                self.cowan.cal_data.widen_all.exp_data.reset_range()
-                self.cowan.cal_data.widen_part.exp_data.reset_range()
-                # 重新展宽
-                self.cowan.cal_data.widen_all.widen(widen_temperature, False)
+                self.cowan.reset_xrange()
             # 设置各个 Cowan
-            for i, (cowan_, _) in enumerate(self.cowan_lists):
-                self.task_thread.progress.emit(20 + int(i / len(self.cowan_lists.chose_cowan) * 40),
-                                               f'重新展宽{cowan_.name}')
-                # 设置范围
-                cowan_.exp_data.reset_range()
-                cowan_.cal_data.widen_all.exp_data.reset_range()
-                cowan_.cal_data.widen_part.exp_data.reset_range()
-                # 更新展宽参数
-                cowan_.cal_data.widen_all.n = None
-                cowan_.cal_data.widen_part.n = None
-                # 重新展宽
-                cowan_.cal_data.widen_all.widen(widen_temperature, False)
+            self.task_thread.progress.emit(30, 'self.cowan_lists reset range ...')
+            if self.cowan_lists is not None:
+                self.cowan_lists.reset_xrange()
             # 设置第二页的实验谱线
-            self.task_thread.progress.emit(65, '设置第二页的实验谱线')
+            self.task_thread.progress.emit(40, 'self.expdata_2 reset range ...')
             if self.expdata_2 is not None:
-                self.expdata_2.reset_range()
-                # functools.partial(UpdatePage2.update_exp_figure, self)()
+                self.expdata_2.reset_xrange()
             # 设置叠加谱线
-            self.task_thread.progress.emit(65, '重新模拟当前光谱')
+            self.task_thread.progress.emit(50, 'self.simulate reset range ...')
             if self.simulate is not None:
-                self.simulate.exp_data.reset_range()
-                # 重新模拟
-                self.simulate.init_cowan_list(self.cowan_lists)
-                temperature = self.ui.page2_temperature.value()
-                density = (self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value())
-                self.simulate.get_simulate_data(temperature, density)
-                self.simulate.del_cowan_list()
+                self.simulate.reset_xrange(self.cowan_lists)
             # 设置实验叠加谱线
-            for i, (key, sim) in enumerate(self.space_time_resolution.simulate_spectral_dict.items()):
-                self.task_thread.progress.emit(
-                    65 + int(i / len(self.space_time_resolution.simulate_spectral_dict) * 35),
-                    f'重新模拟{key[0]}_{key[1][0]}的光谱')
-                # 设置范围
-                sim.exp_data.reset_range()
-                # 重新模拟
-                if sim.temperature is None or sim.electron_density is None:
-                    continue
-                sim.init_cowan_list(self.cowan_lists)
-                sim.get_simulate_data(sim.temperature, sim.electron_density)
-                sim.del_cowan_list()
+            self.task_thread.progress.emit(100, 'self.space_time_resolution reset range ...')
+            if self.space_time_resolution is not None:
+                self.space_time_resolution.reset_xrange(self.cowan_lists)
 
             self.ui.statusbar.showMessage('重置范围成功！')
 
@@ -350,12 +294,11 @@ class Page1(MainWindow):
         if self.info['x_range'] is None:
             pass
         else:
-            self.expdata_1.set_range(self.info['x_range'])
+            self.expdata_1.set_xrange(self.info['x_range'])
         # 更新运行历史的实验数据
         self.cowan_lists.update_exp_data(self.expdata_1)
-        self.expdata_1.plot_html()
-        # 更新页面
-        self.ui.exp_web.load(QUrl.fromLocalFile(self.expdata_1.plot_path))
+
+        functools.partial(UpdatePage1.update_exp_figure, self)()
 
     def redraw_exp_data(self):
         """
@@ -631,8 +574,11 @@ class Page1(MainWindow):
             self.ui.statusbar.showMessage('计算完成！正在展宽，请稍后...')
 
             # -------------------------- 展宽 --------------------------
-            self.cowan.cal_data.widen_all.widen(temperature=25.6, only_p=False)  # 整体展宽
-            self.cowan.set_xrange(self.info['x_range'], )
+            if self.info['x_range'] is None:
+                self.cowan.cal_data.widen_all.widen(only_p=False)  # 整体展宽
+            else:
+                num = int((self.info['x_range'][1] - self.info['x_range'][0]) / self.info['x_range'][2])
+                self.cowan.set_xrange(self.info['x_range'], num)
             # self.cowan.cal_data.widen_part.widen_by_group(widen_temperature)  # 部分展宽
             # -------------------------- 添加到运行历史 --------------------------
             self.cowan_lists.add_history(self.cowan)
@@ -807,8 +753,7 @@ class Page1(MainWindow):
         # ----- in2 -----
         functools.partial(UpdatePage1.update_in2, self)()
         # ----- 偏移量 -----
-        self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
-        self.ui.widen_fwhm.setValue(self.cowan.cal_data.widen_all.fwhm_value)
+        functools.partial(UpdatePage1.update_cowan_info, self)()
         # ----- 实验数据 -----
         functools.partial(UpdatePage1.update_exp_figure, self)()
         # ----- 线状谱和展宽 -----
@@ -820,15 +765,12 @@ class Page1(MainWindow):
         重新展宽
 
         """
-        self.cowan.cal_data.set_delta_lambda(self.ui.offset.value())
-        # self.cowan.cal_data.widen_all.delta_lambda = self.ui.offset.value()
-        # self.cowan.cal_data.widen_part.delta_lambda = self.ui.offset.value()
-        self.cowan.cal_data.set_fwhm(self.ui.widen_fwhm.value())
-        # self.cowan.cal_data.widen_all.fwhm_value = self.ui.widen_fwhm.value()
-        # self.cowan.cal_data.widen_part.fwhm_value = self.ui.widen_fwhm.value()
-        widen_temperature = self.ui.widen_temp.value()
-        self.cowan.cal_data.widen_all.widen(widen_temperature, False)
-        # self.cowan.cal_data.widen_part.widen_by_group(temperature=widen_temperature)
+        self.cowan.cal_data.set_cowan_info(
+            delta_lambda=self.ui.offset.value(),
+            fwhm=self.ui.widen_fwhm.value(),
+            temperature=self.ui.widen_temp.value()
+        )
+        self.cowan.cal_data.widen_all.widen(False)
 
         # -------------------------- 更新历史记录和选择列表 --------------------------
         self.cowan_lists.add_history(self.cowan)
@@ -943,10 +885,8 @@ class Page2(MainWindow):
         path, types = QFileDialog.getOpenFileName(self, '请选择实验数据', PROJECT_PATH().as_posix(),
                                                   '数据文件(*.txt *.csv)')
         self.expdata_2 = ExpData(Path(path))
-        if self.info['x_range'] is None:
-            pass
-        else:
-            self.expdata_2.set_range(self.info['x_range'])
+        if self.info['x_range'] is not None:
+            self.expdata_2.set_xrange(self.info['x_range'])
 
         # -------------------------- 更新页面 --------------------------
         self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
@@ -1068,6 +1008,9 @@ class Page2(MainWindow):
             return
         temperature = self.simulated_grid.t_list[item.column()]
         density = self.simulated_grid.ne_list[item.row()]
+        if (temperature, density) not in self.simulated_grid.grid_data:
+            warnings.warn('计算出现错误，没有该温度密度下的结果！')
+            return
         self.simulate = copy.deepcopy(self.simulated_grid.grid_data[(temperature, density)])
 
         # -------------------------- 更新页面 --------------------------
@@ -1124,10 +1067,8 @@ class Page2(MainWindow):
                 loc = f'-{i + 1}'
                 tim = f'-{i + 1}'
             self.expdata_2 = ExpData(file_name)
-            if self.info['x_range'] is None:
-                pass
-            else:
-                self.expdata_2.set_range(self.info['x_range'])
+            if self.info['x_range'] is not None:
+                self.expdata_2.set_xrange(self.info['x_range'])
             simulate = SimulateSpectral()
             simulate.load_exp_data(Path(file_name))
             self.space_time_resolution.add_st((tim, (loc, '0', '0')), simulate)
@@ -1160,7 +1101,7 @@ class Page2(MainWindow):
         key = list(self.space_time_resolution.simulate_spectral_dict.keys())[index]
         self.simulate = copy.deepcopy(self.space_time_resolution.simulate_spectral_dict[key])
         self.expdata_2 = copy.deepcopy(self.simulate.exp_data)
-        if self.simulated_grid is not None:
+        if self.simulated_grid is not None and self.ui.update_similarity.isChecked():
             self.simulated_grid.change_task('update', self.expdata_2)
             simulated_grid_run = SimulateGridThread(self.simulated_grid)
             progressDialog = CustomProgressDialog(dialog_title='正在更新网格...')
@@ -1477,7 +1418,7 @@ class Page4(MainWindow):
         add_example = get_configuration_add_list(self)
         for cowan_, _ in self.cowan_lists:
             if cowan_.cal_data.widen_part.grouped_widen_data is None:
-                cowan_.cal_data.widen_part.widen_by_group(temperature=self.ui.widen_temp.value())
+                cowan_.cal_data.widen_part.widen_by_group()
         self.simulate_page4.init_cowan_list(self.cowan_lists)
         self.simulate_page4.plot_con_contribution_html(add_example)
         self.ui.webEngineView_2.load(QUrl.fromLocalFile(self.simulate_page4.example_path))

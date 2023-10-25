@@ -3,6 +3,7 @@ import shelve
 import sys
 import warnings
 import traceback
+from packaging.version import Version
 
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWidgets import QAbstractItemView
@@ -242,8 +243,11 @@ class MainWindow(QMainWindow):
         self.space_time_resolution = SpaceTimeResolution()
 
         self.info = {
-            'x_range': None,
+            'x_range': None,  # example: [2, 8, 0.01] [<最小波长>, <最大波长>, <最小步长>]
+            'version': '1.0.0',  # example: '1.0.0'
         }
+
+        print('当前软件版本：{}'.format(self.info['version']))
 
         # 初始化
         self.init()
@@ -430,162 +434,9 @@ class MainWindow(QMainWindow):
         # tree view
         self.ui.treeWidget.itemClicked.connect(functools.partial(Page4.tree_item_changed, self))  # 选择列表
 
-    def test(self):
-        pass
-        SET_PROJECT_PATH(Path('F:/Cowan/Al'))
-        delta = {3: 0.05, 4: -0.04, 5: 0.0, 6: 0.05}
-
-        for i in range(3, 7):
-            self.in36 = In36()
-            self.in36.read_from_file(PROJECT_PATH() / f'in36_{i}')
-            self.atom = copy.deepcopy(self.in36.atom)
-            self.in2 = In2()
-            self.expdata_1 = ExpData(PROJECT_PATH() / './exp_data.csv')
-            self.cowan = Cowan(self.in36, self.in2, f'Al_{i}', self.expdata_1, 1)
-            cowan_r = CowanThread(self.cowan)
-            cowan_r.start()
-            cowan_r.wait()
-            cowan_r.update_origin()
-            self.cowan.cal_data.widen_all.delta_lambda = delta[i]
-            self.cowan.cal_data.widen_all.widen(25.6, False)
-            self.cowan_lists.add_history(self.cowan)
-        self.cowan_lists.chose_cowan = list(self.cowan_lists.cowan_run_history.keys())
-        self.cowan_lists.add_or_not = [True for _ in range(len(self.cowan_lists.chose_cowan))]
-
-        # -------------------------- 更新页面 --------------------------
-        # ----- 原子信息 -----
-        functools.partial(UpdatePage1.update_atom, self)()
-        # ----- in36 -----
-        functools.partial(UpdatePage1.update_in36, self)()
-        # ----- in2 -----
-        functools.partial(UpdatePage1.update_in2, self)()
-        # ----- 偏移量 -----
-        self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
-        # ----- 实验数据 -----
-        functools.partial(UpdatePage1.update_exp_figure, self)()
-        # ----- 线状谱和展宽 -----
-        functools.partial(UpdatePage1.update_line_figure, self)()
-        functools.partial(UpdatePage1.update_widen_figure, self)()
-
-        # ----- 历史数据 -----
-        # 更新历史记录列表
-        functools.partial(UpdatePage1.update_history_list, self)()
-        # 更新选择列表
-        functools.partial(UpdatePage1.update_selection_list, self)()
-
-        # --------------- 第二页
-        self.expdata_2 = ExpData(PROJECT_PATH() / 'exp_data.csv')
-        # 更新界面
-        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
-        # 更新谱峰个数
-        # functools.partial(UpdatePage2.update_characteristic_peaks, self)()
-
-        # 时空分辨表格
-        functools.partial(UpdatePage2.update_space_time_table, self)()
-
-        # --------------- 第三页
-        functools.partial(UpdatePage3.update_space_time_combobox, self)()
-
-        # --------------- 第四页
-        functools.partial(UpdatePage4.update_space_time_combobox, self)()
-
-    def load_Ge(self):
-        folder_path = Path(r'E:\研究生工作\科研工作\2023_08_08_Ge等离子体光谱\计算数据')
-        self.expdata_1 = ExpData(PROJECT_PATH() / './0.4mm_30ns.csv')
-        for path in folder_path.iterdir():
-            self.in36 = In36()
-            self.in36.read_from_file(path / f'in36')
-            self.atom = copy.deepcopy(self.in36.atom)
-            self.in2 = In2()
-            self.in2.read_from_file(path / f'in2')
-            name = path.name.split('Ge')[-1].strip('+')
-            self.cowan = Cowan(self.in36, self.in2, f'Ge_{name}', self.expdata_1, 1)
-            self.cowan.cal_data = CalData(f'Ge_{name}', self.expdata_1)
-            self.cowan.cal_data.widen_all.widen(25.6, False)
-            self.cowan_lists.add_history(self.cowan)
-            print(f'加载{self.cowan.name}')
-        self.cowan_lists.chose_cowan = list(self.cowan_lists.cowan_run_history.keys())
-        self.cowan_lists.add_or_not = [True for _ in range(len(self.cowan_lists.chose_cowan))]
-
-        # -------------------------- 更新页面 --------------------------
-        # ----- 原子信息 -----
-        functools.partial(UpdatePage1.update_atom, self)()
-        # ----- in36 -----
-        functools.partial(UpdatePage1.update_in36, self)()
-        # ----- in2 -----
-        functools.partial(UpdatePage1.update_in2, self)()
-        # ----- 偏移量 -----
-        self.ui.offset.setValue(self.cowan.cal_data.widen_all.delta_lambda)
-        # ----- 实验数据 -----
-        functools.partial(UpdatePage1.update_exp_figure, self)()
-        # ----- 线状谱和展宽 -----
-        functools.partial(UpdatePage1.update_line_figure, self)()
-        functools.partial(UpdatePage1.update_widen_figure, self)()
-
-        # ----- 历史数据 -----
-        # 更新历史记录列表
-        functools.partial(UpdatePage1.update_history_list, self)()
-        # 更新选择列表
-        functools.partial(UpdatePage1.update_selection_list, self)()
-        # --------------- 第二页
-        self.expdata_2 = ExpData(Path(r'F:\Cowan\Ge\0.4mm.csv'))
-        # 更新界面
-        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
-        # 时空分辨表格
-        functools.partial(UpdatePage2.update_space_time_table, self)()
-        # --------------- 第三页
-        functools.partial(UpdatePage3.update_space_time_combobox, self)()
-        # --------------- 第四页
-        functools.partial(UpdatePage4.update_space_time_combobox, self)()
-
-    def cal_ave_wave(self):
-        SET_PROJECT_PATH(Path(r'F:/Cowan/Ni'))
-        self.expdata_1 = ExpData(PROJECT_PATH() / './0.4mm_30ns.csv')
-        data_frames = {}
-        for path in PROJECT_PATH().joinpath('cal_result').iterdir():
-            if 'Ni' not in path.name:
-                continue
-            self.in36 = In36()
-            self.in36.read_from_file(path / f'in36')
-            self.atom = copy.deepcopy(self.in36.atom)
-            self.in2 = In2()
-            self.in2.read_from_file(path / f'in2')
-            name = path.name
-            self.cowan = Cowan(self.in36, self.in2, name, self.expdata_1, 1)
-            self.cowan.cal_data = CalData(name, self.expdata_1)
-            self.cowan.cal_data.widen_all.widen(25.6, False)
-            self.cowan_lists.add_history(self.cowan)
-            ave_w = self.cowan.cal_data.get_average_wavelength()
-            temp_1 = []
-            temp_2 = []
-            temp_3 = []
-            temp_4 = []
-            names = ['下态序号', '上态序号', '跃迁名称', '平均波长(nm)']
-            for key, value in ave_w.items():
-                a = int(key.split('_')[0])
-                b = int(key.split('_')[1])
-                c = self.cowan.in36.get_configuration_name(a, b)
-                d = value
-                temp_1.append(a)
-                temp_2.append(b)
-                temp_3.append(c)
-                temp_4.append(d)
-            data_frames[self.cowan.name] = (
-                pd.DataFrame({names[0]: temp_1, names[1]: temp_2, names[2]: temp_3, names[3]: temp_4}))
-            print(f'加载{self.cowan.name}')
-        self.cowan_lists.chose_cowan = list(self.cowan_lists.cowan_run_history.keys())
-        self.cowan_lists.add_or_not = [True for _ in range(len(self.cowan_lists.chose_cowan))]
-        with pd.ExcelWriter('tb.xlsx', ) as writer:
-            for key, value in data_frames.items():
-                if key == 'Ni_12':
-                    name = 'Ni_11_extra'
-                else:
-                    name = key
-                value.to_excel(writer, sheet_name=name, index=False)
-
     def save_project(self):
         def task():
-            obj_info = shelve.open(PROJECT_PATH().joinpath('.cowan/obj_info').as_posix())
+            obj_info = shelve.open(PROJECT_PATH().joinpath('.cowan/obj_info').as_posix(), flag='n')
             # 第一页
             self.task_thread.progress.emit(5, 'atom')
             obj_info['atom'] = self.atom
@@ -622,13 +473,20 @@ class MainWindow(QMainWindow):
         self.task_thread.start()
 
     def load_project(self):
+        def load_info():
+            info = obj_info['info']
+            self.info['x_range'] = info['x_range']
+            self.info['version'] = info['version']
+        # 函数定义结束 ------------------------------------------------------
+
+        if not PROJECT_PATH().joinpath('.cowan/obj_info.dat').exists():
+            return
         # 读取初始化文件
         obj_info = shelve.open(PROJECT_PATH().joinpath('.cowan/obj_info').as_posix())
-        try:
-            obj_info['atom']
-        except KeyError:
-            warnings.warn('初始化文件不存在！', UserWarning)
-            return
+        self.update_version(obj_info)
+        # ---------------------------------------------------------
+        # 总共
+        self.info = obj_info['info']
         # 第一页
         self.atom = obj_info['atom']
         self.in36 = obj_info['in36']
@@ -636,7 +494,6 @@ class MainWindow(QMainWindow):
         self.expdata_1 = obj_info['expdata_1']
         self.cowan = obj_info['cowan']
         self.cowan_lists = obj_info['cowan_lists']
-        self.info = obj_info['info']
         # 第二页
         self.expdata_2 = obj_info['expdata_2']
         self.simulate = obj_info['simulate']
@@ -644,6 +501,19 @@ class MainWindow(QMainWindow):
         self.space_time_resolution = obj_info['space_time_resolution']
         # 第四页
         self.simulate_page4 = obj_info['simulate_page4']
+
+        # ---------------------------------------------------------
+        obj_list = [
+            (self.atom, 'atom'), (self.in36, 'in36'), (self.in2, 'in2'), (self.expdata_1, 'expdata_1'),
+            (self.cowan, 'cowan'), (self.cowan_lists, 'cowan_lists'), (self.expdata_2, 'expdata_2'),
+            (self.simulate, 'simulate'), (self.simulated_grid, 'simulated_grid'),
+            (self.space_time_resolution, 'space_time_resolution'), (self.simulate_page4, 'simulate_page4')
+        ]
+        load_info()
+        for obj, name in obj_list:
+            if obj is not None:
+                obj.load_class(obj_info[name])
+        # ---------------------------------------------------------
         obj_info.close()
 
         # 更新界面
@@ -663,6 +533,30 @@ class MainWindow(QMainWindow):
     def print_memory():
         print('{:>22} {:>15.2f} [GB]'.format('总大小：',
                                              asizeof.asizeof(window) / 1024 ** 3))
+
+    @staticmethod
+    def update_version(obj_info):
+        if 'version' not in obj_info['info'].keys():
+            print('数据版本：无版本')
+        else:
+            print('数据版本：{}'.format(obj_info['info']['version']))
+
+        # 无版本号 > 1.0.0 ---------------------------------------------------
+        if 'version' not in obj_info['info'].keys():
+            print('正在进行版本升级 [无版本号 > 1.0.0]')
+            project_info = obj_info['info']
+            # 1. 添加版本号
+            project_info['version'] = '1.0.0'
+            # 2. 更新了自定义波长的记录方式
+            if project_info['x_range'] is not None:
+                if len(project_info['x_range']) == 2:
+                    project_info['x_range'].append(0.01)
+            obj_info.update({'info': project_info})
+            print('版本升级完成！')
+
+        # 1.0.0 > 1.0.1 ---------------------------------------------------
+        if Version(obj_info['info']['version']) < Version('1.0.1'):
+            pass
 
     def closeEvent(self, event):
         # dialog = self.save_project()

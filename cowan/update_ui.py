@@ -59,6 +59,9 @@ class UpdatePage1(MainWindow):
         self.ui.high_configuration.setCurrentIndex(1)
 
     def update_in36_configuration(self):
+        if len(self.in36.configuration_card) == 0:
+            warnings.warn('in36.configuration_card is None')
+            return
         # 更新表格
         df = pd.DataFrame(
             list(zip(*self.in36.configuration_card))[0],
@@ -117,6 +120,7 @@ class UpdatePage1(MainWindow):
             return
         self.ui.offset.setValue(self.cowan.cal_data.get_delta_lambda())
         self.ui.widen_fwhm.setValue(self.cowan.cal_data.get_fwhm())
+        self.ui.widen_temp.setValue(self.cowan.cal_data.get_temperature())
 
     def update_history_list(self):
         self.ui.run_history_list.clear()

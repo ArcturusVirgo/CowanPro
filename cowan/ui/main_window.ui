@@ -3245,11 +3245,20 @@
              </item>
              <item>
               <widget class="QDoubleSpinBox" name="widen_temp">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="minimumSize">
                 <size>
-                 <width>50</width>
+                 <width>70</width>
                  <height>0</height>
                 </size>
+               </property>
+               <property name="suffix">
+                <string>eV</string>
                </property>
                <property name="singleStep">
                 <double>0.100000000000000</double>
@@ -3273,6 +3282,12 @@
                  <width>50</width>
                  <height>0</height>
                 </size>
+               </property>
+               <property name="suffix">
+                <string>nm</string>
+               </property>
+               <property name="decimals">
+                <number>3</number>
                </property>
                <property name="maximum">
                 <double>10.000000000000000</double>
@@ -3300,6 +3315,9 @@
                  <height>0</height>
                 </size>
                </property>
+               <property name="suffix">
+                <string>nm</string>
+               </property>
                <property name="decimals">
                 <number>3</number>
                </property>
@@ -3322,9 +3340,12 @@
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Minimum</enum>
+               </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>40</width>
+                 <width>30</width>
                  <height>20</height>
                 </size>
                </property>
@@ -3716,6 +3737,15 @@
              </item>
              <item>
               <widget class="QDoubleSpinBox" name="page2_temperature">
+               <property name="prefix">
+                <string/>
+               </property>
+               <property name="suffix">
+                <string/>
+               </property>
+               <property name="decimals">
+                <number>3</number>
+               </property>
                <property name="maximum">
                 <double>10000.000000000000000</double>
                </property>
@@ -3736,6 +3766,9 @@
              </item>
              <item>
               <widget class="QDoubleSpinBox" name="page2_density_base">
+               <property name="decimals">
+                <number>3</number>
+               </property>
                <property name="singleStep">
                 <double>0.100000000000000</double>
                </property>
@@ -3851,6 +3884,9 @@
                </item>
                <item>
                 <widget class="QSpinBox" name="temperature_num">
+                 <property name="suffix">
+                  <string>个</string>
+                 </property>
                  <property name="value">
                   <number>10</number>
                  </property>
@@ -3862,6 +3898,9 @@
               <layout class="QHBoxLayout" name="horizontalLayout_18">
                <item>
                 <widget class="QDoubleSpinBox" name="temperature_min">
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
                  <property name="value">
                   <double>20.000000000000000</double>
                  </property>
@@ -3869,6 +3908,9 @@
                </item>
                <item>
                 <widget class="QDoubleSpinBox" name="temperature_max">
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
                  <property name="value">
                   <double>50.000000000000000</double>
                  </property>
@@ -3900,6 +3942,9 @@
                </item>
                <item>
                 <widget class="QSpinBox" name="density_num">
+                 <property name="suffix">
+                  <string>个</string>
+                 </property>
                  <property name="value">
                   <number>10</number>
                  </property>
@@ -3914,6 +3959,9 @@
               <layout class="QHBoxLayout" name="horizontalLayout_16">
                <item>
                 <widget class="QDoubleSpinBox" name="density_min_base">
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
                  <property name="value">
                   <double>1.000000000000000</double>
                  </property>
@@ -3944,6 +3992,9 @@
               <layout class="QHBoxLayout" name="horizontalLayout_17">
                <item>
                 <widget class="QDoubleSpinBox" name="density_max_base">
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
                  <property name="value">
                   <double>1.000000000000000</double>
                  </property>
@@ -4158,7 +4209,7 @@
                <item>
                 <widget class="QPushButton" name="pushButton_2">
                  <property name="text">
-                  <string>PushButton</string>
+                  <string>测试按钮</string>
                  </property>
                 </widget>
                </item>
@@ -4174,6 +4225,16 @@
                   </size>
                  </property>
                 </spacer>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="update_similarity">
+                 <property name="text">
+                  <string>更新网格相似度</string>
+                 </property>
+                 <property name="checked">
+                  <bool>false</bool>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>
