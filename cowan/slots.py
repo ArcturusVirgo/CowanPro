@@ -717,14 +717,21 @@ class Page1(MainWindow):
             # -------------------------- 更新页面 --------------------------
             functools.partial(UpdatePage1.update_selection_list, self)()
 
+        def sort_selection():
+            self.cowan_lists.sort_chose_cowan()
+            functools.partial(UpdatePage1.update_selection_list, self)()
+
         right_menu = QMenu(self.ui.selection_list)
 
         # 设置动作
         item_1 = QAction('删除', self.ui.selection_list)
-        item_1.triggered.connect(del_selection)
+        item_1.triggered.connect(del_selection)        # 设置动作
+        item_2 = QAction('按照离化度排序', self.ui.selection_list)
+        item_2.triggered.connect(sort_selection)
 
         # 添加
         right_menu.addAction(item_1)
+        right_menu.addAction(item_2)
 
         # 显示右键菜单
         right_menu.popup(QCursor.pos())
@@ -1201,6 +1208,10 @@ class Page2(MainWindow):
             update_ui()
 
         def close_window():
+            if len(self.simulate.characteristic_peaks) < 2:
+                QMessageBox.warning(self, '警告', '最少的峰个数是两个！')
+                dialog.activateWindow()
+                return
             if all_changed.isChecked():
                 for sim in self.space_time_resolution.simulate_spectral_dict.values():
                     sim.characteristic_peaks = copy.deepcopy(self.simulate.characteristic_peaks)

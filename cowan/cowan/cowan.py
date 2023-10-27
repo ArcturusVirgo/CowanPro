@@ -937,7 +937,8 @@ class WidenAll:
         new_J = temp_1.combine_first(temp_2)
         new_J = new_J.values
         # 计算布居
-        population = ((2 * new_J + 1) * np.exp(-abs(new_energy - min_energy) * 0.124 / self.temperature) / (2 * min_J + 1))
+        population = ((2 * new_J + 1) * np.exp(-abs(new_energy - min_energy) * 0.124 / self.temperature) / (
+                2 * min_J + 1))
         print('    population completed!')
 
         res = [self.__complex_cal(val, new_intensity, fwhmgauss(val), new_wavelength, population, new_J) for val in
@@ -1283,6 +1284,9 @@ class CowanList:
 
         self.cowan_run_history: Dict[str:Cowan] = {}  # 用于存储 cowan 对象
 
+    def sort_chose_cowan(self):
+        self.chose_cowan = sorted(self.chose_cowan, key=lambda x: int(x.split('_')[-1]))
+
     def add_cowan(self, key):
         """
         从历史记录中 添加 cowan 对象，如果列表中已经存在就删除再添加
@@ -1468,7 +1472,10 @@ class SimulateSpectral:
             if flag:
                 temp += cowan.cal_data.widen_all.widen_data['cross_P'].values * abu
         res['intensity'] = temp
-        res['intensity_normalization'] = res['intensity'] / res['intensity'].max()
+        if res['intensity'].max() == 0.0:
+            res['intensity_normalization'] = copy.deepcopy(res['intensity'])
+        else:
+            res['intensity_normalization'] = res['intensity'] / res['intensity'].max()
 
         self.sim_data = res
         self.get_spectrum_similarity()
@@ -1796,6 +1803,9 @@ class SimulateSpectral:
         x, y1, y2 = self.get_y1y2(fax, fbx)
         peaks1, _ = find_peaks(y1)
         peaks2, _ = find_peaks(y2)
+        if len(peaks2) < 5:
+            warnings.warn('计算得到的峰值个数 < 5, 相似度返回 -1')
+            return -1
         d = {}
         for index in peaks2:
             d[index] = y2[index]
@@ -1926,8 +1936,10 @@ class SimulateSpectral:
         x = fax_new[col_names_a[0]].values
         y1 = fax_new[col_names_a[1]].values
         y2 = f2(x)
-        y1 = y1 / max(y1)
-        y2 = y2 / max(y2)
+        if max(y1) != 0.0:
+            y1 = y1 / max(y1)
+        if max(y2) != 0.0:
+            y2 = y2 / max(y2)
         return x, y1, y2
 
     def load_class(self, class_info):
