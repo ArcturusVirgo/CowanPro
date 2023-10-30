@@ -725,7 +725,7 @@ class Page1(MainWindow):
 
         # 设置动作
         item_1 = QAction('删除', self.ui.selection_list)
-        item_1.triggered.connect(del_selection)        # 设置动作
+        item_1.triggered.connect(del_selection)  # 设置动作
         item_2 = QAction('按照离化度排序', self.ui.selection_list)
         item_2.triggered.connect(sort_selection)
 
@@ -1479,3 +1479,10 @@ class Page4(MainWindow):
                         break
                 else:
                     item.parent().setCheckState(0, Qt.Unchecked)
+
+
+class Page5(MainWindow):
+    def ion_selected(self, index):
+        self.cowan_page5: Cowan = copy.deepcopy(self.cowan_lists[index][0])
+        self.cowan_page5.cal_data.get_statistics()
+        functools.partial(UpdatePage5.update_statistics_table, self)()

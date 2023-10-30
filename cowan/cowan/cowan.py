@@ -663,12 +663,13 @@ class CalData:
         """
         self.name = name
         self.exp_data = exp_data
-        self.filepath = (PROJECT_PATH() / f'cal_result/{self.name}/spectra.dat').as_posix()
         self.plot_path = (PROJECT_PATH() / f'figure/line/{self.name}.html').as_posix()
         self.init_data: pd.DataFrame | None = None
 
         self.widen_all: Optional[WidenAll] = None  # 通过self.read_file()赋初值
         self.widen_part: Optional[WidenPart] = None  # 通过self.read_file()赋初值
+
+        self.info_dict = {}
 
         self.read_file()
 
@@ -680,7 +681,7 @@ class CalData:
 
         """
         self.init_data = pd.read_csv(
-            self.filepath,
+            (PROJECT_PATH() / f'cal_result/{self.name}/spectra.dat').as_posix(),
             sep='\s+',
             names=['energy_l', 'energy_h', 'wavelength_ev', 'intensity', 'index_l', 'index_h', 'J_l', 'J_h', ],
         )
@@ -832,14 +833,137 @@ class CalData:
         """
         return self.widen_all.temperature
 
+    def get_statistics(self):
+        spec_path = (PROJECT_PATH() / f'cal_result/{self.name}/Spec.dat').as_posix()
+        jenergy_path = (PROJECT_PATH() / f'cal_result/{self.name}/Jenergy-totaa.dat').as_posix()
+        eav_path = (PROJECT_PATH() / f'cal_result/{self.name}/Eav.dat').as_posix()
+        # Spec.dat 文件读取 =====================================
+        spec = pd.read_fwf(spec_path, widths=[1, 11, 5, 3, 1, 8, 13, 5, 3, 1, 8, 13, 12, 8, 9, 8, 10, 9], header=None)
+        spec = spec.dropna(axis=1)
+        spec.columns = [
+            'energy_l', 'J_l', 'index_l', 'configuration_l',
+            'energy_h', 'J_h', 'index_h', 'configuration_h',
+            'fnu', 'flam', 's2', 'gf', 'alggf', 'ga', 'brnch'
+        ]
+        # Jenergy-totaa.dat 文件读取 =====================================
+        J_energy = pd.read_fwf(jenergy_path, widths=[9, 2, 10], names=['level', 'temp', 'gaa'])
+        J_energy = J_energy.drop('temp', axis=1)
+        # Eav.dat 文件读取 =====================================
+        eav = pd.read_csv(eav_path, sep='\s+', names=['index_l', 'index_h', 'energy'])
+        energy_ground = eav['energy'].values[0]
+        eav['energy_with_ground'] = (eav['energy'] - energy_ground) * 0.124
+        # 开始统计 ==================================================
+        eav_2 = eav[eav['index_l'] == 2].__deepcopy__()
+        eav_2 = eav_2.reset_index()
+        eav_2 = eav_2.drop('index', axis=1)
+        # 计算 Gaa
+        spec['Gaa'] = np.NaN
+        for i, v in enumerate(J_energy['level']):
+            index = list(spec[v == spec['energy_h']].index)
+            for v_index in index:
+                spec.loc[v_index, 'Gaa'] = J_energy['gaa'][i]
+        min_energy = spec['energy_l'].min()
+        spec['energy_h'] = (spec['energy_h'] - min_energy) * 0.124
+        spec['energy_l'] = (spec['energy_l'] - min_energy) * 0.124
+        spec['fnu'] = 1239.85 / spec['fnu']
+        grouped_data = spec.groupby(['index_l', 'index_h'])
+        info_dict = {}
+        for key, v in grouped_data:
+            configuration_info = {}
+
+            max_wavelength = v['fnu'].max()
+            min_wavelength = v['fnu'].min()
+            line_range = {
+                'max': max_wavelength,
+                'min': min_wavelength,
+            }
+            configuration_info['wavelength_range'] = line_range
+
+            line_num = v.shape[0]
+            configuration_info['line_num'] = line_num
+
+            # max_gf
+            max_gf = v['gf'].max()
+            configuration_info['max_gf'] = max_gf
+
+            # Sum_gf
+            sum_gf = v['gf'].sum()
+            configuration_info['sum_gf'] = sum_gf
+
+            # Sum_Ar
+            sum_Ar = v['ga'].sum()
+            configuration_info['sum_Ar'] = sum_Ar
+
+            # Sum_Aa
+            sum_Aa = v['Gaa'].sum()
+            configuration_info['sum_Aa'] = sum_Aa
+
+            # sum_G
+            sum_G = (2 * v['J_h'] + 1).sum()
+            configuration_info['sum_G'] = sum_G
+
+            # ConAverGaSum
+            temp_energy = eav_2[eav_2['index_h'] == key[1]]['energy_with_ground'].values[0]
+            sum_ConAverGa = (v['gf'] * (1239.85 / v['fnu'] - temp_energy) ** 2).sum()
+            configuration_info['sum_ConAverGa'] = sum_ConAverGa
+
+            if sum_gf == 0:
+                continue
+
+            # 组态平均自电离几率=真理总自电离/总统计权重
+            Aa_ave = sum_Aa / sum_G
+            configuration_info['ave_Aa'] = Aa_ave
+
+            # 平均自电离宽度=6.582E-16*组态平均自电离几率
+            Ga_ave = 6.582e-16 * Aa_ave
+            configuration_info['ave_Ga'] = Ga_ave
+
+            # 能级统计宽度=sqrt(能级统计宽度分子项/总阵子强度),画能级图用
+            ConAverGa = np.sqrt(sum_ConAverGa / sum_gf)
+            configuration_info['ConAverGa'] = ConAverGa
+
+            # ConEWidth(k)=ConAverGa(k)+AverGa(k)
+            ConEWidth = ConAverGa + Ga_ave
+            configuration_info['ConEWidth'] = ConEWidth
+
+            # 将 configuration_info 添加到 info_dict 中
+            info_dict[key] = configuration_info
+
+        # print(
+        #     '{:>2}  {:>2}  {:>7}  {:>7}  {:>4}  {:>7}  {:>10}  {:>10}  {:>10}  {:>7}  {:>10}  {:>10}'.format(
+        #         'i', 'k', 'min', 'max', 'n', 'sum_gf', 'sum_Ar', 'sum_Aa', 'ave_Aa', 'ave_Ga', 'ConAverGa',
+        #         'ConEWidth', ))
+        # for key, value in info_dict.items():
+        #     print(
+        #         '{:>2d}  {:>2d}  {:>7.3f}  {:>7.3f}  {:>4d}  {:>7.3f}  {:>10.2e}  {:>10.2e}  {:>10.2e}  {:>7.3f}  {:>10.3f}  {:>10.3f}'.format(
+        #             key[0], key[1],
+        #             value['wavelength_range']['min'],
+        #             value['wavelength_range']['max'],
+        #             value['line_num'],
+        #             value['sum_gf'],
+        #             value['sum_Ar'],
+        #             value['sum_Aa'],
+        #             value['ave_Aa'],
+        #             value['ave_Ga'],
+        #             value['ConAverGa'],
+        #             value['ConEWidth'],
+        #         ))
+        self.info_dict = info_dict
+        return info_dict
+
     def load_class(self, class_info):
         self.name = class_info.name
         self.exp_data.load_class(class_info.exp_data)
         self.init_data = class_info.init_data
-        self.filepath = (PROJECT_PATH() / f'cal_result/{self.name}/spectra.dat').as_posix()
         self.plot_path = (PROJECT_PATH() / f'figure/line/{self.name}.html').as_posix()
         self.widen_all.load_class(class_info.widen_all)
         self.widen_part.load_class(class_info.widen_part)
+        # start [1.0.0 > 1.0.1]
+        if 'info_dict' in class_info.__dict__.keys():
+            self.info_dict = class_info.info_dict
+        else:
+            self.info_dict = {}
+        # end
 
 
 class WidenAll:
@@ -1354,13 +1478,6 @@ class CowanList:
     def __getitem__(self, index):
         return self.cowan_run_history[self.chose_cowan[index]], self.add_or_not[index]
 
-    def load_class(self, class_info):
-        self.chose_cowan = class_info.chose_cowan
-        self.add_or_not = class_info.add_or_not
-        for (ok, ov), (nk, nv) in zip(self.cowan_run_history.items(), class_info.cowan_run_history.items()):
-            ov.load_class(nv)
-            self.cowan_run_history[ok] = ov
-
     def set_xrange(self, x_range, num):
         for cowan in self.cowan_run_history.values():
             cowan.set_xrange(x_range, num)
@@ -1368,6 +1485,13 @@ class CowanList:
     def reset_xrange(self):
         for cowan in self.cowan_run_history.values():
             cowan.reset_xrange()
+
+    def load_class(self, class_info):
+        self.chose_cowan = class_info.chose_cowan
+        self.add_or_not = class_info.add_or_not
+        for (ok, ov), (nk, nv) in zip(self.cowan_run_history.items(), class_info.cowan_run_history.items()):
+            ov.load_class(nv)
+            self.cowan_run_history[ok] = ov
 
 
 class SimulateSpectral:

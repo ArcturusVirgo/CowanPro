@@ -241,10 +241,11 @@ class MainWindow(QMainWindow):
         self.simulate: Optional[SimulateSpectral] = SimulateSpectral()
         self.simulate_page4: Optional[SimulateSpectral] = None
         self.space_time_resolution = SpaceTimeResolution()
+        self.cowan_page5: Optional[Cowan] = None
 
         self.info = {
             'x_range': None,  # example: [2, 8, 0.01] [<最小波长>, <最大波长>, <最小步长>]
-            'version': '1.0.0',  # example: '1.0.0'
+            'version': '1.0.1',  # example: '1.0.0'
         }
 
         print('当前软件版本：{}'.format(self.info['version']))
@@ -434,6 +435,10 @@ class MainWindow(QMainWindow):
         # tree view
         self.ui.treeWidget.itemClicked.connect(functools.partial(Page4.tree_item_changed, self))  # 选择列表
 
+        # ------------------------------- 第五页 -------------------------------
+        # 下拉框
+        self.ui.page5_ion_select.activated.connect(functools.partial(Page5.ion_selected, self))  # 选择列表
+
     def save_project(self):
         def task():
             obj_info = shelve.open(PROJECT_PATH().joinpath('.cowan/obj_info').as_posix(), flag='n')
@@ -451,7 +456,7 @@ class MainWindow(QMainWindow):
             self.task_thread.progress.emit(35, 'cowan')
             obj_info['cowan'] = self.cowan
             self.task_thread.progress.emit(35, 'cowan')
-            obj_info['info'] = self.info
+
             # 第二页
             self.task_thread.progress.emit(45, 'expdata_2')
             obj_info['expdata_2'] = self.expdata_2
@@ -461,10 +466,19 @@ class MainWindow(QMainWindow):
             obj_info['simulated_grid'] = self.simulated_grid
             self.task_thread.progress.emit(90, 'space_time_resolution')
             obj_info['space_time_resolution'] = self.space_time_resolution
-            # 第四页
-            obj_info['simulate_page4'] = self.simulate_page4
-            self.task_thread.progress.emit(100, 'space_time_resolution')
 
+            # 第四页
+            self.task_thread.progress.emit(95, 'simulate_page4')
+            obj_info['simulate_page4'] = self.simulate_page4
+
+            # 第五页
+            self.task_thread.progress.emit(95, 'cowan_page5')
+            obj_info['cowan_page5'] = self.cowan_page5
+
+            # 总共
+            obj_info['info'] = self.info
+            # -----------------------------------------------------------
+            self.task_thread.progress.emit(100, 'All saved!')
             self.ui.statusbar.showMessage('保存成功！')
 
         self.task_thread = ProgressThread(dialog_title='正在保存项目，请稍后...', range_=(0, 100))
@@ -477,6 +491,7 @@ class MainWindow(QMainWindow):
             info = obj_info['info']
             self.info['x_range'] = info['x_range']
             self.info['version'] = info['version']
+
         # 函数定义结束 ------------------------------------------------------
 
         if not PROJECT_PATH().joinpath('.cowan/obj_info.dat').exists():
@@ -501,6 +516,8 @@ class MainWindow(QMainWindow):
         self.space_time_resolution = obj_info['space_time_resolution']
         # 第四页
         self.simulate_page4 = obj_info['simulate_page4']
+        # 第五页
+        self.cowan_page5 = obj_info['cowan_page5']
 
         # ---------------------------------------------------------
         obj_list = [
@@ -551,12 +568,25 @@ class MainWindow(QMainWindow):
             if project_info['x_range'] is not None:
                 if len(project_info['x_range']) == 2:
                     project_info['x_range'].append(0.01)
+
+            # 更新 >>>>>>>>>>>>>>>>>>
             obj_info.update({'info': project_info})
             print('版本升级完成！')
 
         # 1.0.0 > 1.0.1 ---------------------------------------------------
         if Version(obj_info['info']['version']) < Version('1.0.1'):
-            pass
+            print('正在进行版本升级 [1.0.0 > 1.0.1]')
+            project_info = obj_info['info']
+            # 1. 添加版本号
+            project_info['version'] = '1.0.1'
+            # 2. 更新了数据统计功能，主窗口类添加 cowan_page5 属性
+            print('更新了数据统计功能')
+            if 'cowan_page5' not in obj_info.keys():
+                obj_info['cowan_page5'] = None
+
+            # 更新 >>>>>>>>>>>>>>>>>>
+            obj_info.update({'info': project_info})
+            print('版本升级完成！')
 
     def closeEvent(self, event):
         # dialog = self.save_project()

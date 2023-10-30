@@ -1903,6 +1903,73 @@ class Ui_main_window(object):
         self.verticalLayout_11.addLayout(self.horizontalLayout_23)
 
         self.stackedWidget.addWidget(self.page_2)
+        self.page_3 = QWidget()
+        self.page_3.setObjectName(u"page_3")
+        self.horizontalLayout_13 = QHBoxLayout(self.page_3)
+        self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
+        self.groupBox_7 = QGroupBox(self.page_3)
+        self.groupBox_7.setObjectName(u"groupBox_7")
+        self.groupBox_7.setMaximumSize(QSize(300, 16777215))
+        self.verticalLayout_8 = QVBoxLayout(self.groupBox_7)
+        self.verticalLayout_8.setObjectName(u"verticalLayout_8")
+        self.comboBox = QComboBox(self.groupBox_7)
+        self.comboBox.setObjectName(u"comboBox")
+
+        self.verticalLayout_8.addWidget(self.comboBox)
+
+        self.treeWidget = QTreeWidget(self.groupBox_7)
+        __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setText(0, u"1");
+        self.treeWidget.setHeaderItem(__qtreewidgetitem)
+        self.treeWidget.setObjectName(u"treeWidget")
+        self.treeWidget.setMaximumSize(QSize(16777215, 16777215))
+
+        self.verticalLayout_8.addWidget(self.treeWidget)
+
+        self.horizontalLayout_28 = QHBoxLayout()
+        self.horizontalLayout_28.setObjectName(u"horizontalLayout_28")
+        self.page4_con_contribution = QPushButton(self.groupBox_7)
+        self.page4_con_contribution.setObjectName(u"page4_con_contribution")
+
+        self.horizontalLayout_28.addWidget(self.page4_con_contribution)
+
+        self.page4_ion_contribution = QPushButton(self.groupBox_7)
+        self.page4_ion_contribution.setObjectName(u"page4_ion_contribution")
+
+        self.horizontalLayout_28.addWidget(self.page4_ion_contribution)
+
+
+        self.verticalLayout_8.addLayout(self.horizontalLayout_28)
+
+
+        self.horizontalLayout_13.addWidget(self.groupBox_7)
+
+        self.groupBox_8 = QGroupBox(self.page_3)
+        self.groupBox_8.setObjectName(u"groupBox_8")
+        self.verticalLayout_5 = QVBoxLayout(self.groupBox_8)
+        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
+        self.webEngineView = QWebEngineView(self.groupBox_8)
+        self.webEngineView.setObjectName(u"webEngineView")
+        self.webEngineView.setMaximumSize(QSize(16777215, 250))
+        self.webEngineView.setUrl(QUrl(u"about:blank"))
+
+        self.verticalLayout_5.addWidget(self.webEngineView)
+
+        self.webEngineView_2 = QWebEngineView(self.groupBox_8)
+        self.webEngineView_2.setObjectName(u"webEngineView_2")
+        self.webEngineView_2.setUrl(QUrl(u"about:blank"))
+
+        self.verticalLayout_5.addWidget(self.webEngineView_2)
+
+        self.page4_consider_popular = QCheckBox(self.groupBox_8)
+        self.page4_consider_popular.setObjectName(u"page4_consider_popular")
+
+        self.verticalLayout_5.addWidget(self.page4_consider_popular)
+
+
+        self.horizontalLayout_13.addWidget(self.groupBox_8)
+
+        self.stackedWidget.addWidget(self.page_3)
         self.page_4 = QWidget()
         self.page_4.setObjectName(u"page_4")
         self.gridLayout_6 = QGridLayout(self.page_4)
@@ -2025,73 +2092,35 @@ class Ui_main_window(object):
         self.gridLayout_6.addWidget(self.groupBox_10, 1, 0, 1, 1)
 
         self.stackedWidget.addWidget(self.page_4)
-        self.page_3 = QWidget()
-        self.page_3.setObjectName(u"page_3")
-        self.horizontalLayout_13 = QHBoxLayout(self.page_3)
-        self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
-        self.groupBox_7 = QGroupBox(self.page_3)
-        self.groupBox_7.setObjectName(u"groupBox_7")
-        self.groupBox_7.setMaximumSize(QSize(300, 16777215))
-        self.verticalLayout_8 = QVBoxLayout(self.groupBox_7)
-        self.verticalLayout_8.setObjectName(u"verticalLayout_8")
-        self.comboBox = QComboBox(self.groupBox_7)
-        self.comboBox.setObjectName(u"comboBox")
+        self.page_5 = QWidget()
+        self.page_5.setObjectName(u"page_5")
+        self.verticalLayout_15 = QVBoxLayout(self.page_5)
+        self.verticalLayout_15.setObjectName(u"verticalLayout_15")
+        self.statistical_table = QTableWidget(self.page_5)
+        self.statistical_table.setObjectName(u"statistical_table")
 
-        self.verticalLayout_8.addWidget(self.comboBox)
+        self.verticalLayout_15.addWidget(self.statistical_table)
 
-        self.treeWidget = QTreeWidget(self.groupBox_7)
-        __qtreewidgetitem = QTreeWidgetItem()
-        __qtreewidgetitem.setText(0, u"1");
-        self.treeWidget.setHeaderItem(__qtreewidgetitem)
-        self.treeWidget.setObjectName(u"treeWidget")
-        self.treeWidget.setMaximumSize(QSize(16777215, 16777215))
+        self.horizontalLayout_31 = QHBoxLayout()
+        self.horizontalLayout_31.setObjectName(u"horizontalLayout_31")
+        self.label_9 = QLabel(self.page_5)
+        self.label_9.setObjectName(u"label_9")
 
-        self.verticalLayout_8.addWidget(self.treeWidget)
+        self.horizontalLayout_31.addWidget(self.label_9)
 
-        self.horizontalLayout_28 = QHBoxLayout()
-        self.horizontalLayout_28.setObjectName(u"horizontalLayout_28")
-        self.page4_con_contribution = QPushButton(self.groupBox_7)
-        self.page4_con_contribution.setObjectName(u"page4_con_contribution")
+        self.page5_ion_select = QComboBox(self.page_5)
+        self.page5_ion_select.setObjectName(u"page5_ion_select")
 
-        self.horizontalLayout_28.addWidget(self.page4_con_contribution)
+        self.horizontalLayout_31.addWidget(self.page5_ion_select)
 
-        self.page4_ion_contribution = QPushButton(self.groupBox_7)
-        self.page4_ion_contribution.setObjectName(u"page4_ion_contribution")
+        self.horizontalSpacer_16 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        self.horizontalLayout_28.addWidget(self.page4_ion_contribution)
+        self.horizontalLayout_31.addItem(self.horizontalSpacer_16)
 
 
-        self.verticalLayout_8.addLayout(self.horizontalLayout_28)
+        self.verticalLayout_15.addLayout(self.horizontalLayout_31)
 
-
-        self.horizontalLayout_13.addWidget(self.groupBox_7)
-
-        self.groupBox_8 = QGroupBox(self.page_3)
-        self.groupBox_8.setObjectName(u"groupBox_8")
-        self.verticalLayout_5 = QVBoxLayout(self.groupBox_8)
-        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
-        self.webEngineView = QWebEngineView(self.groupBox_8)
-        self.webEngineView.setObjectName(u"webEngineView")
-        self.webEngineView.setMaximumSize(QSize(16777215, 250))
-        self.webEngineView.setUrl(QUrl(u"about:blank"))
-
-        self.verticalLayout_5.addWidget(self.webEngineView)
-
-        self.webEngineView_2 = QWebEngineView(self.groupBox_8)
-        self.webEngineView_2.setObjectName(u"webEngineView_2")
-        self.webEngineView_2.setUrl(QUrl(u"about:blank"))
-
-        self.verticalLayout_5.addWidget(self.webEngineView_2)
-
-        self.page4_consider_popular = QCheckBox(self.groupBox_8)
-        self.page4_consider_popular.setObjectName(u"page4_consider_popular")
-
-        self.verticalLayout_5.addWidget(self.page4_consider_popular)
-
-
-        self.horizontalLayout_13.addWidget(self.groupBox_8)
-
-        self.stackedWidget.addWidget(self.page_3)
+        self.stackedWidget.addWidget(self.page_5)
 
         self.horizontalLayout.addWidget(self.stackedWidget)
 
@@ -2128,7 +2157,7 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(4)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -2408,6 +2437,11 @@ class Ui_main_window(object):
         ___qtablewidgetitem6.setText(QCoreApplication.translate("main_window", u"\u5bc6\u5ea6", None));
         ___qtablewidgetitem7 = self.st_resolution_table.horizontalHeaderItem(4)
         ___qtablewidgetitem7.setText(QCoreApplication.translate("main_window", u"\u5b9e\u9a8c\u8c31\u6587\u4ef6\u540d", None));
+        self.groupBox_7.setTitle(QCoreApplication.translate("main_window", u"GroupBox", None))
+        self.page4_con_contribution.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u7ec4\u6001\u7684\u8d21\u732e", None))
+        self.page4_ion_contribution.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u79bb\u5b50\u7684\u8d21\u732e", None))
+        self.groupBox_8.setTitle(QCoreApplication.translate("main_window", u"GroupBox", None))
+        self.page4_consider_popular.setText(QCoreApplication.translate("main_window", u"\u8003\u8651\u5e03\u5c45", None))
         self.groupBox_9.setTitle(QCoreApplication.translate("main_window", u"\u968f\u65f6\u95f4\u7684\u53d8\u5316", None))
         self.label_13.setText(QCoreApplication.translate("main_window", u"\u4f4d\u7f6e\u9009\u62e9", None))
         self.td_by_t.setText(QCoreApplication.translate("main_window", u"\u7ed8\u5236", None))
@@ -2419,11 +2453,7 @@ class Ui_main_window(object):
         self.groupBox_10.setTitle(QCoreApplication.translate("main_window", u"\u968f\u4f4d\u7f6e\u7684\u53d8\u5316", None))
         self.label_22.setText(QCoreApplication.translate("main_window", u"\u65f6\u95f4\u9009\u62e9", None))
         self.td_by_s.setText(QCoreApplication.translate("main_window", u"\u7ed8\u5236", None))
-        self.groupBox_7.setTitle(QCoreApplication.translate("main_window", u"GroupBox", None))
-        self.page4_con_contribution.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u7ec4\u6001\u7684\u8d21\u732e", None))
-        self.page4_ion_contribution.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u79bb\u5b50\u7684\u8d21\u732e", None))
-        self.groupBox_8.setTitle(QCoreApplication.translate("main_window", u"GroupBox", None))
-        self.page4_consider_popular.setText(QCoreApplication.translate("main_window", u"\u8003\u8651\u5e03\u5c45", None))
+        self.label_9.setText(QCoreApplication.translate("main_window", u"\u8bf7\u9009\u62e9\u79bb\u5316\u5ea6", None))
         self.menu.setTitle(QCoreApplication.translate("main_window", u"\u6587\u4ef6", None))
         self.menu_2.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))
         self.menu_3.setTitle(QCoreApplication.translate("main_window", u"\u5de5\u5177", None))
