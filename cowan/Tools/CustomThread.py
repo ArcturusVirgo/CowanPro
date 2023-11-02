@@ -1,5 +1,6 @@
 from PySide6.QtCore import QThread, Signal
-from .ui.custom_widget import *
+
+from ..View import CustomProgressDialog
 
 
 class ProgressThread(QThread):

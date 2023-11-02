@@ -1,13 +1,19 @@
+import copy
 import functools
+import json
 import shelve
+import shutil
 import sys
 import warnings
 import traceback
-from packaging.version import Version
+from pathlib import Path
+from typing import Optional
 
-from PySide6.QtWebEngineCore import QWebEnginePage
-from PySide6.QtWidgets import QAbstractItemView
 from pympler import asizeof
+from packaging.version import Version
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtWidgets import QAbstractItemView, QWidget, QMessageBox, QFileDialog, QMainWindow, QHeaderView, \
+    QApplication
 
 from cowan import *
 
@@ -323,39 +329,39 @@ class MainWindow(QMainWindow):
         # ------------------------------- 第一页 -------------------------------
         # =====>> 下拉框
         # 原子序数改变
-        self.ui.atomic_num.activated.connect(functools.partial(Page1.atom_changed, self))
+        self.ui.atomic_num.activated.connect(functools.partial(LineIdentification.atom_changed, self))
         # 元素符号改变
-        self.ui.atomic_symbol.activated.connect(functools.partial(Page1.atom_changed, self))
+        self.ui.atomic_symbol.activated.connect(functools.partial(LineIdentification.atom_changed, self))
         # 元素名称改变
-        self.ui.atomic_name.activated.connect(functools.partial(Page1.atom_changed, self))
+        self.ui.atomic_name.activated.connect(functools.partial(LineIdentification.atom_changed, self))
         # 离化度
-        self.ui.atomic_ion.activated.connect(functools.partial(Page1.atom_ion_changed, self))
+        self.ui.atomic_ion.activated.connect(functools.partial(LineIdentification.atom_ion_changed, self))
         # =====>> 按钮
         # 加载实验数据
-        self.ui.load_exp_data.clicked.connect(functools.partial(Page1.load_exp_data, self))
+        self.ui.load_exp_data.clicked.connect(functools.partial(LineIdentification.load_exp_data, self))
         # 重新绘制实验谱线
-        self.ui.redraw_exp_data.clicked.connect(functools.partial(Page1.redraw_exp_data, self))
+        self.ui.redraw_exp_data.clicked.connect(functools.partial(LineIdentification.redraw_exp_data, self))
         # 添加组态
-        self.ui.add_configuration.clicked.connect(functools.partial(Page1.add_configuration, self))
+        self.ui.add_configuration.clicked.connect(functools.partial(LineIdentification.add_configuration, self))
         # 加载in36文件
-        self.ui.load_in36.clicked.connect(functools.partial(Page1.load_in36, self))
+        self.ui.load_in36.clicked.connect(functools.partial(LineIdentification.load_in36, self))
         # 加载in2文件
-        self.ui.load_in2.clicked.connect(functools.partial(Page1.load_in2, self))
+        self.ui.load_in2.clicked.connect(functools.partial(LineIdentification.load_in2, self))
         # 预览in36
-        self.ui.preview_in36.clicked.connect(functools.partial(Page1.preview_in36, self))
+        self.ui.preview_in36.clicked.connect(functools.partial(LineIdentification.preview_in36, self))
         # 预览in2
-        self.ui.preview_in2.clicked.connect(functools.partial(Page1.preview_in2, self))
+        self.ui.preview_in2.clicked.connect(functools.partial(LineIdentification.preview_in2, self))
         # 组态下移
-        self.ui.configuration_move_down.clicked.connect(functools.partial(Page1.configuration_move_down, self))
+        self.ui.configuration_move_down.clicked.connect(functools.partial(LineIdentification.configuration_move_down, self))
         # 组态上移
-        self.ui.configuration_move_up.clicked.connect(functools.partial(Page1.configuration_move_up, self))
+        self.ui.configuration_move_up.clicked.connect(functools.partial(LineIdentification.configuration_move_up, self))
         # 运行Cowan
-        self.ui.run_cowan.clicked.connect(functools.partial(Page1.run_cowan, self))
+        self.ui.run_cowan.clicked.connect(functools.partial(LineIdentification.run_cowan, self))
         # =====>> 单选框
         # 自动生成 in36 组态
-        self.ui.auto_write_in36.clicked.connect(functools.partial(Page1.auto_write_in36, self))
+        self.ui.auto_write_in36.clicked.connect(functools.partial(LineIdentification.auto_write_in36, self))
         # 手动输入 in36 组态
-        self.ui.manual_write_in36.clicked.connect(functools.partial(Page1.manual_write_in36, self))
+        self.ui.manual_write_in36.clicked.connect(functools.partial(LineIdentification.manual_write_in36, self))
         # 线状谱展宽成gauss
         self.ui.gauss.clicked.connect(
             lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_gauss)))
@@ -367,77 +373,77 @@ class MainWindow(QMainWindow):
             lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_NP)))
         # =====>> 输入框
         # in2 的斯莱特系数改变
-        self.ui.in2_11_e.valueChanged.connect(functools.partial(Page1.in2_11_e_value_changed, self))  # in2 11 e
+        self.ui.in2_11_e.valueChanged.connect(functools.partial(LineIdentification.in2_11_e_value_changed, self))  # in2 11 e
         # 偏移
-        self.ui.update_offect.clicked.connect(functools.partial(Page1.re_widen, self))  # 偏移
+        self.ui.update_offect.clicked.connect(functools.partial(LineIdentification.re_widen, self))  # 偏移
         # =====>> 右键菜单
         # in36 组态表格
         self.ui.in36_configuration_view.customContextMenuRequested.connect(
-            functools.partial(Page1.in36_configuration_view_right_menu, self))
+            functools.partial(LineIdentification.in36_configuration_view_right_menu, self))
         # 运行历史
         self.ui.run_history_list.customContextMenuRequested.connect(
-            functools.partial(Page1.run_history_list_right_menu, self))
+            functools.partial(LineIdentification.run_history_list_right_menu, self))
         # 选择列表
         self.ui.selection_list.customContextMenuRequested.connect(
-            functools.partial(Page1.selection_list_right_menu, self))
+            functools.partial(LineIdentification.selection_list_right_menu, self))
         # =====>> 双击操作
         # 加载库中的项目
-        self.ui.run_history_list.itemDoubleClicked.connect(functools.partial(Page1.load_history, self))
+        self.ui.run_history_list.itemDoubleClicked.connect(functools.partial(LineIdentification.load_history, self))
 
         # ------------------------------- 第二页 -------------------------------
         # =====>> 按钮
         # 绘制模拟谱
-        self.ui.page2_plot_spectrum.clicked.connect(functools.partial(Page2.plot_spectrum, self))
+        self.ui.page2_plot_spectrum.clicked.connect(functools.partial(SpectralSimulation.plot_spectrum, self))
         # 加载实验数据
-        self.ui.page2_load_exp_data.clicked.connect(functools.partial(Page2.load_exp_data, self))
+        self.ui.page2_load_exp_data.clicked.connect(functools.partial(SpectralSimulation.load_exp_data, self))
         # 计算网格
-        self.ui.page2_cal_grid.clicked.connect(functools.partial(Page2.cal_grid, self))
+        self.ui.page2_cal_grid.clicked.connect(functools.partial(SpectralSimulation.cal_grid, self))
         # 记录
-        self.ui.recoder.clicked.connect(functools.partial(Page2.st_resolution_recoder, self))
+        self.ui.recoder.clicked.connect(functools.partial(SpectralSimulation.st_resolution_recoder, self))
         # 绘制实验谱
-        self.ui.plot_exp_2.clicked.connect(functools.partial(Page2.plot_exp, self))
+        self.ui.plot_exp_2.clicked.connect(functools.partial(SpectralSimulation.plot_exp, self))
         # 批量加载时空分辨光谱
-        self.ui.load_space_time.clicked.connect(functools.partial(Page2.load_space_time, self))
+        self.ui.load_space_time.clicked.connect(functools.partial(SpectralSimulation.load_space_time, self))
         # 选择峰位置
-        self.ui.choose_peaks.clicked.connect(functools.partial(Page2.choose_peaks, self))
+        self.ui.choose_peaks.clicked.connect(functools.partial(SpectralSimulation.choose_peaks, self))
         # 显示离子丰度
-        self.ui.show_abu.clicked.connect(functools.partial(Page2.show_abu, self))
+        self.ui.show_abu.clicked.connect(functools.partial(SpectralSimulation.show_abu, self))
         # Cowan对象更新
-        self.ui.page2_cowan_obj_update.clicked.connect(functools.partial(Page2.cowan_obj_update, self))
+        self.ui.page2_cowan_obj_update.clicked.connect(functools.partial(SpectralSimulation.cowan_obj_update, self))
         # =====>> 复选框
         # 切换特征峰位置是否显示
-        self.ui.show_peaks.toggled.connect(functools.partial(Page2.plot_spectrum, self))
+        self.ui.show_peaks.toggled.connect(functools.partial(SpectralSimulation.plot_spectrum, self))
         # =====>> 单击操作
         # 加载网格中的模拟谱线
-        self.ui.page2_grid_list.itemSelectionChanged.connect(functools.partial(Page2.grid_list_clicked, self))  # 网格列表
+        self.ui.page2_grid_list.itemSelectionChanged.connect(functools.partial(SpectralSimulation.grid_list_clicked, self))  # 网格列表
         # =====>> 双击操作
         # 加载库中的项目
-        self.ui.st_resolution_table.itemDoubleClicked.connect(functools.partial(Page2.st_resolution_clicked, self))
+        self.ui.st_resolution_table.itemDoubleClicked.connect(functools.partial(SpectralSimulation.st_resolution_clicked, self))
         # =====>> 列表
         # 选择列表该百年
-        self.ui.page2_selection_list.itemChanged.connect(functools.partial(Page2.selection_list_changed, self))
+        self.ui.page2_selection_list.itemChanged.connect(functools.partial(SpectralSimulation.selection_list_changed, self))
         # =====>> 右键菜单
         self.ui.st_resolution_table.customContextMenuRequested.connect(
-            functools.partial(Page2.st_resolution_right_menu, self))  # 时空分辨表格的右键菜单
+            functools.partial(SpectralSimulation.st_resolution_right_menu, self))  # 时空分辨表格的右键菜单
 
         # ------------------------------- 第三页 -------------------------------
         # 按钮
-        self.ui.td_by_t.clicked.connect(functools.partial(Page3.plot_by_times, self))
-        self.ui.td_by_s.clicked.connect(functools.partial(Page3.plot_by_locations, self))
-        self.ui.td_by_st.clicked.connect(functools.partial(Page3.plot_by_space_time, self))
+        self.ui.td_by_t.clicked.connect(functools.partial(EvolutionaryProcess.plot_by_times, self))
+        self.ui.td_by_s.clicked.connect(functools.partial(EvolutionaryProcess.plot_by_locations, self))
+        self.ui.td_by_st.clicked.connect(functools.partial(EvolutionaryProcess.plot_by_space_time, self))
 
         # ------------------------------- 第四页 -------------------------------
         # 按钮
-        self.ui.page4_con_contribution.clicked.connect(functools.partial(Page4.plot_con_contribution, self))  # 组态贡献
-        self.ui.page4_ion_contribution.clicked.connect(functools.partial(Page4.plot_ion_contribution, self))  # 组态贡献
+        self.ui.page4_con_contribution.clicked.connect(functools.partial(ConfigurationContribution.plot_con_contribution, self))  # 组态贡献
+        self.ui.page4_ion_contribution.clicked.connect(functools.partial(ConfigurationContribution.plot_ion_contribution, self))  # 组态贡献
         # 下拉框
-        self.ui.comboBox.activated.connect(functools.partial(Page4.comboBox_changed, self))  # 选择列表
+        self.ui.comboBox.activated.connect(functools.partial(ConfigurationContribution.comboBox_changed, self))  # 选择列表
         # tree view
-        self.ui.treeWidget.itemClicked.connect(functools.partial(Page4.tree_item_changed, self))  # 选择列表
+        self.ui.treeWidget.itemClicked.connect(functools.partial(ConfigurationContribution.tree_item_changed, self))  # 选择列表
 
         # ------------------------------- 第五页 -------------------------------
         # 下拉框
-        self.ui.page5_ion_select.activated.connect(functools.partial(Page5.ion_selected, self))  # 选择列表
+        self.ui.page5_ion_select.activated.connect(functools.partial(DataStatistics.ion_selected, self))  # 选择列表
 
     def save_project(self):
         def task():
@@ -535,16 +541,16 @@ class MainWindow(QMainWindow):
 
         # 更新界面
         # 第一页 =================================================
-        functools.partial(UpdatePage1.update_page, self)()
+        functools.partial(UpdateLineIdentification.update_page, self)()
 
         # 第二页 =================================================
-        functools.partial(UpdatePage2.update_page, self)()
+        functools.partial(UpdateSpectralSimulation.update_page, self)()
 
         # 第三页 =================================================
-        functools.partial(UpdatePage3.update_space_time_combobox, self)()
+        functools.partial(UpdateEvolutionaryProcess.update_space_time_combobox, self)()
 
         # 第四页 =================================================
-        functools.partial(UpdatePage4.update_space_time_combobox, self)()
+        functools.partial(UpdateConfigurationContribution.update_space_time_combobox, self)()
 
     @staticmethod
     def print_memory():
@@ -598,8 +604,5 @@ class MainWindow(QMainWindow):
 if __name__ == '__main__':
     app = QApplication([])
     window = LoginWindow()  # 启动登陆页面
-    # window = MainWindow(Path('F:/Cowan/Test'), False)  # 启动主界面
-    # window = MainWindow(Path('F:/Cowan/Ge_new'), False)  # 启动主界面
-    # window = MainWindow(Path('F:/Cowan/Ni'), False)  # 启动主界面
     window.show()
     app.exec()
