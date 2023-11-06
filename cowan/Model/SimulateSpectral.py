@@ -300,11 +300,11 @@ class SimulateSpectral:
         Returns:
             返回一个列表，每个元素为对应离子的丰度
         """
-        return self.__cal_abundance2(t, e)
+        return self.__cal_abundance(t, e)
 
-    def __cal_abundance1(self, temperature, electron_density) -> np.ndarray:
+    def __cal_abundance(self, temperature, electron_density) -> np.ndarray:
         """
-        计算各种离子的丰度（用我自己的方法）
+        计算各种离子的丰度
 
         Args:
             temperature: 等离子体温度，单位是ev
@@ -328,49 +328,6 @@ class SimulateSpectral:
         ratio = S / (Ar + electron_density * A3r)
         abundance = self.__calculate_a_over_S(ratio)
         return abundance
-
-    def __cal_abundance2(self, temperature, electron_density):
-        """
-        使用fortran程序中的方法计算离子丰度
-
-        Args:
-            temperature: 等离子体温度，单位是ev
-            electron_density: 等离子体粒子数密度
-
-        Returns:
-            返回一个列表，每个元素为对应离子的丰度
-        """
-        atomic_num = self.cowan_list[0].in36.atom.num
-        ion_num = np.array([i for i in range(atomic_num)])
-        ion_energy = np.array(list(IONIZATION_ENERGY[atomic_num].values()))
-        electron_num = np.array([self.__get_outermost_num(i) for i in range(atomic_num)])
-
-        S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
-                ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
-        Ar = (5.2 * 1e-14 * np.sqrt(ion_energy / temperature) * ion_num * (
-                0.429 + 0.5 * np.log(ion_energy / temperature) + 0.469 * np.sqrt(temperature / ion_energy)))
-        A3r = (2.97 * 1e-27 * electron_num / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy)))
-        Co = S / (Ar + electron_density * A3r)
-        CoM = [Co[0]]
-        for i in range(1, atomic_num):
-            CoM.append(Co[i] * CoM[i - 1])
-        Cosum = 0
-        CoMM = []
-        for i in range(atomic_num):
-            CoMM.append((i + 1) * CoM[i])
-            Cosum += CoMM[i]
-        Rat = [electron_density / Cosum]
-        for i in range(1, atomic_num):
-            Rat.append(Co[i - 1] * Rat[i - 1])
-        Ratsum = sum(Rat)
-        aveion = electron_density / Ratsum
-        Ratio = []
-        for i in range(atomic_num):
-            if Rat[i] / Ratsum < 1e-4:
-                Ratio.append(0)
-            else:
-                Ratio.append(Rat[i] / Ratsum)
-        return Ratio
 
     def __get_outermost_num(self, ion: int):
         """

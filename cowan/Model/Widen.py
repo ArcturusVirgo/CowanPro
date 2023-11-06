@@ -93,6 +93,7 @@ class WidenAll:
         new_wavelength = new_wavelength.values
         new_intensity = abs(new_data['intensity'])
         new_intensity = new_intensity.values
+        # 挑选上能级
         flag = new_data['energy_l'] > new_data['energy_h']
         not_flag = np.bitwise_not(flag)
         temp_1 = new_data['energy_l'][flag]

@@ -1,5 +1,6 @@
 from typing import Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -38,30 +39,58 @@ class CalData:
         产生两个展宽对象：widen_all、widen_part
 
         """
-        self.init_data = pd.read_csv(
+        self.init_data = pd.read_fwf(
             (PROJECT_PATH() / f'cal_result/{self.name}/spectra.dat').as_posix(),
-            sep='\s+',
+            widths=[9, 9, 9, 9, 3, 3, 5, 5],
             names=['energy_l', 'energy_h', 'wavelength_ev', 'intensity', 'index_l', 'index_h', 'J_l', 'J_h', ],
         )
         self.widen_all = WidenAll(self.name, self.init_data, self.exp_data)
         self.widen_part = WidenPart(self.name, self.init_data, self.exp_data)
 
+    # TODO 测试用
+    def test(self):
+        wavelength_nm = 1239.85 / self.init_data['wavelength_ev']
+        intensity = self.init_data['intensity']
+        plt.plot(wavelength_nm)
+        plt.show()
+
     def get_average_wavelength(self):
         """
         获取平均波长
+        原理见苏老师博士毕业论文 式子 (5.1) (5.2)
 
         Returns:
             返回当前离化度的各个组态的平均波长，数据格式为字典
             键为组态序号（str），值为平均波长（float）
         """
         temp_data = {}
+        new_data = self.init_data.__deepcopy__()
+        # 挑选上能级
+        flag = new_data['energy_l'] > new_data['energy_h']
+        not_flag = np.bitwise_not(flag)
+        temp_1 = new_data['energy_l'][flag]
+        temp_2 = new_data['energy_h'][not_flag]
+        new_energy = temp_1.combine_first(temp_2)
+        new_energy = new_energy.values  # 上能级
+        temp_1 = new_data['J_l'][flag]
+        temp_2 = new_data['J_h'][not_flag]
+        new_J = temp_1.combine_first(temp_2)
+        new_J = new_J.values  # 上能及对应的J
+        # 添加上能级数据
+        new_data['energy'] = new_energy
+        new_data['J'] = new_J
+
         # 按照跃迁正例分开
-        data_grouped = self.init_data.groupby(by=['index_l', 'index_h'])
+        data_grouped = new_data.groupby(by=['index_l', 'index_h'])
         for index in data_grouped.groups.keys():
             temp_group = pd.DataFrame(data_grouped.get_group(index))
-            intensity = temp_group['intensity'].values
-            wavelength = 1239.85 / temp_group['wavelength_ev'].values
-            temp_data[f'{index[0]}_{index[1]}'] = (intensity * wavelength).sum() / intensity.sum()
+            f_ij = temp_group['intensity'].values
+            g_i = (2 * temp_group['J'].values) + 1
+            E_ij = 1239.85 / temp_group['wavelength_ev'].values
+            # result 开始计算
+            E_UTA = (E_ij * f_ij * g_i).sum() / (f_ij * g_i).sum()
+            Delta_E_UTA = np.sqrt((g_i * f_ij * (E_ij - E_UTA) ** 2).sum() / (g_i * f_ij).sum())
+            temp_data[f'{index[0]}_{index[1]}'] = [E_UTA, Delta_E_UTA]
         return temp_data
 
     def plot_line(self):
@@ -144,6 +173,15 @@ class CalData:
         self.widen_all.delta_lambda = delta_lambda
         self.widen_part.delta_lambda = delta_lambda
 
+    def get_delta_lambda(self):
+        """
+        获取展宽时的波长偏移量
+
+        Returns:
+            波长偏移量，单位为 nm
+        """
+        return self.widen_all.delta_lambda
+
     def set_fwhm(self, fwhm: float):
         """
         设置展宽时的半高宽
@@ -154,6 +192,15 @@ class CalData:
         self.widen_all.fwhm_value = fwhm
         self.widen_part.fwhm_value = fwhm
 
+    def get_fwhm(self):
+        """
+        获取展宽时的半高宽
+
+        Returns:
+            半高宽，单位为 nm
+        """
+        return self.widen_all.fwhm_value
+
     def set_temperature(self, temperature: float):
         """
         设置等离子体温度
@@ -163,24 +210,6 @@ class CalData:
         """
         self.widen_all.temperature = temperature
         self.widen_part.temperature = temperature
-
-    def get_delta_lambda(self):
-        """
-        获取展宽时的波长偏移量
-
-        Returns:
-            波长偏移量，单位为 nm
-        """
-        return self.widen_all.delta_lambda
-
-    def get_fwhm(self):
-        """
-        获取展宽时的半高宽
-
-        Returns:
-            半高宽，单位为 nm
-        """
-        return self.widen_all.fwhm_value
 
     def get_temperature(self):
         """
@@ -287,25 +316,6 @@ class CalData:
             # 将 configuration_info 添加到 info_dict 中
             info_dict[key] = configuration_info
 
-        # print(
-        #     '{:>2}  {:>2}  {:>7}  {:>7}  {:>4}  {:>7}  {:>10}  {:>10}  {:>10}  {:>7}  {:>10}  {:>10}'.format(
-        #         'i', 'k', 'min', 'max', 'n', 'sum_gf', 'sum_Ar', 'sum_Aa', 'ave_Aa', 'ave_Ga', 'ConAverGa',
-        #         'ConEWidth', ))
-        # for key, value in info_dict.items():
-        #     print(
-        #         '{:>2d}  {:>2d}  {:>7.3f}  {:>7.3f}  {:>4d}  {:>7.3f}  {:>10.2e}  {:>10.2e}  {:>10.2e}  {:>7.3f}  {:>10.3f}  {:>10.3f}'.format(
-        #             key[0], key[1],
-        #             value['wavelength_range']['min'],
-        #             value['wavelength_range']['max'],
-        #             value['line_num'],
-        #             value['sum_gf'],
-        #             value['sum_Ar'],
-        #             value['sum_Aa'],
-        #             value['ave_Aa'],
-        #             value['ave_Ga'],
-        #             value['ConAverGa'],
-        #             value['ConEWidth'],
-        #         ))
         self.info_dict = info_dict
         return info_dict
 

@@ -187,9 +187,11 @@ class LoginWindow(QWidget):
         path_ = Path(path_)  # 项目路径
         # 如果项目文件不存在，就删除项目
         if not path_.exists():
-            reply = QMessageBox.question(self, 'Warning', '项目路径不存在，是否删除该项目？', QMessageBox.Yes,
-                                         QMessageBox.No)
-            if reply == QMessageBox.Yes:
+            reply = QMessageBox.question(self, 'Warning', '项目路径不存在，是否删除该项目？',
+                                         QMessageBox.StandardButton.Yes,
+                                         QMessageBox.StandardButton.No
+                                         )
+            if reply == QMessageBox.StandardButton.Yes:
                 self.project_data.pop(name)
                 self.update_project_list()
             return
@@ -352,7 +354,8 @@ class MainWindow(QMainWindow):
         # 预览in2
         self.ui.preview_in2.clicked.connect(functools.partial(LineIdentification.preview_in2, self))
         # 组态下移
-        self.ui.configuration_move_down.clicked.connect(functools.partial(LineIdentification.configuration_move_down, self))
+        self.ui.configuration_move_down.clicked.connect(
+            functools.partial(LineIdentification.configuration_move_down, self))
         # 组态上移
         self.ui.configuration_move_up.clicked.connect(functools.partial(LineIdentification.configuration_move_up, self))
         # 运行Cowan
@@ -373,7 +376,8 @@ class MainWindow(QMainWindow):
             lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_NP)))
         # =====>> 输入框
         # in2 的斯莱特系数改变
-        self.ui.in2_11_e.valueChanged.connect(functools.partial(LineIdentification.in2_11_e_value_changed, self))  # in2 11 e
+        self.ui.in2_11_e.valueChanged.connect(
+            functools.partial(LineIdentification.in2_11_e_value_changed, self))  # in2 11 e
         # 偏移
         self.ui.update_offect.clicked.connect(functools.partial(LineIdentification.re_widen, self))  # 偏移
         # =====>> 右键菜单
@@ -410,18 +414,23 @@ class MainWindow(QMainWindow):
         self.ui.show_abu.clicked.connect(functools.partial(SpectralSimulation.show_abu, self))
         # Cowan对象更新
         self.ui.page2_cowan_obj_update.clicked.connect(functools.partial(SpectralSimulation.cowan_obj_update, self))
+        # todo 测试，删除
+        self.ui.pushButton_2.clicked.connect(functools.partial(SpectralSimulation.test, self))
         # =====>> 复选框
         # 切换特征峰位置是否显示
         self.ui.show_peaks.toggled.connect(functools.partial(SpectralSimulation.plot_spectrum, self))
         # =====>> 单击操作
         # 加载网格中的模拟谱线
-        self.ui.page2_grid_list.itemSelectionChanged.connect(functools.partial(SpectralSimulation.grid_list_clicked, self))  # 网格列表
+        self.ui.page2_grid_list.itemSelectionChanged.connect(
+            functools.partial(SpectralSimulation.grid_list_clicked, self))  # 网格列表
         # =====>> 双击操作
         # 加载库中的项目
-        self.ui.st_resolution_table.itemDoubleClicked.connect(functools.partial(SpectralSimulation.st_resolution_clicked, self))
+        self.ui.st_resolution_table.itemDoubleClicked.connect(
+            functools.partial(SpectralSimulation.st_resolution_clicked, self))
         # =====>> 列表
         # 选择列表该百年
-        self.ui.page2_selection_list.itemChanged.connect(functools.partial(SpectralSimulation.selection_list_changed, self))
+        self.ui.page2_selection_list.itemChanged.connect(
+            functools.partial(SpectralSimulation.selection_list_changed, self))
         # =====>> 右键菜单
         self.ui.st_resolution_table.customContextMenuRequested.connect(
             functools.partial(SpectralSimulation.st_resolution_right_menu, self))  # 时空分辨表格的右键菜单
@@ -434,12 +443,15 @@ class MainWindow(QMainWindow):
 
         # ------------------------------- 第四页 -------------------------------
         # 按钮
-        self.ui.page4_con_contribution.clicked.connect(functools.partial(ConfigurationContribution.plot_con_contribution, self))  # 组态贡献
-        self.ui.page4_ion_contribution.clicked.connect(functools.partial(ConfigurationContribution.plot_ion_contribution, self))  # 组态贡献
+        self.ui.page4_con_contribution.clicked.connect(
+            functools.partial(ConfigurationContribution.plot_con_contribution, self))  # 组态贡献
+        self.ui.page4_ion_contribution.clicked.connect(
+            functools.partial(ConfigurationContribution.plot_ion_contribution, self))  # 组态贡献
         # 下拉框
         self.ui.comboBox.activated.connect(functools.partial(ConfigurationContribution.comboBox_changed, self))  # 选择列表
         # tree view
-        self.ui.treeWidget.itemClicked.connect(functools.partial(ConfigurationContribution.tree_item_changed, self))  # 选择列表
+        self.ui.treeWidget.itemClicked.connect(
+            functools.partial(ConfigurationContribution.tree_item_changed, self))  # 选择列表
 
         # ------------------------------- 第五页 -------------------------------
         # 下拉框

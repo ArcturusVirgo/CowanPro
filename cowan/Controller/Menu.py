@@ -224,13 +224,14 @@ class Menu(MainWindow):
         path = Path(path)
 
         data_frames = {}
-        names = ['下态序号', '上态序号', '跃迁名称', '平均波长(nm)']
+        names = ['下态序号', '上态序号', '跃迁名称', 'averaged transition energy (nm)', 'width']
         for cowan_, _ in self.cowan_lists:
             ave_w = cowan_.cal_data.get_average_wavelength()
             temp_1 = []
             temp_2 = []
             temp_3 = []
             temp_4 = []
+            temp_5 = []
             for key, value in ave_w.items():
                 temp_1.append(int(key.split('_')[0]))
                 temp_2.append(int(key.split('_')[1]))
@@ -240,12 +241,19 @@ class Menu(MainWindow):
                         int(key.split('_')[1])
                     )
                 )
-                temp_4.append(value)
+                temp_4.append(value[0])
+                temp_5.append(value[1])
             # 将数据放在DataFrame中
             data_frames[cowan_.name] = (
-                pd.DataFrame({names[0]: temp_1, names[1]: temp_2, names[2]: temp_3, names[3]: temp_4}))
+                pd.DataFrame({
+                    names[0]: temp_1,
+                    names[1]: temp_2,
+                    names[2]: temp_3,
+                    names[3]: temp_4,
+                    names[4]: temp_5,
+                }))
             # 存储
-            with pd.ExcelWriter(path.joinpath('组态平均波长.xlsx'), ) as writer:
+            with pd.ExcelWriter(path.joinpath('averaged transition energy.xlsx'), ) as writer:
                 for key, value in data_frames.items():
                     value.to_excel(writer, sheet_name=key, index=False)
 

@@ -515,6 +515,10 @@ class SpectralSimulation(MainWindow):
         self.task_thread.progress_dialog.set_prompt_words('正在重新模拟xxx的光谱，请稍后……')
         self.task_thread.start()
 
+    # todo 测试，删除
+    def test(self):
+        self.cowan.cal_data.test()
+
 
 class UpdateSpectralSimulation(MainWindow):
     def update_selection_list(self):
