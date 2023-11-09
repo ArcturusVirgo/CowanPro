@@ -464,7 +464,7 @@ class SpectralSimulation(MainWindow):
             max_y = max(y_list)
             for x_, y_ in zip(x_list, y_list):
                 ax.text(x_, y_, '{:.4f}'.format(y_), ha='center', va='bottom', fontsize=10, rotation=45)
-            ax.set_xticks([f'$Al^{v}+$' for v in x_list])
+            # ax.set_xticks([f'$Al^{v}+$' for v in x_list])
             ax.set_ylim(0, max_y * 1.2)
             ax.set_title('${:2}$\n${:.4f}\\enspace eV \\quad and \\quad {}*10^{{{}}}\\enspace cm^{{-3}}$'.format(
                 self.cowan_lists.chose_cowan[0].split('_')[0],
