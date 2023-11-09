@@ -51,14 +51,31 @@ ATOM_INFO = json.load(open(_path_.parent / 'IonsInfo.json', 'r'))
 # 电离能
 IONIZATION_ENERGY = {}
 for key_, value_ in ATOM_INFO['energy'].items():
-    IONIZATION_ENERGY[int(key_)] = value_
+    temp_dict = {}
+    for key__, value__ in value_.items():
+        temp_dict[int(key__)] = value__
+    IONIZATION_ENERGY[int(key_)] = temp_dict
+
+# 旧的电离能
+OLD_IONIZATION_ENERGY = {}
+for key_, value_ in ATOM_INFO['old_energy'].items():
+    temp_dict = {}
+    for key__, value__ in value_.items():
+        temp_dict[int(key__)] = value__
+    OLD_IONIZATION_ENERGY[int(key_)] = temp_dict
 
 # 基组态
 BASE_CONFIGURATION = {}
-
 for num_, config in ATOM_INFO['config'].items():
     temp_dict = {}
     for key_, value_ in config.items():
         temp_dict[int(key_)] = value_
     BASE_CONFIGURATION[int(num_)] = temp_dict
 
+# 最外层电子数
+OUTER_ELECTRON_NUM = {}
+for num_, electron_num in ATOM_INFO['outermost_electron_num'].items():
+    temp_dict = {}
+    for key_, value_ in electron_num.items():
+        temp_dict[int(key_)] = value_
+    OUTER_ELECTRON_NUM[int(num_)] = temp_dict

@@ -2157,7 +2157,7 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(4)
+        self.stackedWidget.setCurrentIndex(1)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -2379,7 +2379,7 @@ class Ui_main_window(object):
         self.label_24.setText(QCoreApplication.translate("main_window", u"\u5c55\u5bbd\u6e29\u5ea6", None))
         self.widen_temp.setSuffix(QCoreApplication.translate("main_window", u"eV", None))
         self.label_23.setText(QCoreApplication.translate("main_window", u"FWHM", None))
-        self.widen_fwhm.setSuffix(QCoreApplication.translate("main_window", u"nm", None))
+        self.widen_fwhm.setSuffix(QCoreApplication.translate("main_window", u"eV", None))
         self.label_10.setText(QCoreApplication.translate("main_window", u"\u504f\u79fb", None))
         self.offset.setSuffix(QCoreApplication.translate("main_window", u"nm", None))
         self.update_offect.setText(QCoreApplication.translate("main_window", u"\u91cd\u65b0\u5c55\u5bbd", None))

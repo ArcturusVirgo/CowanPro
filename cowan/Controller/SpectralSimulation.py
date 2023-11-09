@@ -461,10 +461,12 @@ class SpectralSimulation(MainWindow):
             else:  # 显示选中的
                 x_list = [key.split('_')[-1] for key in self.cowan_lists.chose_cowan]
                 ax.bar(x_list, y_list)
-
+            max_y = max(y_list)
             for x_, y_ in zip(x_list, y_list):
-                ax.text(x_, y_, '{:.2f}'.format(y_), ha='center', va='bottom', fontsize=10)
-            ax.set_title('${:2}$\n${:.2f}\\enspace eV \\quad and \\quad {}*10^{{{}}}\\enspace cm^{{-3}}$'.format(
+                ax.text(x_, y_, '{:.4f}'.format(y_), ha='center', va='bottom', fontsize=10, rotation=45)
+            ax.set_xticks([f'$Al^{v}+$' for v in x_list])
+            ax.set_ylim(0, max_y * 1.2)
+            ax.set_title('${:2}$\n${:.4f}\\enspace eV \\quad and \\quad {}*10^{{{}}}\\enspace cm^{{-3}}$'.format(
                 self.cowan_lists.chose_cowan[0].split('_')[0],
                 self.ui.page2_temperature.value(),
                 self.ui.page2_density_base.value(),
@@ -479,7 +481,7 @@ class SpectralSimulation(MainWindow):
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-        widget = QDialog()
+        widget = QWidget()
         canvas = FigureCanvas(fig)
         checkbox = QCheckBox('显示全部', widget)
         layout = QVBoxLayout(widget)
@@ -488,7 +490,7 @@ class SpectralSimulation(MainWindow):
         checkbox.clicked.connect(update_ui)
 
         update_ui()
-        widget.exec()
+        widget.show()
 
     def cowan_obj_update(self):
         """

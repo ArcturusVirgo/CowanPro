@@ -89,7 +89,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page">
        <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,4">
@@ -3284,7 +3284,7 @@
                 </size>
                </property>
                <property name="suffix">
-                <string>nm</string>
+                <string>eV</string>
                </property>
                <property name="decimals">
                 <number>3</number>

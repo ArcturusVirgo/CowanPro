@@ -10,7 +10,7 @@ from plotly.offline import plot
 from scipy.interpolate import interp1d
 from scipy.signal import find_peaks
 
-from .AtomInfo import IONIZATION_ENERGY
+from .AtomInfo import IONIZATION_ENERGY, BASE_CONFIGURATION, OLD_IONIZATION_ENERGY, OUTER_ELECTRON_NUM
 from .CowanList import CowanList
 from .Cowan_ import Cowan
 from .ExpData import ExpData
@@ -302,7 +302,7 @@ class SimulateSpectral:
         """
         return self.__cal_abundance(t, e)
 
-    def __cal_abundance(self, temperature, electron_density) -> np.ndarray:
+    def __cal_abundance(self, temperature, electron_density) -> np.array:
         """
         计算各种离子的丰度
 
@@ -315,10 +315,13 @@ class SimulateSpectral:
             例如：[0 1 2 3 4 5 6 7 8]
             分别代表 一次离化，二次离化，三次离化，四次离化，五次离化，六次离化，七次离化，八次离化 九次离化 的粒子数密度
         """
-        atomic_num = self.cowan_list[0].in36.atom.num
-        ion_num = np.array([i for i in range(atomic_num - 1)])
-        ion_energy = np.array(list(IONIZATION_ENERGY[atomic_num].values())[1:])
-        electron_num = np.array([self.__get_outermost_num(i) for i in range(1, atomic_num)])
+        atom_nums = self.cowan_list[0].in36.atom.num
+        ion_num = np.array([k for k in range(atom_nums)])
+        ion_energy = np.array([OLD_IONIZATION_ENERGY[atom_nums][k] for k in range(atom_nums)])
+        electron_num = np.array([OUTER_ELECTRON_NUM[atom_nums][k] for k in range(atom_nums)])
+
+        # for i in range(len(ion_energy)):
+        #     print(f'{ion_num[i]:3d}   {ion_energy[i]:>10.4f} {electron_num[i]:3d}')
 
         S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
                 ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
@@ -328,24 +331,6 @@ class SimulateSpectral:
         ratio = S / (Ar + electron_density * A3r)
         abundance = self.__calculate_a_over_S(ratio)
         return abundance
-
-    def __get_outermost_num(self, ion: int):
-        """
-        获取离子的最外层电子数
-
-        Args:
-            ion: 离化度，0为原子，1为1次离化，2为2次离化，以此类推
-
-        Returns:
-            electron_num : 最外层电子数
-        """
-        temp_electron_num = self.cowan_list[0].in36.atom.num - ion
-        for n in range(1, 7):
-            if temp_electron_num > 2 * n ** 2:
-                temp_electron_num -= 2 * n ** 2
-            else:
-                electron_num = temp_electron_num
-                return electron_num
 
     @staticmethod
     def __calculate_a_over_S(a_ratios):
@@ -377,7 +362,7 @@ class SimulateSpectral:
 
         """
         if self.exp_data.data.shape[0] == 0:
-            warnings.warn('实验光谱数据在次波段内为空，无法计算光谱相似度')
+            warnings.warn('实验光谱数据在此波段内为空，无法计算光谱相似度')
             return
         if self.exp_data.data['wavelength'].max() < self.sim_data['wavelength'].min() and \
                 self.sim_data['wavelength'].max() < self.exp_data.data['wavelength'].min():
