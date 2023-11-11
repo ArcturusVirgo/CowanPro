@@ -262,8 +262,9 @@ class In2:
         Returns:
             in2 字符串
         """
+
         in2 = 'g5inp     000 0.0000          01        .095.095  8499848484 0.00   1 18229'
-        new_in2 = in2[:50] + ''.join(self.input_card[13:18]) + in2[60:]
+        new_in2 = in2[:5] + f'{self.input_card[1]:>2}' + in2[7:50] + ''.join(self.input_card[13:18]) + in2[60:]
         # in2 += ''.join(self.input_card)
         new_in2 += '\n'
         new_in2 += '        -1\n'
