@@ -253,7 +253,7 @@ class MainWindow(QMainWindow):
 
         self.info = {
             'x_range': None,  # example: [2, 8, 0.01] [<最小波长>, <最大波长>, <最小步长>]
-            'version': '1.0.1',  # example: '1.0.0'
+            'version': '1.0.2',  # example: '1.0.0'
         }
 
         print('当前软件版本：{}'.format(self.info['version']))
@@ -327,6 +327,8 @@ class MainWindow(QMainWindow):
         self.ui.set_xrange.triggered.connect(functools.partial(Menu.set_xrange, self))
         # 重置范围
         self.ui.reset_xrange.triggered.connect(functools.partial(Menu.reset_xrange, self))
+        # 导出画图数据
+        self.ui.export_plot_data.triggered.connect(functools.partial(Menu.switch_export_data, self))
 
         # ------------------------------- 第一页 -------------------------------
         # =====>> 下拉框
@@ -582,10 +584,12 @@ class MainWindow(QMainWindow):
             project_info = obj_info['info']
             # 1. 添加版本号
             project_info['version'] = '1.0.0'
+            print('版本号更新完成')
             # 2. 更新了自定义波长的记录方式
             if project_info['x_range'] is not None:
                 if len(project_info['x_range']) == 2:
                     project_info['x_range'].append(0.01)
+            print('更新了自定义波长的记录方式')
 
             # 更新 >>>>>>>>>>>>>>>>>>
             obj_info.update({'info': project_info})
@@ -597,10 +601,28 @@ class MainWindow(QMainWindow):
             project_info = obj_info['info']
             # 1. 添加版本号
             project_info['version'] = '1.0.1'
+            print('版本号更新完成')
             # 2. 更新了数据统计功能，主窗口类添加 cowan_page5 属性
-            print('更新了数据统计功能')
             if 'cowan_page5' not in obj_info.keys():
                 obj_info['cowan_page5'] = None
+            print('更新了数据统计功能')
+
+            # 更新 >>>>>>>>>>>>>>>>>>
+            obj_info.update({'info': project_info})
+            print('版本升级完成！')
+        # 1.0.1 > 1.0.2 ---------------------------------------------------
+        if Version(obj_info['info']['version']) < Version('1.0.2'):
+            print('正在进行版本升级 [1.0.1 > 1.0.2]')
+            project_info = obj_info['info']
+            # 1. 添加版本号
+            project_info['version'] = '1.0.2'
+            print('版本号更新完成')
+            # 2. 添加了第一页和第二页画图时数据的导出功能
+            if not PROJECT_PATH().joinpath('plot_data').exists():
+                old_path = Path.cwd().joinpath('init_file/plot_data')
+                path_ = PROJECT_PATH().joinpath('plot_data')
+                shutil.copytree(old_path, path_)
+            print('添加了第一页和第二页画图时数据的导出功能')
 
             # 更新 >>>>>>>>>>>>>>>>>>
             obj_info.update({'info': project_info})

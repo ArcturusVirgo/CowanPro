@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional, Dict
 
 import numpy as np
@@ -129,6 +130,9 @@ class WidenAll:
             self.__plot_html(self.widen_data, self.plot_path_gauss, 'wavelength', 'gauss')
             self.__plot_html(self.widen_data, self.plot_path_cross_NP, 'wavelength', 'cross_NP')
         self.__plot_html(self.widen_data, self.plot_path_cross_P, 'wavelength', 'cross_P')
+
+    def export_plot_data(self, filepath: Path):
+        self.widen_data.to_csv(filepath, sep=',', index=False)
 
     def __plot_html(self, data, path, x_name, y_name):
         """

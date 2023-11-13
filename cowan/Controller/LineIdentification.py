@@ -757,6 +757,8 @@ class UpdateLineIdentification(MainWindow):
             warnings.warn('expdata_1 is None')
             return
         self.expdata_1.plot_html()
+        if self.ui.export_plot_data.text() == '关闭导出':
+            self.expdata_1.export_plot_data(PROJECT_PATH() / 'plot_data/LineIdentification/exp_data.csv')
         self.ui.exp_web.load(QUrl.fromLocalFile(self.expdata_1.plot_path))
 
     def update_line_figure(self):
@@ -768,6 +770,8 @@ class UpdateLineIdentification(MainWindow):
             return
 
         self.cowan.cal_data.plot_line()
+        if self.ui.export_plot_data.text() == '关闭导出':
+            self.cowan.cal_data.export_plot_data(PROJECT_PATH() / 'plot_data/LineIdentification/line_data.csv')
         # 加载线状谱
         self.ui.web_cal_line.load(QUrl.fromLocalFile(self.cowan.cal_data.plot_path))
 
@@ -783,6 +787,9 @@ class UpdateLineIdentification(MainWindow):
             return
 
         self.cowan.cal_data.widen_all.plot_widen()
+        if self.ui.export_plot_data.text() == '关闭导出':
+            self.cowan.cal_data.widen_all.export_plot_data(
+                PROJECT_PATH() / 'plot_data/LineIdentification/widen_data.csv')
 
         if self.ui.crossP.isChecked():
             self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_P))

@@ -2,7 +2,7 @@
 /.idea
 __pycache__/
 /tests
-/temp_file
+/test_file
 /docs
 
 projects.json

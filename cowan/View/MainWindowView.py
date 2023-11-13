@@ -65,6 +65,8 @@ class Ui_main_window(object):
         self.reset_xrange.setObjectName(u"reset_xrange")
         self.export_configuration_average_wavelength = QAction(main_window)
         self.export_configuration_average_wavelength.setObjectName(u"export_configuration_average_wavelength")
+        self.export_plot_data = QAction(main_window)
+        self.export_plot_data.setObjectName(u"export_plot_data")
         self.centralwidget = QWidget(main_window)
         self.centralwidget.setObjectName(u"centralwidget")
         self.centralwidget.setEnabled(True)
@@ -2137,6 +2139,8 @@ class Ui_main_window(object):
         self.menu_3.setObjectName(u"menu_3")
         self.menu_4 = QMenu(self.menubar)
         self.menu_4.setObjectName(u"menu_4")
+        self.menu_5 = QMenu(self.menubar)
+        self.menu_5.setObjectName(u"menu_5")
         main_window.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(main_window)
         self.statusbar.setObjectName(u"statusbar")
@@ -2146,6 +2150,7 @@ class Ui_main_window(object):
         self.menubar.addAction(self.menu_2.menuAction())
         self.menubar.addAction(self.menu_3.menuAction())
         self.menubar.addAction(self.menu_4.menuAction())
+        self.menubar.addAction(self.menu_5.menuAction())
         self.menu.addAction(self.save_project)
         self.menu.addAction(self.exit_project)
         self.menu_2.addAction(self.set_xrange)
@@ -2154,6 +2159,7 @@ class Ui_main_window(object):
         self.menu_3.addAction(self.reset_cal)
         self.menu_4.addAction(self.export_data)
         self.menu_4.addAction(self.export_configuration_average_wavelength)
+        self.menu_5.addAction(self.export_plot_data)
 
         self.retranslateUi(main_window)
 
@@ -2181,6 +2187,7 @@ class Ui_main_window(object):
         self.set_xrange.setText(QCoreApplication.translate("main_window", u"\u8bbe\u7f6e\u6ce2\u957f\u8303\u56f4", None))
         self.reset_xrange.setText(QCoreApplication.translate("main_window", u"\u91cd\u7f6e\u6ce2\u957f\u8303\u56f4", None))
         self.export_configuration_average_wavelength.setText(QCoreApplication.translate("main_window", u"\u5bfc\u51fa\u7ec4\u6001\u5e73\u5747\u6ce2\u957f", None))
+        self.export_plot_data.setText(QCoreApplication.translate("main_window", u"\u5f00\u542f\u5bfc\u51fa", None))
 
         __sortingEnabled = self.navigation.isSortingEnabled()
         self.navigation.setSortingEnabled(False)
@@ -2458,5 +2465,6 @@ class Ui_main_window(object):
         self.menu_2.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))
         self.menu_3.setTitle(QCoreApplication.translate("main_window", u"\u5de5\u5177", None))
         self.menu_4.setTitle(QCoreApplication.translate("main_window", u"\u5bfc\u51fa", None))
+        self.menu_5.setTitle(QCoreApplication.translate("main_window", u"\u8bbe\u7f6e", None))
     # retranslateUi
 

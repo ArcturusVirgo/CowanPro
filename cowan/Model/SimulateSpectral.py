@@ -128,6 +128,14 @@ class SimulateSpectral:
         self.get_spectrum_similarity()
         return copy.deepcopy(self)
 
+    def export_plot_data(self, filepath:Path):
+        temp_data = pd.DataFrame()
+        temp_data['exp_wavelength'] = self.exp_data.data['wavelength']
+        temp_data['exp_intensity_normalization'] = self.exp_data.data['intensity_normalization']
+        temp_data['cal_wavelength'] = self.sim_data['wavelength']
+        temp_data['cal_intensity_normalization'] = self.sim_data['intensity_normalization']
+        temp_data.to_csv(filepath, sep=',', index=False)
+
     def plot_html(self, show_point=False):
         """
         绘制叠加光谱

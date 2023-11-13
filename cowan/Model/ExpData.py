@@ -94,3 +94,6 @@ class ExpData:
         self.data = class_info.data
         self.init_xrange = class_info.init_xrange
         self.x_range = class_info.x_range
+
+    def export_plot_data(self, filepath: Path):
+        self.data.to_csv(filepath, index=False)

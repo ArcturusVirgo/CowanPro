@@ -258,3 +258,9 @@ class Menu(MainWindow):
                     value.to_excel(writer, sheet_name=key, index=False)
 
         self.ui.statusbar.showMessage('导出成功！')
+
+    def switch_export_data(self):
+        if self.ui.export_plot_data.text() == '开启导出':
+            self.ui.export_plot_data.setText('关闭导出')
+        elif self.ui.export_plot_data.text() == '关闭导出':
+            self.ui.export_plot_data.setText('开启导出')

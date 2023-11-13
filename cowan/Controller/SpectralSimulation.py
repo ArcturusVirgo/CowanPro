@@ -552,6 +552,8 @@ class UpdateSpectralSimulation(MainWindow):
             self.simulate.plot_html(show_point=True)
         else:
             self.simulate.plot_html()
+        if self.ui.export_plot_data.text() == '关闭导出':
+            self.simulate.export_plot_data(PROJECT_PATH() / 'plot_data/SpectralSimulation/sim_data.csv')
         self.ui.page2_add_spectrum_web.load(QUrl.fromLocalFile(self.simulate.plot_path))
 
     def update_exp_figure(self):
@@ -560,6 +562,8 @@ class UpdateSpectralSimulation(MainWindow):
             return
         # 更新界面
         self.expdata_2.plot_html()
+        if self.ui.export_plot_data.text() == '关闭导出':
+            self.expdata_2.export_plot_data(PROJECT_PATH() / 'plot_data/SpectralSimulation/exp_data.csv')
         self.ui.page2_add_spectrum_web.load(QUrl.fromLocalFile(self.expdata_2.plot_path))
 
     def update_grid(self):

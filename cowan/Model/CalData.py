@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 import matplotlib.pyplot as plt
@@ -109,6 +110,9 @@ class CalData:
         # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
         fig = go.Figure(data=data, layout=layout)
         plot(fig, filename=self.plot_path, auto_open=False)
+
+    def export_plot_data(self, filepath: Path):
+        self.init_data.to_csv(filepath, sep=',', index=False)
 
     def __get_line_data(self, origin_data):
         """
