@@ -1,9 +1,10 @@
 /venv/
 /.idea
 __pycache__/
-/tests
-/test_file
-/docs
+/tests/
+/test_file/
+/docs/
 
 projects.json
+
 

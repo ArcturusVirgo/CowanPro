@@ -73,8 +73,8 @@ class Menu(MainWindow):
                 value.del_cowan_list()
             else:
                 temp = [None] * self.cowan_lists[0][0].in36.atom.num
-            export_table.append(temp_1 + temp)
-        columns = ['时间', '位置', '温度', '电子密度', '模拟光谱'] + [f'{atom_symbol}{i}+' for i in range(atom_num)]
+            export_table.append(temp_1 + temp.tolist())
+        columns = ['时间', '位置', '温度', '电子密度', '模拟光谱'] + [f'{atom_symbol}{i}+' for i in range(atom_num + 1)]
         data = pd.DataFrame(export_table, columns=columns)
         data.to_excel(path.joinpath('space_time_resolution.xlsx'), index=False)
 
