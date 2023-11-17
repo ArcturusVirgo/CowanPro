@@ -236,7 +236,7 @@ class Menu(MainWindow):
                 temp_1.append(int(key.split('_')[0]))
                 temp_2.append(int(key.split('_')[1]))
                 temp_3.append(
-                    self.cowan.in36.get_configuration_name(
+                    cowan_.in36.get_configuration_name(
                         int(key.split('_')[0]),
                         int(key.split('_')[1])
                     )

@@ -135,9 +135,9 @@ class In36:
                 first_configuration.append(configuration[-1])
             else:
                 second_configuration.append(configuration[-1])
-        low_index, high_index = low_index - 1, high_index - 1
-        low_configuration = first_configuration[low_index]
-        high_configuration = second_configuration[high_index]
+        low_index_, high_index_ = low_index - 1, high_index - 1
+        low_configuration = first_configuration[low_index_]
+        high_configuration = second_configuration[high_index_]
 
         low_configuration = low_configuration.split(' ')
         high_configuration = high_configuration.split(' ')

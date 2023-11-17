@@ -338,10 +338,10 @@ class LineIdentification(MainWindow):
             # -------------------------- 展宽 --------------------------
             if self.info['x_range'] is None:
                 self.cowan.cal_data.widen_all.widen(only_p=False)  # 整体展宽
+                self.cowan.cal_data.widen_part.widen_by_group()  # 部分展宽
             else:
                 num = int((self.info['x_range'][1] - self.info['x_range'][0]) / self.info['x_range'][2])
                 self.cowan.set_xrange(self.info['x_range'], num)
-            # self.cowan.cal_data.widen_part.widen_by_group(widen_temperature)  # 部分展宽
             # -------------------------- 添加到运行历史 --------------------------
             self.cowan_lists.add_history(self.cowan)
             # -------------------------- 更新页面 --------------------------
@@ -540,6 +540,7 @@ class LineIdentification(MainWindow):
             temperature=self.ui.widen_temp.value()
         )
         self.cowan.cal_data.widen_all.widen(False)
+        self.cowan.cal_data.widen_part.widen_by_group()
 
         # -------------------------- 更新历史记录和选择列表 --------------------------
         self.cowan_lists.add_history(self.cowan)

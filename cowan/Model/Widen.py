@@ -252,10 +252,14 @@ class WidenPart:
             {'1-2': pd.DataFrame, '1-3': pd.DataFrame, ...}
             pd.DataFrame的列标题为：wavelength, gaussian, cross-NP, cross-P
         """
+        print('{} grouped widen start! [temperate: {}eV] [delta_lambda: {}nm] [fwhm: {}nm] [range: {} - {}]'.format(
+            self.name, self.temperature, self.delta_lambda, self.fwhm_value,
+            self.exp_data.x_range[0], self.exp_data.x_range[1]))
         temp_data = {}
         # 按照跃迁正例展宽
         data_grouped = self.init_data.groupby(by=['index_l', 'index_h'])
         for index in data_grouped.groups.keys():
+            print(f'    widen {index} ...')
             temp_group = pd.DataFrame(data_grouped.get_group(index))
             temp_result = self.__widen(self.temperature, temp_group)
             # 如果这个波段没有跃迁正例
@@ -268,6 +272,7 @@ class WidenPart:
                     PROJECT_PATH() / f'figure/part/{self.name}_{key}.html'
             ).as_posix()
         self.grouped_widen_data = temp_data
+        print(f'{self.name} widen completed! [grouped]')
 
     def __widen(self, temperature: float, temp_data: pd.DataFrame, only_p=True):
         """
