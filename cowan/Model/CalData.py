@@ -256,8 +256,8 @@ class CalData:
             max_wavelength = v['fnu'].max()
             min_wavelength = v['fnu'].min()
             line_range = {
-                'max(nm)': max_wavelength,
-                'min(nm)': min_wavelength,
+                'max': max_wavelength,
+                'min': min_wavelength,
             }
             configuration_info['wavelength_range'] = line_range
 

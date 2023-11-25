@@ -318,12 +318,6 @@ class Ui_DataShow(object):
 
         self.verticalLayout_7.addWidget(self.ion_widen_abu)
 
-        self.con_widen = QCheckBox(self.groupBox_5)
-        self.con_widen.setObjectName(u"con_widen")
-        self.con_widen.setChecked(True)
-
-        self.verticalLayout_7.addWidget(self.con_widen)
-
         self.verticalSpacer_5 = QSpacerItem(20, 227, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.verticalLayout_7.addItem(self.verticalSpacer_5)
@@ -365,10 +359,10 @@ class Ui_DataShow(object):
 
         self.horizontalLayout_7.addItem(self.horizontalSpacer_3)
 
-        self.export4 = QPushButton(self.all_st_resolution)
-        self.export4.setObjectName(u"export4")
+        self.export_4 = QPushButton(self.all_st_resolution)
+        self.export_4.setObjectName(u"export_4")
 
-        self.horizontalLayout_7.addWidget(self.export4)
+        self.horizontalLayout_7.addWidget(self.export_4)
 
 
         self.verticalLayout_9.addLayout(self.horizontalLayout_7)
@@ -427,7 +421,6 @@ class Ui_DataShow(object):
         self.groupBox_5.setTitle(QCoreApplication.translate("DataShow", u"\u6309\u7ec4\u6001", None))
         self.ion_widen.setText(QCoreApplication.translate("DataShow", u"\u5404\u79bb\u5b50\u5c55\u5bbd", None))
         self.ion_widen_abu.setText(QCoreApplication.translate("DataShow", u"\u5404\u79bb\u5b50\u5c55\u5bbd*\u79bb\u5b50\u4e30\u5ea6", None))
-        self.con_widen.setText(QCoreApplication.translate("DataShow", u"\u5404\u7ec4\u6001\u5c55\u5bbd", None))
         self.export_3_con.setText(QCoreApplication.translate("DataShow", u"\u5bfc\u51fa\u6570\u636e", None))
         ___qtablewidgetitem4 = self.st_info_table.horizontalHeaderItem(0)
         ___qtablewidgetitem4.setText(QCoreApplication.translate("DataShow", u"\u65f6\u95f4", None));
@@ -437,6 +430,6 @@ class Ui_DataShow(object):
         ___qtablewidgetitem6.setText(QCoreApplication.translate("DataShow", u"\u6e29\u5ea6", None));
         ___qtablewidgetitem7 = self.st_info_table.horizontalHeaderItem(3)
         ___qtablewidgetitem7.setText(QCoreApplication.translate("DataShow", u"\u5bc6\u5ea6", None));
-        self.export4.setText(QCoreApplication.translate("DataShow", u"\u5bfc\u51fa\u6570\u636e ", None))
+        self.export_4.setText(QCoreApplication.translate("DataShow", u"\u5bfc\u51fa\u6570\u636e ", None))
     # retranslateUi
 

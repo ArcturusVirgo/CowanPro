@@ -4,7 +4,7 @@ import warnings
 
 from PySide6.QtCore import QUrl, Qt
 from PySide6.QtGui import QColor, QBrush
-from PySide6.QtWidgets import QTreeWidgetItem
+from PySide6.QtWidgets import QTreeWidgetItem, QMessageBox
 
 from main import MainWindow
 from ..Model import SimulateSpectral
@@ -29,6 +29,13 @@ class ConfigurationContribution(MainWindow):
             temp_list.append(copy.deepcopy(value))
         self.simulate_page4: SimulateSpectral = temp_list[index]
         self.simulate_page4.init_cowan_list(self.cowan_lists)
+        need_widen_list = []
+        for cowan, _ in self.cowan_lists:
+            if cowan.cal_data.widen_part.get_grouped_widen_data() is None:
+                need_widen_list.append(cowan.name)
+        if need_widen_list:
+            QMessageBox.information(self, '警告', f'请重新展宽{need_widen_list}', QMessageBox.Ok)
+            return
         # -------------------------- 更新页面 --------------------------
         functools.partial(UpdateConfigurationContribution.update_treeview, self)()
         functools.partial(UpdateConfigurationContribution.update_exp_figure, self)()
@@ -107,8 +114,6 @@ class UpdateConfigurationContribution(MainWindow):
     def update_treeview(self):
         def task():
             for c in self.simulate_page4.cowan_list:
-                c.cal_data.widen_part.widen_by_group()
-
                 parents = QTreeWidgetItem()
                 parents.setText(0, c.name.replace('_', '+'))
                 parents.setCheckState(0, Qt.Checked)

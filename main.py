@@ -462,6 +462,8 @@ class MainWindow(QMainWindow):
         # ------------------------------- 第五页 -------------------------------
         # 下拉框
         self.ui.page5_ion_select.activated.connect(functools.partial(DataStatistics.ion_selected, self))  # 选择列表
+        # 导出数据
+        self.ui.export_static_table.clicked.connect(functools.partial(ExportData.export_statistics_table, self))
 
     def save_project(self):
         def task():

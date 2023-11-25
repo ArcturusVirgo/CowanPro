@@ -480,16 +480,6 @@
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="con_widen">
-              <property name="text">
-               <string>各组态展宽</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
              <spacer name="verticalSpacer_5">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -558,7 +548,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="export4">
+          <widget class="QPushButton" name="export_4">
            <property name="text">
             <string>导出数据 </string>
            </property>

@@ -37,6 +37,8 @@ class SimulateSpectral:
         self.abundance = []  # 离子丰度
         self.sim_data = None  # 模拟光谱数据
 
+        self.ion_contribution = None
+
         self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()
         self.example_path = (PROJECT_PATH().joinpath('figure/part/example.html').as_posix())
 
@@ -104,12 +106,7 @@ class SimulateSpectral:
         # 将温度和密度赋值给当前对象
         self.temperature = temperature
         self.electron_density = electron_density
-        # 获取各种离子的丰度
-        self.__choose_abundance(temperature, electron_density)
-        for cowan, flag in zip(self.cowan_list, self.add_or_not):
-            if flag:
-                cowan.cal_data.set_temperature(temperature)
-                cowan.cal_data.widen_all.widen()
+        self.cal_ion_contribution()
         res = pd.DataFrame()
         res['wavelength'] = self.cowan_list[0].cal_data.widen_all.widen_data['wavelength']
         temp = np.zeros(res.shape[0])
@@ -126,7 +123,30 @@ class SimulateSpectral:
         self.cal_spectrum_similarity()
         return copy.deepcopy(self)
 
-    def export_plot_data(self, filepath:Path):
+    def cal_ion_contribution(self):
+        if self.cowan_list is None or self.add_or_not is None:
+            raise Exception('cowan_list 未初始化！！！')
+        temp_contribution = {}
+        self.__choose_abundance(self.temperature, self.electron_density)
+        temp_popular = self.abundance
+        # 重新使用cowan展宽，以确保温度相同
+        for i, cowan in enumerate(self.cowan_list):
+            cowan.cal_data.set_temperature(self.temperature)
+            cowan.cal_data.widen_all.widen()
+            cowan.cal_data.widen_part.widen_by_group()
+            # 开始获取每个离子的贡献
+            x = cowan.cal_data.widen_all.widen_data['wavelength'].values
+            y = cowan.cal_data.widen_all.widen_data['cross_P'].values
+            y_with_population = cowan.cal_data.widen_all.widen_data['cross_P'].values * temp_popular[i]
+            temp_data = pd.DataFrame({
+                'wavelength': x,
+                'intensity': y,
+                'intensity_with_population': y_with_population
+            })
+            temp_contribution[cowan.name] = temp_data
+        self.ion_contribution = temp_contribution
+
+    def export_plot_data(self, filepath: Path):
         temp_data = pd.DataFrame()
         temp_data['exp_wavelength'] = self.exp_data.data['wavelength']
         temp_data['exp_intensity_normalization'] = self.exp_data.data['intensity_normalization']
@@ -193,6 +213,9 @@ class SimulateSpectral:
             # i 是CowanList中的索引
             # c 是 Cowan 对象
             if add_list[i][0]:  # 如果这个离子要画在图上
+                c.cal_data.set_temperature(self.temperature)
+                c.cal_data.widen_all.widen()
+                c.cal_data.widen_part.widen_by_group()
                 for j, (key, value) in enumerate(c.cal_data.widen_part.grouped_widen_data.items()):
                     if add_list[i][1][j]:  # 遍历组态
                         index_low, index_high = map(int, key.split('_'))
@@ -239,33 +262,31 @@ class SimulateSpectral:
         """
         height = 0
         trace = []
-
-        if with_popular:  # 如果考虑离子丰度
-            temp_popular = self.abundance
-        else:
-            temp_popular = [1 for _ in range(len(self.abundance))]
-        for i, cowan_ in enumerate(self.cowan_list):
+        self.cal_ion_contribution()
+        ion_contribution = self.ion_contribution
+        for i, (cowan_name, value) in enumerate(ion_contribution.items()):
             if add_list[i][0]:
-                x = cowan_.cal_data.widen_all.widen_data['wavelength'].values
-                y = cowan_.cal_data.widen_all.widen_data['cross_P'].values * temp_popular[i]
+                x = value['wavelength']
                 if with_popular:  # 如果考虑丰度
+                    y = value['intensity_with_population']
                     trace.append(
                         go.Scatter(
                             x=x,
                             y=y,
                             mode='lines',
                             name='',
-                            hovertext=cowan_.name,
+                            hovertext=cowan_name,
                         )
                     )
                 else:  # 不考虑丰度
+                    y = value['intensity']
                     trace.append(
                         go.Scatter(
                             x=x,
                             y=y / y.max() + height,
                             mode='lines',
                             name='',
-                            hovertext=cowan_.name,
+                            hovertext=cowan_name,
                         )
                     )
                 height += 1.2
@@ -538,10 +559,13 @@ class SimulateSpectral:
         return self.temperature, self.electron_density
 
     def get_exp_data(self) -> pd.DataFrame:
-        return self.exp_data.data
+        return self.exp_data.data.__deepcopy__()
 
     def get_sim_data(self) -> pd.DataFrame:
-        return self.sim_data
+        return self.sim_data.__deepcopy__()
+
+    def get_ion_contribution(self) -> {str: pd.DataFrame}:
+        return copy.deepcopy(self.ion_contribution)
 
     def load_class(self, class_info):
         if class_info.cowan_list is None:
@@ -563,6 +587,13 @@ class SimulateSpectral:
 
         self.abundance = class_info.abundance
         self.sim_data = class_info.sim_data
+
+        # [1.0.2 > 1.0.3]
+        if hasattr(class_info, 'ion_contribution'):
+            self.ion_contribution = class_info.ion_contribution
+        else:
+            self.ion_contribution = None
+        # [1.0.2 > 1.0.3] end
 
         self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()
         self.example_path = (PROJECT_PATH().joinpath('figure/part/example.html').as_posix())

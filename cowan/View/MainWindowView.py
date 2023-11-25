@@ -2121,6 +2121,11 @@ class Ui_main_window(object):
 
         self.horizontalLayout_31.addItem(self.horizontalSpacer_16)
 
+        self.export_static_table = QPushButton(self.page_5)
+        self.export_static_table.setObjectName(u"export_static_table")
+
+        self.horizontalLayout_31.addWidget(self.export_static_table)
+
 
         self.verticalLayout_15.addLayout(self.horizontalLayout_31)
 
@@ -2166,7 +2171,7 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(3)
+        self.stackedWidget.setCurrentIndex(4)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -2465,6 +2470,7 @@ class Ui_main_window(object):
         self.groupBox_8.setTitle(QCoreApplication.translate("main_window", u"GroupBox", None))
         self.page4_consider_popular.setText(QCoreApplication.translate("main_window", u"\u8003\u8651\u4e30\u5ea6", None))
         self.label_9.setText(QCoreApplication.translate("main_window", u"\u8bf7\u9009\u62e9\u79bb\u5316\u5ea6", None))
+        self.export_static_table.setText(QCoreApplication.translate("main_window", u"\u5bfc\u51fa\u6570\u636e", None))
         self.menu.setTitle(QCoreApplication.translate("main_window", u"\u6587\u4ef6", None))
         self.menu_2.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))
         self.menu_3.setTitle(QCoreApplication.translate("main_window", u"\u5de5\u5177", None))
