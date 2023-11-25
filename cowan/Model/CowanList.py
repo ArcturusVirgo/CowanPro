@@ -82,7 +82,7 @@ class CowanList:
         for cowan in self.cowan_run_history.values():
             cowan.exp_data = exp_data
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> (Cowan, bool):
         return self.cowan_run_history[self.chose_cowan[index]], self.add_or_not[index]
 
     def set_xrange(self, x_range, num):
@@ -99,3 +99,6 @@ class CowanList:
         for (ok, ov), (nk, nv) in zip(self.cowan_run_history.items(), class_info.cowan_run_history.items()):
             ov.load_class(nv)
             self.cowan_run_history[ok] = ov
+
+    def get_cowan_from_name(self, name):
+        return self.cowan_run_history[name]

@@ -1,3 +1,4 @@
+import colorama
 import matplotlib
 from PySide6.QtCore import Qt
 
@@ -36,3 +37,76 @@ def get_configuration_add_list(self):
             else:
                 add_example[i][1].append(False)
     return add_example
+
+
+def print_to_console(text, outline_level=0, color=('', ''), thickness=0, end='\n'):
+    """
+    前景色            背景色           颜色
+    ---------------------------------------
+    30                40              黑色
+    31                41              红色
+    32                42              绿色
+    33                43              黃色
+    34                44              蓝色
+    35                45              紫红色
+    36                46              青蓝色
+    37                47              白色
+    ---------------------------------------
+
+    Args:
+        thickness:
+        text:
+        outline_level:
+        color:
+        end:
+
+    Returns:
+
+    """
+    color_str_list = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white']
+    colorama_fore_list = [
+        colorama.Fore.BLACK,
+        colorama.Fore.RED,
+        colorama.Fore.GREEN,
+        colorama.Fore.YELLOW,
+        colorama.Fore.BLUE,
+        colorama.Fore.MAGENTA,
+        colorama.Fore.CYAN,
+        colorama.Fore.WHITE,
+    ]
+    colorama_back_list = [
+        colorama.Back.BLACK,
+        colorama.Back.RED,
+        colorama.Back.GREEN,
+        colorama.Back.YELLOW,
+        colorama.Back.BLUE,
+        colorama.Back.MAGENTA,
+        colorama.Back.CYAN,
+        colorama.Back.WHITE,
+    ]
+    if color[0] not in color_str_list:
+        fore_color = ''
+    else:
+        fore_color = colorama_fore_list[color_str_list.index(color[0])]
+    if color[1] not in color_str_list:
+        back_color = ''
+    else:
+        back_color = colorama_back_list[color_str_list.index(color[1])]
+
+    style_color = colorama.Style.NORMAL
+    if thickness == 1:
+        style_color = colorama.Style.BRIGHT
+    elif thickness == -1:
+        style_color = colorama.Style.DIM
+    print('  ' * outline_level, end='')
+    print(
+        style_color
+        + back_color
+        + fore_color
+        + text
+        + colorama.Style.RESET_ALL,
+        end=end,
+    )
+
+
+colorama.init(autoreset=True)

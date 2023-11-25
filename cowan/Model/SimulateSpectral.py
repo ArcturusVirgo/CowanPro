@@ -56,7 +56,7 @@ class SimulateSpectral:
         for cowan in self.cowan_list:
             cowan.set_xrange(x_range, num)
         if self.temperature is not None and self.electron_density is not None:
-            self.get_simulate_data(self.temperature, self.electron_density)
+            self.cal_simulate_data(self.temperature, self.electron_density)
         self.del_cowan_list()
 
     def reset_xrange(self, cowan_lists: CowanList):
@@ -65,7 +65,7 @@ class SimulateSpectral:
         for cowan in self.cowan_list:
             cowan.reset_xrange()
         if self.temperature is not None and self.electron_density is not None:
-            self.get_simulate_data(self.temperature, self.electron_density)
+            self.cal_simulate_data(self.temperature, self.electron_density)
         self.del_cowan_list()
 
     def init_cowan_list(self, cowan_lists: CowanList):
@@ -81,7 +81,6 @@ class SimulateSpectral:
             temp_list.append(cowan_lists.cowan_run_history[key])
         self.cowan_list = copy.deepcopy(temp_list)
         self.add_or_not = cowan_lists.add_or_not
-        # self.offset_list = [cowan.cal_data.get_delta_lambda() for cowan in self.cowan_list]
 
     def del_cowan_list(self):
         """
@@ -90,9 +89,8 @@ class SimulateSpectral:
         """
         self.cowan_list = None
         self.add_or_not = None
-        # self.offset_list = None
 
-    def get_simulate_data(self, temperature, electron_density):
+    def cal_simulate_data(self, temperature, electron_density):
         """
         获取模拟光谱
 
@@ -125,7 +123,7 @@ class SimulateSpectral:
             res['intensity_normalization'] = res['intensity'] / res['intensity'].max()
 
         self.sim_data = res
-        self.get_spectrum_similarity()
+        self.cal_spectrum_similarity()
         return copy.deepcopy(self)
 
     def export_plot_data(self, filepath:Path):
@@ -328,9 +326,6 @@ class SimulateSpectral:
         ion_energy = np.array([OLD_IONIZATION_ENERGY[atom_nums][k] for k in range(atom_nums)])
         electron_num = np.array([OUTER_ELECTRON_NUM[atom_nums][k] for k in range(atom_nums)])
 
-        # for i in range(len(ion_energy)):
-        #     print(f'{ion_num[i]:3d}   {ion_energy[i]:>10.4f} {electron_num[i]:3d}')
-
         S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
                 ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
         Ar = (5.2 * 1e-14 * np.sqrt(ion_energy / temperature) * ion_num * (
@@ -364,7 +359,7 @@ class SimulateSpectral:
 
         return a_over_S
 
-    def get_spectrum_similarity(self):
+    def cal_spectrum_similarity(self):
         """
         获取光谱相似度，直接存储在 self.spectrum_similarity 中
 
@@ -538,6 +533,15 @@ class SimulateSpectral:
         if max(y2) != 0.0:
             y2 = y2 / max(y2)
         return x, y1, y2
+
+    def get_temperature_and_density(self) -> tuple:
+        return self.temperature, self.electron_density
+
+    def get_exp_data(self) -> pd.DataFrame:
+        return self.exp_data.data
+
+    def get_sim_data(self) -> pd.DataFrame:
+        return self.sim_data
 
     def load_class(self, class_info):
         if class_info.cowan_list is None:

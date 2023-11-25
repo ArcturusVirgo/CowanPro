@@ -67,6 +67,8 @@ class Ui_main_window(object):
         self.export_configuration_average_wavelength.setObjectName(u"export_configuration_average_wavelength")
         self.export_plot_data = QAction(main_window)
         self.export_plot_data.setObjectName(u"export_plot_data")
+        self.export_data_window = QAction(main_window)
+        self.export_data_window.setObjectName(u"export_data_window")
         self.centralwidget = QWidget(main_window)
         self.centralwidget.setObjectName(u"centralwidget")
         self.centralwidget.setEnabled(True)
@@ -2159,11 +2161,12 @@ class Ui_main_window(object):
         self.menu_3.addAction(self.reset_cal)
         self.menu_4.addAction(self.export_data)
         self.menu_4.addAction(self.export_configuration_average_wavelength)
+        self.menu_4.addAction(self.export_data_window)
         self.menu_5.addAction(self.export_plot_data)
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(3)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -2188,6 +2191,7 @@ class Ui_main_window(object):
         self.reset_xrange.setText(QCoreApplication.translate("main_window", u"\u91cd\u7f6e\u6ce2\u957f\u8303\u56f4", None))
         self.export_configuration_average_wavelength.setText(QCoreApplication.translate("main_window", u"\u5bfc\u51fa\u7ec4\u6001\u5e73\u5747\u6ce2\u957f", None))
         self.export_plot_data.setText(QCoreApplication.translate("main_window", u"\u5f00\u542f\u5bfc\u51fa", None))
+        self.export_data_window.setText(QCoreApplication.translate("main_window", u"\u6570\u636e\u5bfc\u51fa\u7a97\u53e3", None))
 
         __sortingEnabled = self.navigation.isSortingEnabled()
         self.navigation.setSortingEnabled(False)
@@ -2459,7 +2463,7 @@ class Ui_main_window(object):
         self.page4_con_contribution.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u7ec4\u6001\u7684\u8d21\u732e", None))
         self.page4_ion_contribution.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u79bb\u5b50\u7684\u8d21\u732e", None))
         self.groupBox_8.setTitle(QCoreApplication.translate("main_window", u"GroupBox", None))
-        self.page4_consider_popular.setText(QCoreApplication.translate("main_window", u"\u8003\u8651\u5e03\u5c45", None))
+        self.page4_consider_popular.setText(QCoreApplication.translate("main_window", u"\u8003\u8651\u4e30\u5ea6", None))
         self.label_9.setText(QCoreApplication.translate("main_window", u"\u8bf7\u9009\u62e9\u79bb\u5316\u5ea6", None))
         self.menu.setTitle(QCoreApplication.translate("main_window", u"\u6587\u4ef6", None))
         self.menu_2.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))

@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QFileDialog, QDialog, QTextBrowser, QVBoxLayout, Q
     QListWidgetItem
 
 from main import MainWindow
+from ..Tools import print_to_console
 from ..Model import (
     PROJECT_PATH,
     ANGULAR_QUANTUM_NUM_NAME, SUBSHELL_SEQUENCE,
@@ -332,13 +333,20 @@ class LineIdentification(MainWindow):
             progressDialog.close()
             # 更新原Cowan对象
             cowan_run.update_origin()
+            # 控制台输出信息
+            print_to_console(
+                'Cowan running | end',
+                color=('blue', 'green'),
+                outline_level=0,
+                thickness=1
+            )
             # 设置状态栏
             self.ui.statusbar.showMessage('计算完成！正在展宽，请稍后...')
 
             # -------------------------- 展宽 --------------------------
             if self.info['x_range'] is None:
                 self.cowan.cal_data.widen_all.widen(only_p=False)  # 整体展宽
-                self.cowan.cal_data.widen_part.widen_by_group()  # 部分展宽
+                self.cowan.cal_data.widen_part.widen_by_group(only_p=False)  # 部分展宽
             else:
                 num = int((self.info['x_range'][1] - self.info['x_range'][0]) / self.info['x_range'][2])
                 self.cowan.set_xrange(self.info['x_range'], num)
@@ -402,6 +410,13 @@ class LineIdentification(MainWindow):
 
         # -------------------------- 运行 --------------------------
         # 运行Cowan
+        print_to_console(
+            'Cowan running | start >>>',
+            color=('blue', 'green'),
+            outline_level=0,
+            thickness=1
+        )
+        print_to_console(text=f'atom info:{name}', color=('blue', ''), outline_level=0)
         self.cowan = Cowan(self.in36, self.in2, name, self.expdata_1, coupling_mode)
         cowan_run = CowanThread(self.cowan)
         # ----界面代码
@@ -540,7 +555,7 @@ class LineIdentification(MainWindow):
             temperature=self.ui.widen_temp.value()
         )
         self.cowan.cal_data.widen_all.widen(False)
-        self.cowan.cal_data.widen_part.widen_by_group()
+        self.cowan.cal_data.widen_part.widen_by_group(only_p=False)
 
         # -------------------------- 更新历史记录和选择列表 --------------------------
         self.cowan_lists.add_history(self.cowan)
@@ -686,10 +701,24 @@ class UpdateLineIdentification(MainWindow):
             columns=['原子序数', '原子状态', '标识符', '空格', '组态'],
             index=list(range(1, len(self.in36.configuration_card) + 1)),
         )
-        df['宇称'] = list(zip(*self.in36.configuration_card))[1]
+        parity_list = list(zip(*self.in36.configuration_card))[1]
+        df['宇称'] = parity_list
         df = df[['宇称', '原子状态', '组态']]
+        col_name = []
+        con_index = 1
+        for i, value in enumerate(parity_list):
+            if i == 0:
+                col_name.append(con_index)
+                con_index += 1
+                continue
+            if value != parity_list[i - 1]:
+                con_index = 1
+            col_name.append(con_index)
+            con_index += 1
+
         self.ui.in36_configuration_view.clear()
         self.ui.in36_configuration_view.setRowCount(df.shape[0])
+        self.ui.in36_configuration_view.setVerticalHeaderLabels([str(i) for i in col_name])
         self.ui.in36_configuration_view.setColumnCount(df.shape[1])
         self.ui.in36_configuration_view.setHorizontalHeaderLabels(df.columns)
         for i in range(df.shape[0]):
@@ -772,7 +801,7 @@ class UpdateLineIdentification(MainWindow):
 
         self.cowan.cal_data.plot_line()
         if self.ui.export_plot_data.text() == '关闭导出':
-            self.cowan.cal_data.export_plot_data(PROJECT_PATH() / 'plot_data/LineIdentification/line_data.csv')
+            self.cowan.cal_data.export_init_data(PROJECT_PATH() / 'plot_data/LineIdentification/line_data.csv')
         # 加载线状谱
         self.ui.web_cal_line.load(QUrl.fromLocalFile(self.cowan.cal_data.plot_path))
 

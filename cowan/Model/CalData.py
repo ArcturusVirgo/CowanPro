@@ -49,13 +49,6 @@ class CalData:
         self.widen_all = WidenAll(self.name, self.init_data, self.exp_data)
         self.widen_part = WidenPart(self.name, self.init_data, self.exp_data)
 
-    # TODO 测试用
-    def test(self):
-        wavelength_nm = 1239.85 / self.init_data['wavelength_ev']
-        intensity = self.init_data['intensity']
-        plt.plot(wavelength_nm)
-        plt.show()
-
     def get_average_wavelength(self):
         """
         获取平均波长
@@ -111,9 +104,6 @@ class CalData:
         # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
         fig = go.Figure(data=data, layout=layout)
         plot(fig, filename=self.plot_path, auto_open=False)
-
-    def export_plot_data(self, filepath: Path):
-        self.init_data.to_csv(filepath, sep=',', index=False)
 
     def __get_line_data(self, origin_data):
         """
@@ -197,7 +187,7 @@ class CalData:
         self.widen_all.fwhm_value = fwhm
         self.widen_part.fwhm_value = fwhm
 
-    def get_fwhm(self):
+    def get_fwhm(self) -> float:
         """
         获取展宽时的半高宽
 
@@ -216,7 +206,7 @@ class CalData:
         self.widen_all.temperature = temperature
         self.widen_part.temperature = temperature
 
-    def get_temperature(self):
+    def get_temperature(self) -> float:
         """
         获取等离子体温度
 
@@ -225,7 +215,7 @@ class CalData:
         """
         return self.widen_all.temperature
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         spec_path = (PROJECT_PATH() / f'cal_result/{self.name}/Spec.dat').as_posix()
         jenergy_path = (PROJECT_PATH() / f'cal_result/{self.name}/Jenergy-totaa.dat').as_posix()
         eav_path = (PROJECT_PATH() / f'cal_result/{self.name}/Eav.dat').as_posix()
@@ -257,7 +247,7 @@ class CalData:
         min_energy = spec['energy_l'].min()
         spec['energy_h'] = (spec['energy_h'] - min_energy) * 0.124
         spec['energy_l'] = (spec['energy_l'] - min_energy) * 0.124
-        spec['fnu'] = 1239.85 / spec['fnu']
+        spec['fnu'] = 1239.85 / spec['fnu']  # 化完之后的单位时nm
         grouped_data = spec.groupby(['index_l', 'index_h'])
         info_dict = {}
         for key, v in grouped_data:
@@ -266,8 +256,8 @@ class CalData:
             max_wavelength = v['fnu'].max()
             min_wavelength = v['fnu'].min()
             line_range = {
-                'max': max_wavelength,
-                'min': min_wavelength,
+                'max(nm)': max_wavelength,
+                'min(nm)': min_wavelength,
             }
             configuration_info['wavelength_range'] = line_range
 
@@ -337,3 +327,9 @@ class CalData:
         else:
             self.info_dict = {}
         # end
+
+    def export_init_data(self, filepath: Path):
+        self.init_data.to_csv(filepath, sep=',', index=False)
+
+    def get_init_data(self) -> pd.DataFrame:
+        return self.init_data.__deepcopy__()

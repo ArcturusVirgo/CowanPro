@@ -89,7 +89,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="page">
        <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,4">
@@ -4542,7 +4542,7 @@
            <item>
             <widget class="QCheckBox" name="page4_consider_popular">
              <property name="text">
-              <string>考虑布居</string>
+              <string>考虑丰度</string>
              </property>
             </widget>
            </item>
@@ -4628,6 +4628,7 @@
     </property>
     <addaction name="export_data"/>
     <addaction name="export_configuration_average_wavelength"/>
+    <addaction name="export_data_window"/>
    </widget>
    <widget class="QMenu" name="menu_5">
     <property name="title">
@@ -4723,6 +4724,11 @@
   <action name="export_plot_data">
    <property name="text">
     <string>开启导出</string>
+   </property>
+  </action>
+  <action name="export_data_window">
+   <property name="text">
+    <string>数据导出窗口</string>
    </property>
   </action>
  </widget>

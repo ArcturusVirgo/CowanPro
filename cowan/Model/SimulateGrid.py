@@ -145,7 +145,7 @@ class SimulateGridThread(QtCore.QThread):
         pool = ProcessPoolExecutor(os.cpu_count())
         for temperature in self.t_list:
             for density in self.ne_list:
-                future = pool.submit(self.simulate.get_simulate_data, eval(temperature), eval(density))
+                future = pool.submit(self.simulate.cal_simulate_data, eval(temperature), eval(density))
                 future.add_done_callback(functools.partial(callback, temperature, density))
         pool.shutdown()
         self.end.emit(0)
@@ -168,7 +168,7 @@ class SimulateGridThread(QtCore.QThread):
         for key, value in self.grid_data.items():
             self.simulate = copy.deepcopy(value)
             self.simulate.exp_data = copy.deepcopy(exp_obj)
-            self.simulate.get_spectrum_similarity()
+            self.simulate.cal_spectrum_similarity()
             self.grid_data[key] = copy.deepcopy(self.simulate)
         self.up_end.emit(0)
 

@@ -83,7 +83,7 @@ class SpectralSimulation(MainWindow):
         density = (self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value())
         self.simulate.exp_data = copy.deepcopy(self.expdata_2)
         self.simulate.init_cowan_list(self.cowan_lists)
-        self.simulate.get_simulate_data(temperature, density)
+        self.simulate.cal_simulate_data(temperature, density)
         self.simulate.del_cowan_list()
 
         # -------------------------- 更新页面 --------------------------
@@ -508,7 +508,7 @@ class SpectralSimulation(MainWindow):
                     continue
                 te, ne = sim.temperature, sim.electron_density
                 sim.init_cowan_list(self.cowan_lists)
-                sim.get_simulate_data(te, ne)
+                sim.cal_simulate_data(te, ne)
                 sim.del_cowan_list()
 
         # 使用Qt多线程运行task

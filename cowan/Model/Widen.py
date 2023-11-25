@@ -1,3 +1,4 @@
+import copy
 from pathlib import Path
 from typing import Optional, Dict
 
@@ -8,6 +9,7 @@ from plotly.offline import plot
 
 from .GlobalVar import PROJECT_PATH
 from .ExpData import ExpData
+from ..Tools.Other import print_to_console
 
 
 class WidenAll:
@@ -50,9 +52,12 @@ class WidenAll:
             列标题为：wavelength, gaussian, cross-NP, cross-P
             如果only_p为True，则没有cross-NP列和gaussian列
         """
-        print('{} widen start! [temperate: {}eV] [delta_lambda: {}nm] [fwhm: {}nm] [range: {} - {}]'.format(
+        print_to_console('WidenOverall | start >>>', outline_level=0, color=('green', 'blue'), thickness=1)
+        temp_text = '{} >> T:{:.3f}eV d_lambda:{:.3f}nm fwhm:{:.3f}eV range:[{:.3f},{:.3f}]'.format(
             self.name, self.temperature, self.delta_lambda, self.fwhm_value,
-            self.exp_data.x_range[0], self.exp_data.x_range[1]))
+            self.exp_data.x_range[0], self.exp_data.x_range[1])
+        print_to_console(text=temp_text, outline_level=1, color=('blue', ''))
+
         self.only_p = only_p
 
         data = self.init_data.copy()
@@ -74,10 +79,10 @@ class WidenAll:
             ]
         if self.n is None:
             wave = 1239.85 / np.array(self.exp_data.data['wavelength'].values)
-            print('    use exp wavelength')
+            print_to_console('use exp wavelength', outline_level=2, )
         else:
             wave = 1239.85 / np.linspace(min_wavelength_nm, max_wavelength_nm, self.n)
-            print('    use new wavelength')
+            print_to_console('use new wavelength', outline_level=2, )
         result = pd.DataFrame()
         result['wavelength'] = 1239.85 / wave
 
@@ -86,7 +91,8 @@ class WidenAll:
             result['cross_NP'] = 0
             result['cross_P'] = 0
             self.widen_data = result
-            print(f'{self.name} widen completed! [return None]')
+            print_to_console('return None', color=('red', ''), outline_level=1, thickness=1)
+            print_to_console('WidenOverall end', outline_level=0, color=('green', 'blue'), thickness=1)
             return -1
         new_data = new_data.reindex()
         # 获取展宽所需要的数据
@@ -108,18 +114,18 @@ class WidenAll:
         # 计算布居
         population = ((2 * new_J + 1) * np.exp(-abs(new_energy - min_energy) * 0.124 / self.temperature) / (
                 2 * min_J + 1))
-        print('    population completed!')
+        print_to_console('population completed', outline_level=2)
 
         res = [self.__complex_cal(val, new_intensity, fwhmgauss(val), new_wavelength, population, new_J) for val in
                wave]
-        print('    res cal completed!')
+        print_to_console('res cal completed', outline_level=2)
         res = list(zip(*res))
         if not self.only_p:
             result['gauss'] = res[0]
             result['cross_NP'] = res[1]
         result['cross_P'] = res[2]
         self.widen_data = result
-        print(f'{self.name} widen completed!')
+        print_to_console('WidenOverall | end', outline_level=0, color=('green', 'blue'), thickness=1)
 
     def plot_widen(self):
         """
@@ -199,6 +205,9 @@ class WidenAll:
         """
         return self.fwhm_value
 
+    def get_widen_data(self):
+        return self.widen_data.__deepcopy__()
+
     def load_class(self, class_info):
         self.name = class_info.name
         self.init_data = class_info.init_data
@@ -240,10 +249,22 @@ class WidenPart:
 
         self.plot_path_list = {}
 
-        # self.widen_data: Optional[pd.DataFrame] = None
+        self.grouped_data: Optional[Dict[str, pd.DataFrame]] = None
         self.grouped_widen_data: Optional[Dict[str, pd.DataFrame]] = None
 
-    def widen_by_group(self):
+        self.grouping_data()
+
+    def grouping_data(self):
+        temp_grouped_data = {}
+        # 分组
+        data_grouped = self.init_data.groupby(by=['index_l', 'index_h'])
+        # 按组保存
+        for index in data_grouped.groups.keys():
+            temp_group = pd.DataFrame(data_grouped.get_group(index))
+            temp_grouped_data[f'{index[0]}_{index[1]}'] = temp_group
+        self.grouped_data = temp_grouped_data
+
+    def widen_by_group(self, only_p=True):
         """
         按组态进行展宽
 
@@ -252,29 +273,32 @@ class WidenPart:
             {'1-2': pd.DataFrame, '1-3': pd.DataFrame, ...}
             pd.DataFrame的列标题为：wavelength, gaussian, cross-NP, cross-P
         """
-        print('{} grouped widen start! [temperate: {}eV] [delta_lambda: {}nm] [fwhm: {}nm] [range: {} - {}]'.format(
+        print_to_console('WidenByConfiguration | start >>>', outline_level=0, color=('green', 'yellow'), thickness=1)
+        temp_text = '{} >> T:{:.3f}eV d_lambda:{:.3f}nm fwhm:{:.3f}eV range:[{:.3f},{:.3f}]'.format(
             self.name, self.temperature, self.delta_lambda, self.fwhm_value,
-            self.exp_data.x_range[0], self.exp_data.x_range[1]))
+            self.exp_data.x_range[0], self.exp_data.x_range[1])
+        print_to_console(text=temp_text, outline_level=1, color=('yellow', ''))
+
         temp_data = {}
-        # 按照跃迁正例展宽
-        data_grouped = self.init_data.groupby(by=['index_l', 'index_h'])
-        for index in data_grouped.groups.keys():
-            print(f'    widen {index} ...')
-            temp_group = pd.DataFrame(data_grouped.get_group(index))
-            temp_result = self.__widen(self.temperature, temp_group)
+        for key, value in self.grouped_data.items():
+            print_to_console(f'widen {key} ...', outline_level=2, end='')
+            temp_group = value.__deepcopy__()
+            temp_result = self.__widen(self.temperature, temp_group, only_p)
+            print_to_console(f'competed', outline_level=1)
             # 如果这个波段没有跃迁正例
             if type(temp_result) == int:
                 continue
-            temp_data[f'{index[0]}_{index[1]}'] = temp_result
+            temp_data[key] = temp_result
+        # 画图
         self.plot_path_list = {}
         for key, value in temp_data.items():
             self.plot_path_list[key] = (
                     PROJECT_PATH() / f'figure/part/{self.name}_{key}.html'
             ).as_posix()
         self.grouped_widen_data = temp_data
-        print(f'{self.name} widen completed! [grouped]')
+        print_to_console('WidenByConfiguration | end', outline_level=0, color=('green', 'yellow'), thickness=1)
 
-    def __widen(self, temperature: float, temp_data: pd.DataFrame, only_p=True):
+    def __widen(self, temperature: float, temp_data: pd.DataFrame, only_p):
         """
         展宽
 
@@ -429,6 +453,12 @@ class WidenPart:
         """
         return self.fwhm_value
 
+    def get_grouped_widen_data(self) -> Dict[str, pd.DataFrame]:
+        return copy.deepcopy(self.grouped_widen_data)
+
+    def get_grouped_data(self) -> Dict[str, pd.DataFrame]:
+        return copy.deepcopy(self.grouped_data)
+
     def load_class(self, class_info):
         self.name = class_info.name
         self.init_data = class_info.init_data
@@ -448,4 +478,11 @@ class WidenPart:
             self.plot_path_list[key] = (
                     PROJECT_PATH() / f'figure/part/{self.name}_{key}.html'
             ).as_posix()
+        # start [1.0.2 > 1.0.3]
+        if 'grouped_data' in class_info.__dict__.keys():
+            self.grouped_data = class_info.grouped_data
+        else:
+            self.grouped_data = None
+            self.grouping_data()
+        # end [1.0.2 > 1.0.3]
         self.grouped_widen_data = class_info.grouped_widen_data

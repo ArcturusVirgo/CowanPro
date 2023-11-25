@@ -233,6 +233,8 @@ class MainWindow(QMainWindow):
 
         # 设置参考线
         self.v_line = None
+        # 导出窗口
+        self.export_data_window = None
 
         # 第一页使用
         self.atom: Optional[Atom] = Atom(1, 0)
@@ -253,7 +255,7 @@ class MainWindow(QMainWindow):
 
         self.info = {
             'x_range': None,  # example: [2, 8, 0.01] [<最小波长>, <最大波长>, <最小步长>]
-            'version': '1.0.2',  # example: '1.0.0'
+            'version': '1.0.3',  # example: '1.0.0'
         }
 
         print('当前软件版本：{}'.format(self.info['version']))
@@ -329,6 +331,8 @@ class MainWindow(QMainWindow):
         self.ui.reset_xrange.triggered.connect(functools.partial(Menu.reset_xrange, self))
         # 导出画图数据
         self.ui.export_plot_data.triggered.connect(functools.partial(Menu.switch_export_data, self))
+        # 展示导出窗口
+        self.ui.export_data_window.triggered.connect(functools.partial(ExportData.show_export_data_window, self))
 
         # ------------------------------- 第一页 -------------------------------
         # =====>> 下拉框
@@ -624,6 +628,18 @@ class MainWindow(QMainWindow):
                 shutil.copytree(old_path, path_)
             print('添加了第一页和第二页画图时数据的导出功能')
 
+            # 更新 >>>>>>>>>>>>>>>>>>
+            obj_info.update({'info': project_info})
+            print('版本升级完成！')
+        # 1.0.2 > 1.0.3 ---------------------------------------------------
+        if Version(obj_info['info']['version']) < Version('1.0.3'):
+            print('正在进行版本升级 [1.0.2 > 1.0.3]')
+            project_info = obj_info['info']
+            # 1. 添加版本号
+            project_info['version'] = '1.0.3'
+            print('版本号更新完成')
+            # 2. 给widenpart添加了grouped_data属性
+            print('给widenpart添加了grouped_data属性')
             # 更新 >>>>>>>>>>>>>>>>>>
             obj_info.update({'info': project_info})
             print('版本升级完成！')
