@@ -18,6 +18,7 @@ class DataShowWidget(QWidget):
         self.ui.setupUi(self)
 
         self.main_window = main_window
+        self.cheese_sim = []
 
         self.bind_slot()
         self.choose_page_index(0)
@@ -54,23 +55,31 @@ class DataShowWidget(QWidget):
                 self.ui.all_cowan_info_table.setItem(i, 2, QTableWidgetItem(f'{fwhm:.4f}eV'))
                 self.ui.all_cowan_info_table.setItem(i, 3, QTableWidgetItem(f'{temperature:.4f}eV'))
         if index == 2:
+            self.cheese_sim = []
             self.ui.choose_st.clear()
             add_list = []
             for key in self.main_window.space_time_resolution.simulate_spectral_dict.keys():
+                if self.main_window.space_time_resolution.simulate_spectral_dict[key].temperature is None or \
+                        self.main_window.space_time_resolution.simulate_spectral_dict[key].electron_density is None:
+                    continue
+                self.cheese_sim.append(key)
                 add_list.append(f'时间：{key[0]:3>}；位置：{key[1][0]:3>}')
             self.ui.choose_st.addItems(add_list)
         if index == 3:
+            self.cheese_sim = []
             self.ui.st_info_table.clear()
             self.ui.st_info_table.setRowCount(len(self.main_window.space_time_resolution.simulate_spectral_dict.keys()))
             self.ui.st_info_table.setColumnCount(4)
             self.ui.st_info_table.setHorizontalHeaderLabels(['时间', '位置', '温度(eV)', '密度(cm^-3)'])
             for i, (key, simulate) in enumerate(self.main_window.space_time_resolution.simulate_spectral_dict.items()):
+                if simulate.temperature is None or simulate.electron_density is None:
+                    continue
+                self.cheese_sim.append(key)
                 temperature, electron_density = simulate.get_temperature_and_density()
                 self.ui.st_info_table.setItem(i, 0, QTableWidgetItem(f'{key[0]:3>}'))
                 self.ui.st_info_table.setItem(i, 1, QTableWidgetItem(f'{key[1][0]:3>}'))
                 self.ui.st_info_table.setItem(i, 2, QTableWidgetItem(f'{temperature:.4f}'))
                 self.ui.st_info_table.setItem(i, 3, QTableWidgetItem(f'{electron_density:.4e}'))
-
         self.ui.stackedWidget.setCurrentIndex(index)
 
     def choose_ion_changed(self, *args):
@@ -84,7 +93,9 @@ class DataShowWidget(QWidget):
 
     def choose_space_time_changed(self, *args):
         st_index = self.ui.choose_st.currentIndex()
-        key, simulate = self.main_window.space_time_resolution[st_index]
+        if st_index == -1:
+            return
+        simulate = self.main_window.space_time_resolution.simulate_spectral_dict[self.cheese_sim[st_index]]
         temperature, electron_density = simulate.get_temperature_and_density()
         info_text = f'温度：{temperature:>.4f}eV  电子密度：{electron_density:>.4e}cm^-3'
         self.ui.st_info.setText(info_text)
@@ -244,7 +255,8 @@ class DataShowWidget(QWidget):
         if st_name == '':
             QMessageBox.warning(self, '警告', '请先选择位置时间！')
             return
-        key, simulate = self.main_window.space_time_resolution[st_index]
+        key = self.cheese_sim[st_index]
+        simulate = self.main_window.space_time_resolution.simulate_spectral_dict[key]
         temperature, electron_density = simulate.get_temperature_and_density()
         if temperature is None or electron_density is None:
             QMessageBox.warning(self, '警告', '该时空分辨谱温度密度未计算，请重新选择！')
@@ -326,7 +338,8 @@ class DataShowWidget(QWidget):
         if st_name == '':
             QMessageBox.warning(self, '警告', '请先选择位置时间！')
             return
-        st_key, simulate = self.main_window.space_time_resolution[st_index]
+        st_key = self.cheese_sim[st_index]
+        simulate = self.main_window.space_time_resolution.simulate_spectral_dict[st_key]
         simulate: SimulateSpectral
         temperature, electron_density = simulate.get_temperature_and_density()
         if temperature is None or electron_density is None:
@@ -360,6 +373,7 @@ class DataShowWidget(QWidget):
             outline_level=0,
             thickness=1
         )
+
 
 class ExportData(MainWindow):
     def show_export_data_window(self):
