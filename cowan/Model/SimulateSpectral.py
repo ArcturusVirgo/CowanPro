@@ -123,7 +123,7 @@ class SimulateSpectral:
         self.cal_spectrum_similarity()
         return copy.deepcopy(self)
 
-    def cal_ion_contribution(self):
+    def cal_ion_contribution(self, threading=False):
         if self.cowan_list is None or self.add_or_not is None:
             raise Exception('cowan_list 未初始化！！！')
         temp_contribution = {}
@@ -133,7 +133,8 @@ class SimulateSpectral:
         for i, cowan in enumerate(self.cowan_list):
             cowan.cal_data.set_temperature(self.temperature)
             cowan.cal_data.widen_all.widen()
-            cowan.cal_data.widen_part.widen_by_group()
+            if threading:
+                cowan.cal_data.widen_part.widen_by_group()
             # 开始获取每个离子的贡献
             x = cowan.cal_data.widen_all.widen_data['wavelength'].values
             y = cowan.cal_data.widen_all.widen_data['cross_P'].values
