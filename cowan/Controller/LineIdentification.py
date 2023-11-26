@@ -344,9 +344,10 @@ class LineIdentification(MainWindow):
             self.ui.statusbar.showMessage('计算完成！正在展宽，请稍后...')
 
             # -------------------------- 展宽 --------------------------
+            self.cowan.cal_data.widen_all.set_threading(False)
             if self.info['x_range'] is None:
-                self.cowan.cal_data.widen_all.widen(only_p=False)  # 整体展宽
-                self.cowan.cal_data.widen_part.widen_by_group(only_p=False)  # 部分展宽
+                self.cowan.cal_data.widen_all.widen()  # 整体展宽
+                self.cowan.cal_data.widen_part.widen_by_group()  # 部分展宽
             else:
                 num = int((self.info['x_range'][1] - self.info['x_range'][0]) / self.info['x_range'][2])
                 self.cowan.set_xrange(self.info['x_range'], num)
@@ -549,13 +550,14 @@ class LineIdentification(MainWindow):
         重新展宽
 
         """
+        self.cowan.cal_data.widen_all.set_threading(False)
         self.cowan.cal_data.set_cowan_info(
             delta_lambda=self.ui.offset.value(),
             fwhm=self.ui.widen_fwhm.value(),
             temperature=self.ui.widen_temp.value()
         )
-        self.cowan.cal_data.widen_all.widen(False)
-        self.cowan.cal_data.widen_part.widen_by_group(only_p=False)
+        self.cowan.cal_data.widen_all.widen()
+        self.cowan.cal_data.widen_part.widen_by_group()
 
         # -------------------------- 更新历史记录和选择列表 --------------------------
         self.cowan_lists.add_history(self.cowan)
@@ -787,8 +789,6 @@ class UpdateLineIdentification(MainWindow):
             warnings.warn('expdata_1 is None')
             return
         self.expdata_1.plot_html()
-        if self.ui.export_plot_data.text() == '关闭导出':
-            self.expdata_1.export_plot_data(PROJECT_PATH() / 'plot_data/LineIdentification/exp_data.csv')
         self.ui.exp_web.load(QUrl.fromLocalFile(self.expdata_1.plot_path))
 
     def update_line_figure(self):
@@ -799,10 +799,8 @@ class UpdateLineIdentification(MainWindow):
             warnings.warn('Cowan.cal_data 未初始化', UserWarning)
             return
 
-        self.cowan.cal_data.plot_line()
-        if self.ui.export_plot_data.text() == '关闭导出':
-            self.cowan.cal_data.export_init_data(PROJECT_PATH() / 'plot_data/LineIdentification/line_data.csv')
         # 加载线状谱
+        self.cowan.cal_data.plot_line()
         self.ui.web_cal_line.load(QUrl.fromLocalFile(self.cowan.cal_data.plot_path))
 
     def update_widen_figure(self):
@@ -817,10 +815,6 @@ class UpdateLineIdentification(MainWindow):
             return
 
         self.cowan.cal_data.widen_all.plot_widen()
-        if self.ui.export_plot_data.text() == '关闭导出':
-            self.cowan.cal_data.widen_all.export_plot_data(
-                PROJECT_PATH() / 'plot_data/LineIdentification/widen_data.csv')
-
         if self.ui.crossP.isChecked():
             self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_P))
         elif self.ui.crossNP.isChecked():

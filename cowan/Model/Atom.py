@@ -32,7 +32,7 @@ class Atom:
         self.electron_arrangement = self.get_base_electron_arrangement()
         self.base_configuration = self.get_base_configuration()  # 基组态
 
-    def get_base_electron_arrangement(self):
+    def get_base_electron_arrangement(self) -> {str: int}:
         """
         获取原子处于基态时，核外电子的排布情况
 
@@ -50,7 +50,7 @@ class Atom:
             electron_arrangement[key] = value
         return electron_arrangement
 
-    def get_base_configuration(self):
+    def get_base_configuration(self) -> str:
         """
         将电子组态重置为基态，并且 获取基组态字符串
 
@@ -89,6 +89,14 @@ class Atom:
         for name, num in configuration.items():
             configuration_list.append('{}{:0>2}'.format(name, num))
         return ' '.join(configuration_list)
+
+    def get_atom_info(self) -> (int, int, str):
+        """
+        获取原子的基本信息
+        Returns: (num, ion, symbol)
+            Examples: (1, 0, 'H')
+        """
+        return self.num, self.ion, self.symbol
 
     def arouse_electron(self, low_name, high_name):
         """

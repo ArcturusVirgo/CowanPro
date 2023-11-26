@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QColor, QAction, QCursor, QBrush
-from PySide6.QtWidgets import QFileDialog, QMessageBox, QMenu, QInputDialog, QDialog, QCheckBox, QVBoxLayout, QWidget, \
+from PySide6.QtWidgets import QFileDialog, QMessageBox, QMenu, QInputDialog, QCheckBox, QVBoxLayout, QWidget, \
     QListWidget, QPushButton, QHBoxLayout, QListWidgetItem, QTableWidgetItem
 
 from main import MainWindow
@@ -79,12 +79,15 @@ class SpectralSimulation(MainWindow):
         if not self.cowan_lists.chose_cowan:
             QMessageBox.warning(self, '警告', '请先添加计算结果！')
             return
+        self.simulate: SimulateSpectral
         temperature = self.ui.page2_temperature.value()
         density = (self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value())
         self.simulate.exp_data = copy.deepcopy(self.expdata_2)
         self.simulate.init_cowan_list(self.cowan_lists)
-        self.simulate.cal_simulate_data(temperature, density)
-        self.simulate.del_cowan_list()
+        self.simulate.set_threading(False)
+        self.simulate.set_temperature_and_density(temperature, density)
+        self.simulate.simulate_spectral()
+        self.simulate.cal_con_contribution()
 
         # -------------------------- 更新页面 --------------------------
         functools.partial(UpdateSpectralSimulation.update_exp_sim_figure, self)()
@@ -94,7 +97,6 @@ class SpectralSimulation(MainWindow):
         计算网格
 
         """
-
         # 函数定义开始↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
         def update_progress_bar(progress):
             """
@@ -126,6 +128,7 @@ class SpectralSimulation(MainWindow):
 
         # 函数定义完成↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
+        self.simulate:SimulateSpectral
         if self.expdata_2 is None:
             QMessageBox.warning(self, '警告', '请先导入实验数据！')
             return
@@ -148,6 +151,7 @@ class SpectralSimulation(MainWindow):
         ]
         self.simulate.exp_data = copy.deepcopy(self.expdata_2)
         self.simulate.init_cowan_list(self.cowan_lists)
+        self.simulate.set_threading(True)
         self.simulated_grid = SimulateGrid(t_range, ne_range, self.simulate)
         self.simulated_grid.change_task('cal')
         simulated_grid_run = SimulateGridThread(self.simulated_grid)
@@ -187,6 +191,7 @@ class SpectralSimulation(MainWindow):
         记录时空分辨光谱
 
         """
+        self.simulate:SimulateSpectral
         st_time = self.ui.st_time.text()
         st_space = (
             self.ui.st_space_x.text(),
@@ -198,6 +203,9 @@ class SpectralSimulation(MainWindow):
             return
         else:
             self.simulate.exp_data = copy.deepcopy(self.expdata_2)
+        if self.simulate.get_con_contribution() is None:
+            QMessageBox.warning(self, '警告', '请再次进行模拟后再进行添加')
+            return
         self.simulate.del_cowan_list()
         self.space_time_resolution.add_st((st_time, st_space), self.simulate)
 
@@ -232,7 +240,7 @@ class SpectralSimulation(MainWindow):
             if self.info['x_range'] is not None:
                 self.expdata_2.set_xrange(self.info['x_range'])
             simulate = SimulateSpectral()
-            simulate.load_exp_data(Path(file_name))
+            simulate.set_exp_obj(Path(file_name))
             self.space_time_resolution.add_st((tim, (loc, '0', '0')), simulate)
 
         # -------------------------- 更新页面 --------------------------
@@ -446,31 +454,17 @@ class SpectralSimulation(MainWindow):
 
             """
             ax.clear()
-            if checkbox.isChecked():
-                temper = self.ui.page2_temperature.value()
-                density = (self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value())
-                self.simulate.init_cowan_list(self.cowan_lists)
-                y_list = self.simulate.get_abu(temper, density)
-                self.simulate.del_cowan_list()
-            else:
-                y_list = self.simulate.abundance
+            y_list = self.simulate.abundance
+            x_list = [str(i) for i in range(len(y_list))]
+            ax.bar(x_list, y_list)
 
-            if checkbox.isChecked():  # 显示全部
-                x_list = [str(i) for i in range(len(y_list))]
-                ax.bar(x_list, y_list)
-            else:  # 显示选中的
-                x_list = [key.split('_')[-1] for key in self.cowan_lists.chose_cowan]
-                ax.bar(x_list, y_list)
             max_y = max(y_list)
             for x_, y_ in zip(x_list, y_list):
                 ax.text(x_, y_, '{:.4f}'.format(y_), ha='center', va='bottom', fontsize=10, rotation=45)
-            # ax.set_xticks([f'$Al^{v}+$' for v in x_list])
             ax.set_ylim(0, max_y * 1.2)
-            ax.set_title('${:2}$\n${:.4f}\\enspace eV \\quad and \\quad {}*10^{{{}}}\\enspace cm^{{-3}}$'.format(
-                self.cowan_lists.chose_cowan[0].split('_')[0],
-                self.ui.page2_temperature.value(),
-                self.ui.page2_density_base.value(),
-                self.ui.page2_density_index.value()))
+            ax.set_title('${:2}$\n${:.4f}\\enspace eV \\quad and \\quad {:.4e}\\enspace cm^{{-3}}$'.format(
+                self.atom.get_atom_info()[2],
+                *self.simulate.get_temperature_and_density()))
 
             canvas.draw()
 
@@ -483,11 +477,8 @@ class SpectralSimulation(MainWindow):
 
         widget = QWidget()
         canvas = FigureCanvas(fig)
-        checkbox = QCheckBox('显示全部', widget)
         layout = QVBoxLayout(widget)
         layout.addWidget(canvas)
-        layout.addWidget(checkbox)
-        checkbox.clicked.connect(update_ui)
 
         update_ui()
         widget.show()
@@ -508,7 +499,7 @@ class SpectralSimulation(MainWindow):
                     continue
                 te, ne = sim.temperature, sim.electron_density
                 sim.init_cowan_list(self.cowan_lists)
-                sim.cal_simulate_data(te, ne)
+                sim.simulate_spectral()
                 sim.del_cowan_list()
 
         # 使用Qt多线程运行task
@@ -516,10 +507,6 @@ class SpectralSimulation(MainWindow):
         self.task_thread.set_run(task)
         self.task_thread.progress_dialog.set_prompt_words('正在重新模拟xxx的光谱，请稍后……')
         self.task_thread.start()
-
-    # todo 测试，删除
-    def test(self):
-        self.cowan.cal_data.test()
 
 
 class UpdateSpectralSimulation(MainWindow):
@@ -552,8 +539,6 @@ class UpdateSpectralSimulation(MainWindow):
             self.simulate.plot_html(show_point=True)
         else:
             self.simulate.plot_html()
-        if self.ui.export_plot_data.text() == '关闭导出':
-            self.simulate.export_plot_data(PROJECT_PATH() / 'plot_data/SpectralSimulation/sim_data.csv')
         self.ui.page2_add_spectrum_web.load(QUrl.fromLocalFile(self.simulate.plot_path))
 
     def update_exp_figure(self):
@@ -562,8 +547,6 @@ class UpdateSpectralSimulation(MainWindow):
             return
         # 更新界面
         self.expdata_2.plot_html()
-        if self.ui.export_plot_data.text() == '关闭导出':
-            self.expdata_2.export_plot_data(PROJECT_PATH() / 'plot_data/SpectralSimulation/exp_data.csv')
         self.ui.page2_add_spectrum_web.load(QUrl.fromLocalFile(self.expdata_2.plot_path))
 
     def update_grid(self):

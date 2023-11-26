@@ -1,7 +1,7 @@
 import copy
 import warnings
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import numpy as np
 import pandas as pd
@@ -25,7 +25,6 @@ class SimulateSpectral:
         """
         self.cowan_list: Optional[List[Cowan]] = None  # 用于存储 cowan 对象
         self.add_or_not: Optional[List[bool]] = None  # cowan 对象是否被添加
-        # self.offset_list: Optional[List[float]] = None  # cowan 对象的偏移量
         self.exp_data: Optional[ExpData] = None  # 实验光谱数据
         self.spectrum_similarity = None  # 光谱相似度
         self.temperature = None  # 模拟的等离子体温度
@@ -38,37 +37,10 @@ class SimulateSpectral:
         self.sim_data = None  # 模拟光谱数据
 
         self.ion_contribution = None
+        self.con_contribution: Dict[str:Dict[str:List[pd.DataFrame, str]]] = None
 
         self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()
         self.example_path = (PROJECT_PATH().joinpath('figure/part/example.html').as_posix())
-
-    def load_exp_data(self, path: Path):
-        """
-        读取实验光谱数据
-
-        Args:
-            path: 实验光谱数据的路径
-
-        """
-        self.exp_data = ExpData(path)
-
-    def set_xrange(self, x_range, num, cowan_lists: CowanList):
-        self.exp_data.set_xrange(x_range)
-        self.init_cowan_list(cowan_lists)
-        for cowan in self.cowan_list:
-            cowan.set_xrange(x_range, num)
-        if self.temperature is not None and self.electron_density is not None:
-            self.cal_simulate_data(self.temperature, self.electron_density)
-        self.del_cowan_list()
-
-    def reset_xrange(self, cowan_lists: CowanList):
-        self.exp_data.reset_xrange()
-        self.init_cowan_list(cowan_lists)
-        for cowan in self.cowan_list:
-            cowan.reset_xrange()
-        if self.temperature is not None and self.electron_density is not None:
-            self.cal_simulate_data(self.temperature, self.electron_density)
-        self.del_cowan_list()
 
     def init_cowan_list(self, cowan_lists: CowanList):
         """
@@ -92,27 +64,150 @@ class SimulateSpectral:
         self.cowan_list = None
         self.add_or_not = None
 
-    def cal_simulate_data(self, temperature, electron_density):
+    def set_threading(self, threading: bool):
+        for cowan in self.cowan_list:
+            cowan: Cowan
+            cowan.cal_data.widen_all.set_threading(threading)
+
+    def set_exp_obj(self, path: Path):
         """
-        获取模拟光谱
+        读取实验光谱数据
+
+        Args:
+            path: 实验光谱数据的路径
+
+        """
+        self.exp_data = ExpData(path)
+
+    def set_temperature_and_density(self, temperature, electron_density):
+        """
+        设置等离子体温度和电子密度
 
         Args:
             temperature: 等离子体温度
             electron_density: 等离子体电子密度
 
         """
-        if self.cowan_list is None or self.add_or_not is None:
-            raise Exception('cowan_list 未初始化！！！')
-        # 将温度和密度赋值给当前对象
         self.temperature = temperature
         self.electron_density = electron_density
-        self.cal_ion_contribution()
+
+    def cal_abundance(self):
+        """
+        获取离子丰度
+
+        """
+
+        def calculate_a_over_S(a_ratios):
+            """
+            已知a1/a2, a2/a3, ..., a_n-1/a_n，计算a1/S, a2/S, ..., a_n/S，其中S=a1+a2+...+a_n
+
+            Args:
+                a_ratios: a1/a2, a2/a3, ..., a_n-1/a_n
+
+            Returns:
+                a1/S, a2/S, ..., a_n/S
+            """
+            a = np.zeros(len(a_ratios) + 1)
+            a[0] = 1
+            for i in range(1, len(a)):
+                a[i] = a[i - 1] * a_ratios[i - 1]
+
+            # 计算S
+            S = np.sum(a)
+
+            # 计算a1/S, a2/S, ..., a_n/S
+            a_over_S = a / S
+
+            return a_over_S
+
+        temperature = self.temperature
+        electron_density = self.electron_density
+
+        atom_nums = self.cowan_list[0].in36.atom.num
+        ion_num = np.array([k for k in range(atom_nums)])
+        ion_energy = np.array([OLD_IONIZATION_ENERGY[atom_nums][k] for k in range(atom_nums)])
+        electron_num = np.array([OUTER_ELECTRON_NUM[atom_nums][k] for k in range(atom_nums)])
+
+        S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
+                ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
+        Ar = (5.2 * 1e-14 * np.sqrt(ion_energy / temperature) * ion_num * (
+                0.429 + 0.5 * np.log(ion_energy / temperature) + 0.469 * np.sqrt(temperature / ion_energy)))
+        A3r = (2.97 * 1e-27 * electron_num / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy)))
+        ratio = S / (Ar + electron_density * A3r)
+        abundance = calculate_a_over_S(ratio)
+
+        self.abundance = abundance
+
+    def set_xrange(self, x_range, num, cowan_lists: CowanList):
+        self.exp_data.set_xrange(x_range)
+        self.init_cowan_list(cowan_lists)
+        for cowan in self.cowan_list:
+            cowan.set_xrange(x_range, num)
+        if self.temperature is not None and self.electron_density is not None:
+            self.cal_simulate_data()
+
+    def reset_xrange(self, cowan_lists: CowanList):
+        self.exp_data.reset_xrange()
+        self.init_cowan_list(cowan_lists)
+        for cowan in self.cowan_list:
+            cowan.reset_xrange()
+        if self.temperature is not None and self.electron_density is not None:
+            self.cal_simulate_data()
+
+    def cal_ion_contribution(self):
+        def choose_abundance():
+            """
+            将所需要的离子丰度挑选出来
+            """
+            all_abundance = self.abundance
+            temp_abundance = []
+            for c in self.cowan_list:
+                ion = int(c.name.split('_')[1])
+                temp_abundance.append(all_abundance[ion])
+            return temp_abundance
+
+        temp_contribution = {}
+        current_abundance = choose_abundance()
+
+        for i, cowan in enumerate(self.cowan_list):
+            cowan: Cowan
+            cowan.cal_data.set_temperature(self.temperature)
+            cowan.cal_data.widen_all.widen()  # 使用这个温度重新展宽
+            widen_data = cowan.cal_data.widen_all.get_widen_data()  # 获取展宽后的数据
+            # 开始获取每个离子的贡献
+            temp_data = pd.DataFrame({
+                'wavelength': widen_data['wavelength'].values,
+                'intensity': widen_data['cross_P'].values,
+                'intensity_with_population': widen_data['cross_P'].values * current_abundance[i]
+            })
+            temp_contribution[cowan.name] = temp_data
+        self.ion_contribution = temp_contribution
+
+    def cal_con_contribution(self):
+        temp_contribution = {}
+        # 结构如下
+        # {
+        #     'ion_name': {'con_key':[con_data, 'con_name']}
+        # }
+        for i, cowan in enumerate(self.cowan_list):
+            cowan: Cowan
+            temp_con_dict = {}
+            cowan.cal_data.set_temperature(self.temperature)
+            cowan.cal_data.widen_part.widen_by_group()
+            grouped_widen_data = cowan.cal_data.widen_part.get_grouped_widen_data()  # 获取展宽后的数据
+            for con_key, con_value in grouped_widen_data.items():
+                index_low, index_high = map(int, con_key.split('_'))
+                temp_con_dict[con_key] = [con_value, cowan.in36.get_configuration_name(index_low, index_high)]
+            temp_contribution[cowan.name] = temp_con_dict
+        self.con_contribution = temp_contribution
+
+    def cal_simulate_data(self):
         res = pd.DataFrame()
-        res['wavelength'] = self.cowan_list[0].cal_data.widen_all.widen_data['wavelength']
-        temp = np.zeros(res.shape[0])
-        for cowan, abu, flag in zip(self.cowan_list, self.abundance, self.add_or_not):
+        res['wavelength'] = list(self.ion_contribution.values())[0]['wavelength']
+        temp = np.zeros_like(res['wavelength'].values)
+        for cowan, flag in zip(self.cowan_list, self.add_or_not):
             if flag:
-                temp += cowan.cal_data.widen_all.widen_data['cross_P'].values * abu
+                temp += self.ion_contribution[cowan.name]['intensity_with_population'].values
         res['intensity'] = temp
         if res['intensity'].max() == 0.0:
             res['intensity_normalization'] = copy.deepcopy(res['intensity'])
@@ -121,39 +216,12 @@ class SimulateSpectral:
 
         self.sim_data = res
         self.cal_spectrum_similarity()
+
+    def simulate_spectral(self):
+        self.cal_abundance()  # 计算丰度
+        self.cal_ion_contribution()  # 计算离子贡献
+        self.cal_simulate_data()  # 计算模拟光谱数据
         return copy.deepcopy(self)
-
-    def cal_ion_contribution(self, threading=False):
-        if self.cowan_list is None or self.add_or_not is None:
-            raise Exception('cowan_list 未初始化！！！')
-        temp_contribution = {}
-        self.__choose_abundance(self.temperature, self.electron_density)
-        temp_popular = self.abundance
-        # 重新使用cowan展宽，以确保温度相同
-        for i, cowan in enumerate(self.cowan_list):
-            cowan.cal_data.set_temperature(self.temperature)
-            cowan.cal_data.widen_all.widen()
-            if threading:
-                cowan.cal_data.widen_part.widen_by_group()
-            # 开始获取每个离子的贡献
-            x = cowan.cal_data.widen_all.widen_data['wavelength'].values
-            y = cowan.cal_data.widen_all.widen_data['cross_P'].values
-            y_with_population = cowan.cal_data.widen_all.widen_data['cross_P'].values * temp_popular[i]
-            temp_data = pd.DataFrame({
-                'wavelength': x,
-                'intensity': y,
-                'intensity_with_population': y_with_population
-            })
-            temp_contribution[cowan.name] = temp_data
-        self.ion_contribution = temp_contribution
-
-    def export_plot_data(self, filepath: Path):
-        temp_data = pd.DataFrame()
-        temp_data['exp_wavelength'] = self.exp_data.data['wavelength']
-        temp_data['exp_intensity_normalization'] = self.exp_data.data['intensity_normalization']
-        temp_data['cal_wavelength'] = self.sim_data['wavelength']
-        temp_data['cal_intensity_normalization'] = self.sim_data['intensity_normalization']
-        temp_data.to_csv(filepath, sep=',', index=False)
 
     def plot_html(self, show_point=False):
         """
@@ -199,58 +267,6 @@ class SimulateSpectral:
         fig = go.Figure(data=data, layout=layout)
         plot(fig, filename=self.plot_path, auto_open=False)
 
-    def plot_con_contribution_html(self, add_list):
-        """
-        绘制各个组态的贡献
-
-        Args:
-            add_list: 组态选择列表，具体形式如下：
-                [[T, [F, T, F, ...]], [T, [F, T, F, ...]], ...]
-
-        """
-        height = 0
-        trace = []
-        for i, c in enumerate(self.cowan_list):
-            # i 是CowanList中的索引
-            # c 是 Cowan 对象
-            if add_list[i][0]:  # 如果这个离子要画在图上
-                c.cal_data.set_temperature(self.temperature)
-                c.cal_data.widen_all.widen()
-                c.cal_data.widen_part.widen_by_group()
-                for j, (key, value) in enumerate(c.cal_data.widen_part.grouped_widen_data.items()):
-                    if add_list[i][1][j]:  # 遍历组态
-                        index_low, index_high = map(int, key.split('_'))
-                        name = '{},{},{}<br />{}'.format(c.name.replace('_', '+'), index_low, index_high,
-                                                         c.in36.get_configuration_name(index_low, index_high))
-                        if value['cross_P'].max() == 0:
-                            trace.append(
-                                go.Scatter(
-                                    x=value['wavelength'],
-                                    y=value['cross_P'] + height,
-                                    mode='lines',
-                                    name='',
-                                    hovertext=name,
-                                )
-                            )
-                        else:
-                            trace.append(
-                                go.Scatter(
-                                    x=value['wavelength'],
-                                    y=value['cross_P'] / value['cross_P'].max() + height,
-                                    mode='lines',
-                                    name='',
-                                    hovertext=name,
-                                )
-                            )
-                        height += 1.2
-        layout = go.Layout(
-            margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
-            xaxis=go.layout.XAxis(range=self.exp_data.x_range),
-            # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
-        )
-        fig = go.Figure(data=trace, layout=layout)
-        plot(fig, filename=self.example_path, auto_open=False)
-
     def plot_ion_contribution_html(self, add_list, with_popular):
         """
         绘制各个离子的贡献
@@ -263,33 +279,79 @@ class SimulateSpectral:
         """
         height = 0
         trace = []
-        self.cal_ion_contribution()
-        ion_contribution = self.ion_contribution
-        for i, (cowan_name, value) in enumerate(ion_contribution.items()):
-            if add_list[i][0]:
-                x = value['wavelength']
-                if with_popular:  # 如果考虑丰度
-                    y = value['intensity_with_population']
-                    trace.append(
-                        go.Scatter(
-                            x=x,
-                            y=y,
-                            mode='lines',
-                            name='',
-                            hovertext=cowan_name,
-                        )
+        for i, (ion_name, value) in enumerate(self.ion_contribution.items()):
+            if not add_list[i][0]:
+                continue
+            x = value['wavelength']
+            if with_popular:  # 如果考虑丰度
+                y = value['intensity_with_population']
+                trace.append(
+                    go.Scatter(
+                        x=x,
+                        y=y,
+                        mode='lines',
+                        name='',
+                        hovertext=ion_name,
                     )
-                else:  # 不考虑丰度
-                    y = value['intensity']
-                    trace.append(
-                        go.Scatter(
-                            x=x,
-                            y=y / y.max() + height,
-                            mode='lines',
-                            name='',
-                            hovertext=cowan_name,
-                        )
+                )
+            else:  # 不考虑丰度
+                y = value['intensity']
+                trace.append(
+                    go.Scatter(
+                        x=x,
+                        y=y / y.max() + height,
+                        mode='lines',
+                        name='',
+                        hovertext=ion_name,
                     )
+                )
+            height += 1.2
+        layout = go.Layout(
+            margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
+            xaxis=go.layout.XAxis(range=self.exp_data.x_range),
+            # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
+        )
+        fig = go.Figure(data=trace, layout=layout)
+        plot(fig, filename=self.example_path, auto_open=False)
+
+    def plot_con_contribution_html(self, add_list):
+        """
+        绘制各个组态的贡献
+
+        Args:
+            add_list: 组态选择列表，具体形式如下：
+                [[T, [F, T, F, ...]], [T, [F, T, F, ...]], ...]
+
+        """
+        height = 0
+        trace = []
+        for i, (ion_name, ion_value) in enumerate(self.con_contribution.items()):  # 遍历离子
+            ion_name: str
+            if not add_list[i][0]:  # 如果这个离子要画在图上
+                continue
+            for j, (con_key, con_value) in enumerate(ion_value.items()):
+                con_key: str
+                if not add_list[i][1][j]:  # 遍历组态
+                    continue
+                data: pd.DataFrame = con_value[0]
+                con_name: str = con_value[1]
+                line_name = '{},{}<br />{}'.format(ion_name.replace('_', '+'), con_key, con_name)
+                if data['cross_P'].max() == 0:
+                    trace.append(go.Scatter(
+                        x=data['wavelength'],
+                        y=data['cross_P'] + height,
+                        mode='lines',
+                        name='',
+                        hovertext=line_name,
+                    ))
+                else:
+                    trace.append(go.Scatter(
+                        x=data['wavelength'],
+                        y=data['cross_P'] / data['cross_P'].max() + height,
+                        mode='lines',
+                        name='',
+                        hovertext=data,
+                    ))
                 height += 1.2
         layout = go.Layout(
             margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
@@ -299,102 +361,12 @@ class SimulateSpectral:
         fig = go.Figure(data=trace, layout=layout)
         plot(fig, filename=self.example_path, auto_open=False)
 
-    # 计算离子丰度
-    def __choose_abundance(self, temperature, electron_density):
-        """
-        将所需要的离子丰度挑选出来
-
-        Args:
-            temperature: 等离子体温度
-            electron_density: 等离子体电子密度
-
-        """
-        all_abundance = self.get_abu(temperature, electron_density)
-        # print(len(all_abundance))
-        temp_abundance = []
-        for c in self.cowan_list:
-            ion = int(c.name.split('_')[1])
-            temp_abundance.append(all_abundance[ion])
-        self.abundance = temp_abundance
-
-    def get_abu(self, t, e):
-        """
-        获取离子丰度
-
-        Args:
-            t: 等离子体温度
-            e: 等离子体电子密度
-
-        Returns:
-            返回一个列表，每个元素为对应离子的丰度
-        """
-        return self.__cal_abundance(t, e)
-
-    def __cal_abundance(self, temperature, electron_density) -> np.array:
-        """
-        计算各种离子的丰度
-
-        Args:
-            temperature: 等离子体温度，单位是ev
-            electron_density: 等离子体粒子数密度
-
-        Returns:
-            返回一个列表，类型为np.ndarray，每个元素为对应离子的丰度
-            例如：[0 1 2 3 4 5 6 7 8]
-            分别代表 一次离化，二次离化，三次离化，四次离化，五次离化，六次离化，七次离化，八次离化 九次离化 的粒子数密度
-        """
-        atom_nums = self.cowan_list[0].in36.atom.num
-        ion_num = np.array([k for k in range(atom_nums)])
-        ion_energy = np.array([OLD_IONIZATION_ENERGY[atom_nums][k] for k in range(atom_nums)])
-        electron_num = np.array([OUTER_ELECTRON_NUM[atom_nums][k] for k in range(atom_nums)])
-
-        S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
-                ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
-        Ar = (5.2 * 1e-14 * np.sqrt(ion_energy / temperature) * ion_num * (
-                0.429 + 0.5 * np.log(ion_energy / temperature) + 0.469 * np.sqrt(temperature / ion_energy)))
-        A3r = (2.97 * 1e-27 * electron_num / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy)))
-        ratio = S / (Ar + electron_density * A3r)
-        abundance = self.__calculate_a_over_S(ratio)
-        return abundance
-
-    @staticmethod
-    def __calculate_a_over_S(a_ratios):
-        """
-        已知a1/a2, a2/a3, ..., a_n-1/a_n，计算a1/S, a2/S, ..., a_n/S，其中S=a1+a2+...+a_n
-
-        Args:
-            a_ratios: a1/a2, a2/a3, ..., a_n-1/a_n
-
-        Returns:
-            a1/S, a2/S, ..., a_n/S
-        """
-        a = np.zeros(len(a_ratios) + 1)
-        a[0] = 1
-        for i in range(1, len(a)):
-            a[i] = a[i - 1] * a_ratios[i - 1]
-
-        # 计算S
-        S = np.sum(a)
-
-        # 计算a1/S, a2/S, ..., a_n/S
-        a_over_S = a / S
-
-        return a_over_S
-
     def cal_spectrum_similarity(self):
         """
         获取光谱相似度，直接存储在 self.spectrum_similarity 中
 
         """
-        if self.exp_data.data.shape[0] == 0:
-            warnings.warn('实验光谱数据在此波段内为空，无法计算光谱相似度')
-            return
-        if self.exp_data.data['wavelength'].max() < self.sim_data['wavelength'].min() and \
-                self.sim_data['wavelength'].max() < self.exp_data.data['wavelength'].min():
-            warnings.warn('实验波长与模拟波长不匹配！！！')
-            return
-
-        if len(self.characteristic_peaks) == 0:
+        if not self.characteristic_peaks:
             self.spectrum_similarity = self.spectrum_similarity1(
                 self.exp_data.data[['wavelength', 'intensity']],
                 self.sim_data[['wavelength', 'intensity']],
@@ -502,39 +474,6 @@ class SimulateSpectral:
             similarity = len(exp_wavelength_indexes) * 3
         return similarity
 
-    def spectrum_similarity3(self, fax: pd.DataFrame, fbx: pd.DataFrame):
-        """
-        指定峰值匹配法，直接通过波长取峰
-        Args:
-            fax:
-            fbx:
-
-        """
-        x, y1, y2 = self.get_y1y2(fax, fbx)
-        exp_wavelength_indexes = []
-        # 将给定的特征峰的强度与模拟光谱特征峰的强度进行比较
-        for wavelength in self.characteristic_peaks:
-            exp_index = np.argmin(abs(x - wavelength))
-            exp_wavelength_indexes.append(exp_index)
-
-        new_cal_wavelength_indexes = []
-        for index in exp_wavelength_indexes:
-            temp_index = np.argmin(np.abs(x[index] - self.sim_data['wavelength'].values))
-            new_cal_wavelength_indexes.append(temp_index)
-        self.peaks_index = [exp_wavelength_indexes, new_cal_wavelength_indexes]
-
-        # 计算两个光谱数据峰值位置以及强度的相似性
-        similarity = 0
-        for i in range(len(exp_wavelength_indexes) - 1):
-            for j in range(i + 1, len(exp_wavelength_indexes)):
-                similarity += abs(
-                    y1[exp_wavelength_indexes[i]] / y1[exp_wavelength_indexes[j]]
-                    - y2[exp_wavelength_indexes[i]] / y2[exp_wavelength_indexes[j]]
-                )
-        if similarity > len(exp_wavelength_indexes) * 3:
-            similarity = len(exp_wavelength_indexes) * 3
-        return similarity
-
     @staticmethod
     def get_y1y2(fax: pd.DataFrame, fbx: pd.DataFrame, min_x=None, max_x=None):
         col_names_a = fax.columns
@@ -568,6 +507,12 @@ class SimulateSpectral:
     def get_ion_contribution(self) -> {str: pd.DataFrame}:
         return copy.deepcopy(self.ion_contribution)
 
+    def get_con_contribution(self) -> {str: {str: [pd.DataFrame, str]}}:
+        return copy.deepcopy(self.con_contribution)
+
+    def get_abundance(self) -> np.ndarray:
+        return copy.deepcopy(self.abundance)
+
     def load_class(self, class_info):
         if class_info.cowan_list is None:
             self.cowan_list = None
@@ -594,6 +539,10 @@ class SimulateSpectral:
             self.ion_contribution = class_info.ion_contribution
         else:
             self.ion_contribution = None
+        if hasattr(class_info, 'con_contribution'):
+            self.con_contribution = class_info.con_contribution
+        else:
+            self.con_contribution = None
         # [1.0.2 > 1.0.3] end
 
         self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()

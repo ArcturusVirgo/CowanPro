@@ -1,7 +1,7 @@
-import copy
 import functools
 import warnings
 
+import pandas as pd
 from PySide6.QtCore import QUrl, Qt
 from PySide6.QtGui import QColor, QBrush
 from PySide6.QtWidgets import QTreeWidgetItem, QMessageBox
@@ -22,20 +22,8 @@ class ConfigurationContribution(MainWindow):
         """
         # 设置树状列表
         self.ui.treeWidget.clear()
-        temp_list = []
-        for key, value in self.space_time_resolution.simulate_spectral_dict.items():
-            if value.temperature is None or value.electron_density is None:
-                continue
-            temp_list.append(copy.deepcopy(value))
-        self.simulate_page4: SimulateSpectral = temp_list[index]
-        self.simulate_page4.init_cowan_list(self.cowan_lists)
-        need_widen_list = []
-        for cowan, _ in self.cowan_lists:
-            if cowan.cal_data.widen_part.get_grouped_widen_data() is None:
-                need_widen_list.append(cowan.name)
-        if need_widen_list:
-            QMessageBox.information(self, '警告', f'请重新展宽{need_widen_list}', QMessageBox.Ok)
-            return
+        self.simulate_page4: SimulateSpectral = \
+            self.space_time_resolution.get_simulate_spectral_diagnosed_by_index(index)[1]
         # -------------------------- 更新页面 --------------------------
         functools.partial(UpdateConfigurationContribution.update_treeview, self)()
         functools.partial(UpdateConfigurationContribution.update_exp_figure, self)()
@@ -46,13 +34,8 @@ class ConfigurationContribution(MainWindow):
 
         """
         add_example = get_configuration_add_list(self)
-        for cowan_, _ in self.cowan_lists:
-            if cowan_.cal_data.widen_part.grouped_widen_data is None:
-                cowan_.cal_data.widen_part.widen_by_group()
-        self.simulate_page4.init_cowan_list(self.cowan_lists)
         self.simulate_page4.plot_con_contribution_html(add_example)
         self.ui.webEngineView_2.load(QUrl.fromLocalFile(self.simulate_page4.example_path))
-        self.simulate_page4.del_cowan_list()
 
     def plot_ion_contribution(self):
         """
@@ -60,13 +43,8 @@ class ConfigurationContribution(MainWindow):
 
         """
         add_example = get_configuration_add_list(self)
-        for cowan_, _ in self.cowan_lists:
-            if cowan_.cal_data.widen_part.grouped_widen_data is None:
-                cowan_.cal_data.widen_part.widen_by_group()
-        self.simulate_page4.init_cowan_list(self.cowan_lists)
         self.simulate_page4.plot_ion_contribution_html(add_example, self.ui.page4_consider_popular.isChecked())
         self.ui.webEngineView_2.load(QUrl.fromLocalFile(self.simulate_page4.example_path))
-        self.simulate_page4.del_cowan_list()
 
     @staticmethod
     def tree_item_changed(self, item, column):
@@ -113,18 +91,25 @@ class UpdateConfigurationContribution(MainWindow):
 
     def update_treeview(self):
         def task():
-            for c in self.simulate_page4.cowan_list:
+            con_data: dict = self.simulate_page4.get_con_contribution()
+            for ion_name, ion_value in con_data.items():
+                ion_name: str
+                ion_value: dict
+
                 parents = QTreeWidgetItem()
-                parents.setText(0, c.name.replace('_', '+'))
+                parents.setText(0, ion_name.replace('_', '+'))
                 parents.setCheckState(0, Qt.Checked)
 
-                for example in c.cal_data.widen_part.grouped_widen_data:
+                for con_key, con_value in ion_value.items():
+                    con_key: str
+                    con_value: list
+                    data: pd.DataFrame = con_value[0]
+                    con_name: str = con_value[1]
                     child = QTreeWidgetItem()
                     child.setCheckState(0, Qt.Checked)
-                    index_low, index_high = map(int, example.split('_'))
-                    child.setText(0,
-                                  f'{index_low},{index_high} => {c.in36.get_configuration_name(index_low, index_high)}')
-                    if c.cal_data.widen_part.grouped_widen_data[example]['cross_P'].max() == 0:
+                    index_low, index_high = map(int, con_key.split('_'))
+                    child.setText(0, f'{index_low},{index_high} => {con_name}')
+                    if data['cross_P'].max() == 0:
                         child.setBackground(0, QBrush(QColor(255, 0, 0)))
                         child.setCheckState(0, Qt.Unchecked)
                     parents.addChild(child)

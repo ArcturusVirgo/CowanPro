@@ -1,4 +1,5 @@
 import copy
+import warnings
 from typing import List, Dict
 
 from .Cowan_ import Cowan
@@ -82,9 +83,6 @@ class CowanList:
         for cowan in self.cowan_run_history.values():
             cowan.exp_data = exp_data
 
-    def __getitem__(self, index) -> (Cowan, bool):
-        return self.cowan_run_history[self.chose_cowan[index]], self.add_or_not[index]
-
     def set_xrange(self, x_range, num):
         for cowan in self.cowan_run_history.values():
             cowan.set_xrange(x_range, num)
@@ -93,6 +91,12 @@ class CowanList:
         for cowan in self.cowan_run_history.values():
             cowan.reset_xrange()
 
+    def get_cowan_from_name(self, name):
+        return self.cowan_run_history[name]
+
+    def get_cowan_from_index(self, index):
+        return self.cowan_run_history[self.chose_cowan[index]]
+
     def load_class(self, class_info):
         self.chose_cowan = class_info.chose_cowan
         self.add_or_not = class_info.add_or_not
@@ -100,5 +104,5 @@ class CowanList:
             ov.load_class(nv)
             self.cowan_run_history[ok] = ov
 
-    def get_cowan_from_name(self, name):
-        return self.cowan_run_history[name]
+    def __getitem__(self, index) -> (Cowan, bool):
+        return self.cowan_run_history[self.chose_cowan[index]], self.add_or_not[index]

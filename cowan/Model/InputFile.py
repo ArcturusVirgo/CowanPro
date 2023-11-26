@@ -180,6 +180,14 @@ class In36:
         in36 += '   -1\n'
         return in36
 
+    def get_atom_info(self) -> (int, int, str):
+        """
+        获取原子的基本信息
+        Returns: (num, ion, symbol)
+            Examples: (1, 0, 'H')
+        """
+        return self.atom.get_atom_info()
+
     def save(self, path: Path):
         """
         保存为 in36 文件

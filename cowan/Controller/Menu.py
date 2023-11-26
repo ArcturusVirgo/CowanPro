@@ -69,7 +69,7 @@ class Menu(MainWindow):
             if value.temperature is not None and value.electron_density is not None:
                 save_simulate_data(value)
                 value.init_cowan_list(self.cowan_lists)
-                temp = value.get_abu(value.temperature, value.electron_density)
+                temp = value.get_abundance()
                 value.del_cowan_list()
             else:
                 temp = [None] * self.cowan_lists[0][0].in36.atom.num

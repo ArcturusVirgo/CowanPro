@@ -145,7 +145,8 @@ class SimulateGridThread(QtCore.QThread):
         pool = ProcessPoolExecutor(os.cpu_count())
         for temperature in self.t_list:
             for density in self.ne_list:
-                future = pool.submit(self.simulate.cal_simulate_data, eval(temperature), eval(density))
+                self.simulate.set_temperature_and_density(eval(temperature), eval(density))
+                future = pool.submit(self.simulate.simulate_spectral)
                 future.add_done_callback(functools.partial(callback, temperature, density))
         pool.shutdown()
         self.end.emit(0)

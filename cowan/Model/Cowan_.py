@@ -41,7 +41,7 @@ class Cowan:
         self.cal_data.widen_part.exp_data.set_xrange(range_)
         self.cal_data.widen_part.n = num
 
-        self.cal_data.widen_all.widen(False)
+        self.cal_data.widen_all.widen()
         self.cal_data.widen_part.widen_by_group()
 
     def reset_xrange(self):
@@ -51,7 +51,7 @@ class Cowan:
         self.cal_data.widen_all.n = None
         self.cal_data.widen_part.n = None
 
-        self.cal_data.widen_all.widen(False)
+        self.cal_data.widen_all.widen()
         self.cal_data.widen_part.widen_by_group()
 
     def load_class(self, class_info):

@@ -18,7 +18,6 @@ class DataShowWidget(QWidget):
         self.ui.setupUi(self)
 
         self.main_window = main_window
-        self.cheese_sim = []
 
         self.bind_slot()
         self.choose_page_index(0)
@@ -55,26 +54,23 @@ class DataShowWidget(QWidget):
                 self.ui.all_cowan_info_table.setItem(i, 2, QTableWidgetItem(f'{fwhm:.4f}eV'))
                 self.ui.all_cowan_info_table.setItem(i, 3, QTableWidgetItem(f'{temperature:.4f}eV'))
         if index == 2:
-            self.cheese_sim = []
             self.ui.choose_st.clear()
             add_list = []
-            for key in self.main_window.space_time_resolution.simulate_spectral_dict.keys():
-                if self.main_window.space_time_resolution.simulate_spectral_dict[key].temperature is None or \
-                        self.main_window.space_time_resolution.simulate_spectral_dict[key].electron_density is None:
+            for key, simulate in self.main_window.space_time_resolution:
+                simulate: SimulateSpectral
+                if simulate.get_temperature_and_density() == (None, None):
                     continue
-                self.cheese_sim.append(key)
                 add_list.append(f'时间：{key[0]:3>}；位置：{key[1][0]:3>}')
             self.ui.choose_st.addItems(add_list)
         if index == 3:
-            self.cheese_sim = []
             self.ui.st_info_table.clear()
             self.ui.st_info_table.setRowCount(len(self.main_window.space_time_resolution.simulate_spectral_dict.keys()))
             self.ui.st_info_table.setColumnCount(4)
             self.ui.st_info_table.setHorizontalHeaderLabels(['时间', '位置', '温度(eV)', '密度(cm^-3)'])
-            for i, (key, simulate) in enumerate(self.main_window.space_time_resolution.simulate_spectral_dict.items()):
-                if simulate.temperature is None or simulate.electron_density is None:
+            for i, (key, simulate) in enumerate(self.main_window.space_time_resolution):
+                simulate: SimulateSpectral
+                if simulate.get_temperature_and_density() == (None, None):
                     continue
-                self.cheese_sim.append(key)
                 temperature, electron_density = simulate.get_temperature_and_density()
                 self.ui.st_info_table.setItem(i, 0, QTableWidgetItem(f'{key[0]:3>}'))
                 self.ui.st_info_table.setItem(i, 1, QTableWidgetItem(f'{key[1][0]:3>}'))
@@ -95,7 +91,7 @@ class DataShowWidget(QWidget):
         st_index = self.ui.choose_st.currentIndex()
         if st_index == -1:
             return
-        simulate = self.main_window.space_time_resolution.simulate_spectral_dict[self.cheese_sim[st_index]]
+        simulate = self.main_window.space_time_resolution.get_simulate_spectral_diagnosed_by_index(st_index)[1]
         temperature, electron_density = simulate.get_temperature_and_density()
         info_text = f'温度：{temperature:>.4f}eV  电子密度：{electron_density:>.4e}cm^-3'
         self.ui.st_info.setText(info_text)
@@ -162,10 +158,10 @@ class DataShowWidget(QWidget):
         # 获取需要的数据
         cowan: Cowan = self.main_window.cowan_lists.get_cowan_from_name(ion_name)
         grouped_widen_data = cowan.cal_data.widen_part.get_grouped_widen_data()
-        grouped_data = cowan.cal_data.widen_part.get_grouped_data()
         if grouped_widen_data is None:
             QMessageBox.warning(self, '警告', '请重新展宽该离化度')
             return
+        grouped_data = cowan.cal_data.widen_part.get_grouped_data()
 
         print_to_console(
             text='single ionization data export (group by configuration) | start >>>',
@@ -255,12 +251,9 @@ class DataShowWidget(QWidget):
         if st_name == '':
             QMessageBox.warning(self, '警告', '请先选择位置时间！')
             return
-        key = self.cheese_sim[st_index]
-        simulate = self.main_window.space_time_resolution.simulate_spectral_dict[key]
-        temperature, electron_density = simulate.get_temperature_and_density()
-        if temperature is None or electron_density is None:
-            QMessageBox.warning(self, '警告', '该时空分辨谱温度密度未计算，请重新选择！')
-            return
+
+        key, simulate = self.main_window.space_time_resolution.get_simulate_spectral_diagnosed_by_index(st_index)
+        simulate: SimulateSpectral
 
         print_to_console(
             text='space time resolution data export | start >>>',
@@ -287,9 +280,8 @@ class DataShowWidget(QWidget):
         export_data.to_csv(f'{path}/{key[0]}_{key[1][0]}_实验光谱与模拟光谱.csv', index=False)
 
         print_to_console('exporting abu ...', outline_level=1, end='')
-        simulate.init_cowan_list(self.main_window.cowan_lists)
-        abu_data = simulate.get_abu(*simulate.get_temperature_and_density())
-        simulate.del_cowan_list()
+        abu_data = simulate.get_abundance()
+
         name_list = [i for i in range(len(abu_data))]
         export_data = pd.DataFrame({
             '离化度': name_list,
@@ -338,20 +330,11 @@ class DataShowWidget(QWidget):
         if st_name == '':
             QMessageBox.warning(self, '警告', '请先选择位置时间！')
             return
-        st_key = self.cheese_sim[st_index]
-        simulate = self.main_window.space_time_resolution.simulate_spectral_dict[st_key]
+        st_key, simulate = self.main_window.space_time_resolution.get_simulate_spectral_diagnosed_by_index(st_index)
         simulate: SimulateSpectral
-        temperature, electron_density = simulate.get_temperature_and_density()
-        if temperature is None or electron_density is None:
-            QMessageBox.warning(self, '警告', '该时空分辨谱温度密度未计算，请重新选择！')
-            return
         simulate.init_cowan_list(self.main_window.cowan_lists)
         simulate.cal_ion_contribution()
         ion_contribution: dict = simulate.get_ion_contribution()
-        if ion_contribution is None:
-            QMessageBox.warning(self, '警告', '请先绘制该时空分辨谱的离子贡献图')
-            return
-
         print_to_console(
             text='space time resolution grouped data export | start >>>',
             color=('green', 'blue'),

@@ -159,9 +159,22 @@ class SpaceTimeResolution:
         fig = go.Figure(data=data, layout=layout)
         plot(fig, filename=self.change_by_space_time_path, auto_open=False)
 
+    def get_simulate_spectral_diagnosed_by_index(self, index) -> List[Tuple[str, SimulateSpectral]]:
+        temp_list = []
+        for key, value in self.simulate_spectral_dict.items():
+            key: tuple
+            value: SimulateSpectral
+            if value.get_temperature_and_density() == (None, None):
+                continue
+            temp_list.append([copy.deepcopy(key), copy.deepcopy(value)])
+        return temp_list[index]
+
     def __getitem__(self, index) -> Tuple[str, SimulateSpectral]:
         return (list(self.simulate_spectral_dict.keys())[index],
                 list(self.simulate_spectral_dict.values())[index])
+
+    def __iter__(self):
+        return iter(self.simulate_spectral_dict.items())
 
     def load_class(self, class_info):
         for (ok, ov), (nk, nv) in zip(self.simulate_spectral_dict.items(), class_info.simulate_spectral_dict.items()):

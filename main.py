@@ -420,8 +420,6 @@ class MainWindow(QMainWindow):
         self.ui.show_abu.clicked.connect(functools.partial(SpectralSimulation.show_abu, self))
         # Cowan对象更新
         self.ui.page2_cowan_obj_update.clicked.connect(functools.partial(SpectralSimulation.cowan_obj_update, self))
-        # todo 测试，删除
-        self.ui.pushButton_2.clicked.connect(functools.partial(SpectralSimulation.test, self))
         # =====>> 复选框
         # 切换特征峰位置是否显示
         self.ui.show_peaks.toggled.connect(functools.partial(SpectralSimulation.plot_spectrum, self))

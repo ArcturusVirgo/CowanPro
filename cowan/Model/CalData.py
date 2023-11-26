@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -47,14 +46,148 @@ class CalData:
         self.widen_all = WidenAll(self.name, self.init_data, self.exp_data)
         self.widen_part = WidenPart(self.name, self.init_data, self.exp_data)
 
-    def get_average_wavelength(self):
+    def plot_line(self):
+        """
+        绘制线状谱
+        """
+
+        def get_line_data(origin_data):
+            """
+            将计算结果转换为线状谱
+
+            Args:
+                origin_data: 读取进来的原始数据
+
+            Returns:
+                转化后的数据
+            """
+            temp_data_ = origin_data.copy()
+            temp_data_['wavelength'] = 1239.85 / temp_data_['wavelength_ev']
+            temp_data_ = temp_data_[
+                (temp_data_['wavelength'] < self.exp_data.x_range[1])
+                & (temp_data_['wavelength'] > self.exp_data.x_range[0])
+                ]
+            lambda_ = []
+            strength = []
+            if temp_data_['wavelength'].min() > self.exp_data.x_range[0]:
+                lambda_ += [self.exp_data.x_range[0]]
+                strength += [0]
+            for x, y in zip(temp_data_['wavelength'], temp_data_['intensity']):
+                lambda_ += [x, x, x]
+                strength += [0, y, 0]
+            if temp_data_['wavelength'].max() < self.exp_data.x_range[1]:
+                lambda_ += [self.exp_data.x_range[1]]
+                strength += [0]
+            temp = pd.DataFrame({'wavelength': lambda_, 'intensity': strength})
+            return temp
+
+        temp_data = get_line_data(self.init_data[['wavelength_ev', 'intensity']])
+        trace1 = go.Scatter(
+            x=temp_data['wavelength'], y=temp_data['intensity'], mode='lines'
+        )
+        data = [trace1]
+        layout = go.Layout(
+            margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
+            xaxis=go.layout.XAxis(range=self.exp_data.x_range),
+        )
+        # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
+        fig = go.Figure(data=data, layout=layout)
+        plot(fig, filename=self.plot_path, auto_open=False)
+
+    def set_delta_lambda(self, delta_lambda: float):
+        """
+        设置展宽时的波长偏移量
+
+        Args:
+            delta_lambda: 波长偏移量，单位为 nm
+        """
+        self.widen_all.set_delta_lambda(delta_lambda)
+        self.widen_part.set_delta_lambda(delta_lambda)
+
+    def set_fwhm(self, fwhm: float):
+        """
+        设置展宽时的半高宽
+
+        Args:
+            fwhm: 半高宽，单位为 nm
+        """
+        self.widen_all.set_fwhm(fwhm)
+        self.widen_part.set_fwhm(fwhm)
+
+    def set_temperature(self, temperature: float):
+        """
+        设置等离子体温度
+
+        Args:
+            temperature: 等离子体温度，单位为 eV
+        """
+
+        self.widen_all.set_temperature(temperature)
+        self.widen_part.set_temperature(temperature)
+
+    def set_cowan_info(self, delta_lambda, fwhm, temperature):
+        """
+        设置展宽时的参数
+
+        Args:
+            delta_lambda: 波长偏移量，单位为 nm
+            fwhm: 半高宽，单位为 nm
+            temperature: 等离子体温度，单位为 eV
+        """
+        self.set_delta_lambda(delta_lambda)
+        self.set_fwhm(fwhm)
+        self.set_temperature(temperature)
+
+    def get_delta_lambda(self) -> float:
+        """
+        获取展宽时的波长偏移量
+
+        Returns:
+            波长偏移量，单位为 nm
+        """
+        return self.widen_all.delta_lambda
+
+    def get_fwhm(self) -> float:
+        """
+        获取展宽时的半高宽
+
+        Returns:
+            半高宽，单位为 nm
+        """
+        return self.widen_all.fwhm_value
+
+    def get_temperature(self) -> float:
+        """
+        获取等离子体温度
+
+        Returns:
+            等离子体温度，单位为 eV
+        """
+        return self.widen_all.temperature
+
+    def get_cowan_info(self) -> (float, float, float):
+        """
+        获取展宽时的参数
+
+        Returns:
+            返回一个元组，包含了波长偏移量、半高宽、等离子体温度
+            单位分别为 nm、eV、eV
+            Examples: (0.01, 0.5, 25.6)
+        """
+        return self.get_delta_lambda(), self.get_fwhm(), self.get_temperature()
+
+    def get_init_data(self) -> pd.DataFrame:
+        return self.init_data.__deepcopy__()
+
+    def get_average_wavelength(self) -> {str: [float, float]}:
         """
         获取平均波长
-        原理见苏老师博士毕业论文 式子 (5.1) (5.2)
+        原理见苏老师博士毕业论文 式 (5.1) (5.2)
 
         Returns:
             返回当前离化度的各个组态的平均波长，数据格式为字典
             键为组态序号（str），值为平均波长（float）
+            Examples: {'1_2': [1.0, 2.0], '2_3': [2.0, 3.0]}
         """
         temp_data = {}
         new_data = self.init_data.__deepcopy__()
@@ -85,133 +218,6 @@ class CalData:
             Delta_E_UTA = np.sqrt((g_i * f_ij * (E_ij - E_UTA) ** 2).sum() / (g_i * f_ij).sum())
             temp_data[f'{index[0]}_{index[1]}'] = [E_UTA, Delta_E_UTA]
         return temp_data
-
-    def plot_line(self):
-        """
-        绘制线状谱
-        """
-        temp_data = self.__get_line_data(self.init_data[['wavelength_ev', 'intensity']])
-        trace1 = go.Scatter(
-            x=temp_data['wavelength'], y=temp_data['intensity'], mode='lines'
-        )
-        data = [trace1]
-        layout = go.Layout(
-            margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
-            xaxis=go.layout.XAxis(range=self.exp_data.x_range),
-        )
-        # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
-        fig = go.Figure(data=data, layout=layout)
-        plot(fig, filename=self.plot_path, auto_open=False)
-
-    def __get_line_data(self, origin_data):
-        """
-        将计算结果转换为线状谱
-
-        Args:
-            origin_data: 读取进来的原始数据
-
-        Returns:
-            转化后的数据
-        """
-        temp_data = origin_data.copy()
-        temp_data['wavelength'] = 1239.85 / temp_data['wavelength_ev']
-        temp_data = temp_data[
-            (temp_data['wavelength'] < self.exp_data.x_range[1])
-            & (temp_data['wavelength'] > self.exp_data.x_range[0])
-            ]
-        lambda_ = []
-        strength = []
-        if temp_data['wavelength'].min() > self.exp_data.x_range[0]:
-            lambda_ += [self.exp_data.x_range[0]]
-            strength += [0]
-        for x, y in zip(temp_data['wavelength'], temp_data['intensity']):
-            lambda_ += [x, x, x]
-            strength += [0, y, 0]
-        if temp_data['wavelength'].max() < self.exp_data.x_range[1]:
-            lambda_ += [self.exp_data.x_range[1]]
-            strength += [0]
-        temp = pd.DataFrame({'wavelength': lambda_, 'intensity': strength})
-        return temp
-
-    def set_cowan_info(self, delta_lambda, fwhm, temperature):
-        """
-        设置展宽时的参数
-
-        Args:
-            delta_lambda: 波长偏移量，单位为 nm
-            fwhm: 半高宽，单位为 nm
-            temperature: 等离子体温度，单位为 eV
-        """
-        self.set_delta_lambda(delta_lambda)
-        self.set_fwhm(fwhm)
-        self.set_temperature(temperature)
-
-    def get_cowan_info(self):
-        """
-        获取展宽时的参数
-
-        Returns:
-            返回一个元组，包含了波长偏移量、半高宽、等离子体温度
-            单位分别为 nm、nm、eV
-        """
-        return self.get_delta_lambda(), self.get_fwhm(), self.get_temperature()
-
-    def set_delta_lambda(self, delta_lambda: float):
-        """
-        设置展宽时的波长偏移量
-
-        Args:
-            delta_lambda: 波长偏移量，单位为 nm
-        """
-        self.widen_all.delta_lambda = delta_lambda
-        self.widen_part.delta_lambda = delta_lambda
-
-    def get_delta_lambda(self):
-        """
-        获取展宽时的波长偏移量
-
-        Returns:
-            波长偏移量，单位为 nm
-        """
-        return self.widen_all.delta_lambda
-
-    def set_fwhm(self, fwhm: float):
-        """
-        设置展宽时的半高宽
-
-        Args:
-            fwhm: 半高宽，单位为 nm
-        """
-        self.widen_all.fwhm_value = fwhm
-        self.widen_part.fwhm_value = fwhm
-
-    def get_fwhm(self) -> float:
-        """
-        获取展宽时的半高宽
-
-        Returns:
-            半高宽，单位为 nm
-        """
-        return self.widen_all.fwhm_value
-
-    def set_temperature(self, temperature: float):
-        """
-        设置等离子体温度
-
-        Args:
-            temperature: 等离子体温度，单位为 eV
-        """
-        self.widen_all.temperature = temperature
-        self.widen_part.temperature = temperature
-
-    def get_temperature(self) -> float:
-        """
-        获取等离子体温度
-
-        Returns:
-            等离子体温度，单位为 eV
-        """
-        return self.widen_all.temperature
 
     def get_statistics(self) -> dict:
         spec_path = (PROJECT_PATH() / f'cal_result/{self.name}/Spec.dat').as_posix()
@@ -325,9 +331,3 @@ class CalData:
         else:
             self.info_dict = {}
         # end
-
-    def export_init_data(self, filepath: Path):
-        self.init_data.to_csv(filepath, sep=',', index=False)
-
-    def get_init_data(self) -> pd.DataFrame:
-        return self.init_data.__deepcopy__()
