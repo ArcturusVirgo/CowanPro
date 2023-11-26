@@ -1,12 +1,6 @@
 from PySide6.QtWidgets import QWidget, QProgressBar, QLabel, QVBoxLayout, QMessageBox, QFileDialog
 from PySide6.QtCore import Qt
 
-from main import MainWindow
-from .DataShowWindow import Ui_DataShow
-from ..Tools.Other import print_to_console
-from ..Model.Cowan_ import Cowan
-from ..Model import PROJECT_PATH
-
 
 class CustomProgressDialog(QWidget):
     """

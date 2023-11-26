@@ -7,9 +7,10 @@ import pandas as pd
 import plotly.graph_objs as go
 from plotly.offline import plot
 
+from ..Tools.Other import print_to_console
+
 from .GlobalVar import PROJECT_PATH
 from .ExpData import ExpData
-from ..Tools.Other import print_to_console
 
 
 class WidenAll:

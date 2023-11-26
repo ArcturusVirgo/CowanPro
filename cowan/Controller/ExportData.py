@@ -2,9 +2,9 @@ import pandas as pd
 from PySide6.QtWidgets import QWidget, QFileDialog, QMessageBox, QTableWidgetItem
 
 from main import MainWindow
-from ..Tools.Other import print_to_console
+from ..Tools import print_to_console
 from ..Model import PROJECT_PATH, Cowan, SimulateSpectral
-from ..View.DataShowWindow import Ui_DataShow
+from ..View import Ui_DataShow
 
 
 class DataShowWidget(QWidget):

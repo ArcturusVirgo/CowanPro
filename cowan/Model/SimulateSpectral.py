@@ -10,7 +10,7 @@ from plotly.offline import plot
 from scipy.interpolate import interp1d
 from scipy.signal import find_peaks
 
-from .AtomInfo import IONIZATION_ENERGY, BASE_CONFIGURATION, OLD_IONIZATION_ENERGY, OUTER_ELECTRON_NUM
+from .AtomInfo import OLD_IONIZATION_ENERGY, OUTER_ELECTRON_NUM
 from .CowanList import CowanList
 from .Cowan_ import Cowan
 from .ExpData import ExpData
