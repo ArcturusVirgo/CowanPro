@@ -97,6 +97,7 @@ class SpectralSimulation(MainWindow):
         计算网格
 
         """
+
         # 函数定义开始↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
         def update_progress_bar(progress):
             """
@@ -128,7 +129,7 @@ class SpectralSimulation(MainWindow):
 
         # 函数定义完成↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
-        self.simulate:SimulateSpectral
+        self.simulate: SimulateSpectral
         if self.expdata_2 is None:
             QMessageBox.warning(self, '警告', '请先导入实验数据！')
             return
@@ -191,7 +192,7 @@ class SpectralSimulation(MainWindow):
         记录时空分辨光谱
 
         """
-        self.simulate:SimulateSpectral
+        self.simulate: SimulateSpectral
         st_time = self.ui.st_time.text()
         st_space = (
             self.ui.st_space_x.text(),
@@ -482,6 +483,7 @@ class SpectralSimulation(MainWindow):
 
         update_ui()
         widget.show()
+        widget.closeEvent = lambda x: widget.close()
 
     def cowan_obj_update(self):
         """
