@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QFileDialog, QDialog, QPushButton, \
     QHBoxLayout, QDoubleSpinBox, QLabel, QVBoxLayout
 
 from main import VerticalLine, MainWindow
-from ..Model import PROJECT_PATH
+from ..Model import PROJECT_PATH, Cowan
 from ..Tools import ProgressThread
 
 
@@ -25,72 +25,6 @@ class Menu(MainWindow):
             self.v_line.close()
             self.v_line = None
             self.ui.show_guides.setText('显示参考线')
-
-    def export_data(self):
-        """
-        导出数据
-
-        """
-
-        def save_simulate_data(sim):
-            exp_wavelength = sim.exp_data.data['wavelength']
-            exp_intensity = sim.exp_data.data['intensity']
-            exp_intensity_normalization = sim.exp_data.data['intensity_normalization']
-            cal_wavelength = copy.deepcopy(sim.sim_data['wavelength'])
-            cal_intensity = copy.deepcopy(sim.sim_data['intensity'])
-            cal_intensity_normalization = copy.deepcopy(sim.sim_data['intensity_normalization'])
-            datas = pd.DataFrame({
-                'exp_wavelength': exp_wavelength,
-                'exp_intensity': exp_intensity,
-                'exp_intensity_normalization': exp_intensity_normalization,
-                'cal_wavelength': cal_wavelength,
-                'cal_intensity': cal_intensity,
-                'cal_intensity_normalization': cal_intensity_normalization,
-            })
-            datas.to_csv(path.joinpath(filename_1), index=False)
-
-        path = QFileDialog.getExistingDirectory(self, '选择存储路径', PROJECT_PATH().as_posix())
-        if path == '':
-            return
-        path = Path(path)
-
-        atom_symbol = self.cowan_lists[0][0].in36.atom.symbol
-        atom_num = self.cowan_lists[0][0].in36.atom.num
-
-        # 时空分辨
-        export_table = []
-        for key, value in self.space_time_resolution.simulate_spectral_dict.items():
-            filename_1 = f'{key[0]}_{key[1][0]}_simulate_data.csv'
-            temp_1 = [key[0],
-                      key[1][0],
-                      value.temperature,
-                      value.electron_density,
-                      filename_1]
-            if value.temperature is not None and value.electron_density is not None:
-                save_simulate_data(value)
-                value.init_cowan_list(self.cowan_lists)
-                temp = value.get_abundance()
-                value.del_cowan_list()
-            else:
-                temp = [None] * self.cowan_lists[0][0].in36.atom.num
-            export_table.append(temp_1 + temp.tolist())
-        columns = ['时间', '位置', '温度', '电子密度', '模拟光谱'] + [f'{atom_symbol}{i}+' for i in range(atom_num + 1)]
-        data = pd.DataFrame(export_table, columns=columns)
-        data.to_excel(path.joinpath('space_time_resolution.xlsx'), index=False)
-
-        cowan_info = []
-        for cowan_, _ in self.cowan_lists:
-            temp = [
-                cowan_.name,
-                cowan_.coupling_mode,
-                cowan_.cal_data.widen_all.delta_lambda,
-                cowan_.cal_data.widen_all.fwhm_value,
-            ]
-            cowan_info.append(temp)
-        cowan_info = pd.DataFrame(cowan_info, columns=['名称', '耦合模式', '偏移量', '半高全宽'])
-        cowan_info.to_excel(path.joinpath('cowan_info.xlsx'), index=False)
-
-        self.ui.statusbar.showMessage('数据导出完成！')
 
     def set_xrange(self):
         """
@@ -225,8 +159,9 @@ class Menu(MainWindow):
 
         data_frames = {}
         names = ['下态序号', '上态序号', '跃迁名称', 'averaged transition energy (nm)', 'width']
-        for cowan_, _ in self.cowan_lists:
-            ave_w = cowan_.cal_data.get_average_wavelength()
+        for cowan, _ in self.cowan_lists:
+            cowan: Cowan
+            ave_w = cowan.cal_data.get_average_wavelength()
             temp_1 = []
             temp_2 = []
             temp_3 = []
@@ -236,7 +171,7 @@ class Menu(MainWindow):
                 temp_1.append(int(key.split('_')[0]))
                 temp_2.append(int(key.split('_')[1]))
                 temp_3.append(
-                    cowan_.in36.get_configuration_name(
+                    cowan.in36.get_configuration_name(
                         int(key.split('_')[0]),
                         int(key.split('_')[1])
                     )
@@ -244,7 +179,7 @@ class Menu(MainWindow):
                 temp_4.append(value[0])
                 temp_5.append(value[1])
             # 将数据放在DataFrame中
-            data_frames[cowan_.name] = (
+            data_frames[cowan.name] = (
                 pd.DataFrame({
                     names[0]: temp_1,
                     names[1]: temp_2,
@@ -258,9 +193,3 @@ class Menu(MainWindow):
                     value.to_excel(writer, sheet_name=key, index=False)
 
         self.ui.statusbar.showMessage('导出成功！')
-
-    def switch_export_data(self):
-        if self.ui.export_plot_data.text() == '开启导出':
-            self.ui.export_plot_data.setText('关闭导出')
-        elif self.ui.export_plot_data.text() == '关闭导出':
-            self.ui.export_plot_data.setText('开启导出')

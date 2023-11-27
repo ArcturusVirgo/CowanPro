@@ -233,11 +233,11 @@ class SimulateSpectral:
         x2 = self.sim_data['wavelength']
         y2 = self.sim_data['intensity_normalization']
         trace1 = go.Scatter(
-            x=x1, y=y1, mode='lines', line={'color': 'rgb(98, 115, 244)'}
+            x=x1, y=y1, mode='lines', line={'color': 'rgb(98, 115, 244)'}, name='实验光谱'
         )
 
         trace2 = go.Scatter(
-            x=x2, y=y2, mode='lines', line={'color': 'rgb(237, 78, 64)'}
+            x=x2, y=y2, mode='lines', line={'color': 'rgb(237, 78, 64)'}, name='模拟光谱'
         )
         if show_point:
             exp_points_x = [x1.tolist()[index_] for index_ in self.peaks_index[0]]
@@ -350,7 +350,7 @@ class SimulateSpectral:
                         y=data['cross_P'] / data['cross_P'].max() + height,
                         mode='lines',
                         name='',
-                        hovertext=data,
+                        hovertext=line_name,
                     ))
                 height += 1.2
         layout = go.Layout(
@@ -510,7 +510,7 @@ class SimulateSpectral:
     def get_con_contribution(self) -> {str: {str: [pd.DataFrame, str]}}:
         return copy.deepcopy(self.con_contribution)
 
-    def get_abundance(self) -> np.ndarray:
+    def get_abundance(self) -> list:
         return copy.deepcopy(self.abundance)
 
     def load_class(self, class_info):

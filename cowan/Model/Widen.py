@@ -192,7 +192,7 @@ class WidenAll:
             y_name: y的列名
 
         """
-        trace1 = go.Scatter(x=data[x_name], y=data[y_name], mode='lines')
+        trace1 = go.Scatter(x=data[x_name], y=data[y_name], mode='lines', name=y_name)
         data = [trace1]
         layout = go.Layout(
             margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),

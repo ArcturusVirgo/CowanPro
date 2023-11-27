@@ -2,7 +2,7 @@ import os
 import copy
 import shutil
 import subprocess
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from pathlib import Path
 
 from PySide6 import QtCore
@@ -12,6 +12,7 @@ from .GlobalVar import PROJECT_PATH
 from .InputFile import In36, In2
 from .CalData import CalData
 from .ExpData import ExpData
+from .Widen import WidenAll, WidenPart
 
 
 class Cowan:
@@ -53,6 +54,15 @@ class Cowan:
 
         self.cal_data.widen_all.widen()
         self.cal_data.widen_part.widen_by_group()
+
+    def get_widen_all_obj(self) -> WidenAll:
+        return copy.deepcopy(self.cal_data.widen_all)
+
+    def get_widen_part_obj(self) -> WidenPart:
+        return copy.deepcopy(self.cal_data.widen_part)
+
+    def get_widen_obj(self) -> Tuple[WidenAll, WidenPart]:
+        return self.get_widen_all_obj(), self.get_widen_part_obj()
 
     def load_class(self, class_info):
         self.in36.load_class(class_info.in36)

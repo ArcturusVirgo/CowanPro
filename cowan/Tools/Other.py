@@ -1,5 +1,6 @@
 import colorama
 import matplotlib
+import pandas as pd
 from PySide6.QtCore import Qt
 
 
@@ -107,6 +108,12 @@ def print_to_console(text, outline_level=0, color=('', ''), thickness=0, end='\n
         + colorama.Style.RESET_ALL,
         end=end,
     )
+
+
+def dataframe_append_series(dataframe: pd.DataFrame, series: pd.Series, series_name: str) -> pd.DataFrame:
+    series.name = series_name
+    dataframe = pd.concat([dataframe, series], axis=1)
+    return dataframe
 
 
 colorama.init(autoreset=True)

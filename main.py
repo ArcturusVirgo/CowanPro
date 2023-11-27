@@ -323,14 +323,10 @@ class MainWindow(QMainWindow):
         self.ui.reset_cal.triggered.connect(lambda: self.ui.page2_cal_grid.setDisabled(False))
         # 退出项目
         self.ui.exit_project.triggered.connect(self.print_memory)
-        # 导出数据
-        self.ui.export_data.triggered.connect(functools.partial(Menu.export_data, self))
         # 设置x轴范围
         self.ui.set_xrange.triggered.connect(functools.partial(Menu.set_xrange, self))
         # 重置范围
         self.ui.reset_xrange.triggered.connect(functools.partial(Menu.reset_xrange, self))
-        # 导出画图数据
-        self.ui.export_plot_data.triggered.connect(functools.partial(Menu.switch_export_data, self))
         # 展示导出窗口
         self.ui.export_data_window.triggered.connect(functools.partial(ExportData.show_export_data_window, self))
 

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 from PySide6.QtCore import Qt, QUrl
-from PySide6.QtGui import QAction, QCursor
+from PySide6.QtGui import QAction, QCursor, QColor, QBrush
 from PySide6.QtWidgets import QFileDialog, QDialog, QTextBrowser, QVBoxLayout, QMenu, QMessageBox, QTableWidgetItem, \
     QListWidgetItem
 
@@ -726,6 +726,11 @@ class UpdateLineIdentification(MainWindow):
         for i in range(df.shape[0]):
             for j in range(df.shape[1]):
                 item = QTableWidgetItem(str(df.iloc[i, j]))
+                if df.iloc[i, 0] == 0:
+                    item.setBackground(QBrush(QColor(189, 215, 238)))
+                else:
+                    item.setBackground(QBrush(QColor(197, 224, 179)))
+
                 self.ui.in36_configuration_view.setItem(i, j, item)
 
     def update_in36_control(self):
