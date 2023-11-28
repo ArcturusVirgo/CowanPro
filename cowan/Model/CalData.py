@@ -217,6 +217,12 @@ class CalData:
             E_UTA = (E_ij * f_ij * g_i).sum() / (f_ij * g_i).sum()
             Delta_E_UTA = np.sqrt((g_i * f_ij * (E_ij - E_UTA) ** 2).sum() / (g_i * f_ij).sum())
             temp_data[f'{index[0]}_{index[1]}'] = [E_UTA, Delta_E_UTA]
+        index_l_max = new_data['index_l'].max()
+        index_h_max = new_data['index_h'].max()
+        for index_l in range(1, index_l_max + 1):
+            for index_h in range(1, index_h_max + 1):
+                if f'{index_l}_{index_h}' not in temp_data.keys():
+                    temp_data[f'{index_l}_{index_h}'] = [np.nan, np.nan]
         return temp_data
 
     def get_statistics(self) -> dict:

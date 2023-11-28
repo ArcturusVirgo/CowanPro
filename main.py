@@ -47,6 +47,7 @@ class LoginWindow(QWidget):
         super().__init__()
         self.ui = Ui_login_window()
         self.ui.setupUi(self)
+        self.setWindowTitle('激光等离子体光谱模拟程序-登录界面')
         self.WORKING_PATH = Path.cwd()
 
         self.project_data: dict = {}

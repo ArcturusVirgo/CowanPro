@@ -178,15 +178,19 @@ class Menu(MainWindow):
                 )
                 temp_4.append(value[0])
                 temp_5.append(value[1])
+            # 创建数据
+            export_data = pd.DataFrame({
+                names[0]: temp_1,
+                names[1]: temp_2,
+                names[2]: temp_3,
+                names[3]: temp_4,
+                names[4]: temp_5,
+            })
+            # 对数据进行排序
+            export_data.sort_values(by=['下态序号', '上态序号'], inplace=True)
             # 将数据放在DataFrame中
-            data_frames[cowan.name] = (
-                pd.DataFrame({
-                    names[0]: temp_1,
-                    names[1]: temp_2,
-                    names[2]: temp_3,
-                    names[3]: temp_4,
-                    names[4]: temp_5,
-                }))
+            data_frames[cowan.name] = export_data
+
             # 存储
             with pd.ExcelWriter(path.joinpath('averaged transition energy.xlsx'), ) as writer:
                 for key, value in data_frames.items():

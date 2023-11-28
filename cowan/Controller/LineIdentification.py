@@ -612,7 +612,7 @@ class LineIdentification(MainWindow):
 
         """
         v0 = '{:>5}'.format(self.ui.in2_1.text())
-        v1 = '{:>2}'.format(self.ui.in2_2.text())
+        v1 = '{:<2}'.format(self.ui.in2_2.text())
         v2 = '{:>1}'.format(self.ui.in2_3.text())
         v3 = '{:>2}'.format(self.ui.in2_4.text())
         v4 = '{:>1}'.format(self.ui.in2_5.text())
@@ -644,7 +644,7 @@ class LineIdentification(MainWindow):
         temp = []
         for i in range(26):
             temp.append(eval(f'v{i}'))
-        in2_obj.input_card = temp
+        in2_obj.set_in2_list(temp)
 
 
 class UpdateLineIdentification(MainWindow):

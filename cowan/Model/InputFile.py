@@ -240,6 +240,7 @@ class In2:
         self.input_card: List[str] = [
             'g5inp', '  ', '0', ' 0', '0', '00', '  0.000', ' ', '00000000', ' 0000000', '   00000', ' 000', '0', '90',
             '99', '90', '90', '90', '.0000', '     ', '0', '7', '2', '2', '9', '     ', ]
+        self.rule = [5, 2, 1, 2, 1, 2, 7, 1, 8, 8, 8, 4, 1, 2, 2, 2, 2, 2, 5, 5, 1, 1, 1, 1, 1, 5, ]
 
     def read_from_file(self, path: Path):
         """
@@ -256,12 +257,21 @@ class In2:
         line = line.strip('\n')
         if len(line) != 80:
             line += ' ' * (80 - len(line) - 1)
-        rules = [5, 2, 1, 2, 1, 2, 7, 1, 8, 8, 8, 4, 1, 2, 2, 2, 2, 2, 5, 5, 1, 1, 1, 1, 1, 5, ]
         input_card_list = []
-        for rule in rules:
+        for rule in self.rule:
             input_card_list.append(line[:rule])
             line = line[rule:]
         self.input_card = input_card_list
+
+    def set_in2_list(self, in2_list: List[str]):
+        """
+        设置输入卡
+
+        Args:
+            in2_list: 输入卡列表
+
+        """
+        self.input_card = copy.deepcopy(in2_list)
 
     def get_text(self):
         """
@@ -272,7 +282,13 @@ class In2:
         """
 
         in2 = 'g5inp     000 0.0000          01        .095.095  8499848484 0.00   1 18229'
-        new_in2 = in2[:5] + f'{self.input_card[1]:>2}' + in2[7:50] + ''.join(self.input_card[13:18]) + in2[60:]
+        new_in2 = (
+                in2[:5] +
+                f'{self.input_card[1][:self.rule[1]]}'  # RCK 用于调整输出
+                + in2[7:50] +
+                ''.join(self.input_card[13:18]) +  # salter 因子
+                in2[60:]
+        )
         # in2 += ''.join(self.input_card)
         new_in2 += '\n'
         new_in2 += '        -1\n'
@@ -291,3 +307,9 @@ class In2:
 
     def load_class(self, class_info):
         self.input_card = class_info.input_card
+        # start [1.0.2 > 1.0.3]
+        if hasattr(class_info, 'rule'):
+            self.rule = class_info.rule
+        else:
+            self.rule = [5, 2, 1, 2, 1, 2, 7, 1, 8, 8, 8, 4, 1, 2, 2, 2, 2, 2, 5, 5, 1, 1, 1, 1, 1, 5, ]
+        # end [1.0.2 > 1.0.3]
