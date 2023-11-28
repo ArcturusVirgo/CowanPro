@@ -492,20 +492,29 @@ class WidenPart:
     def get_gauss_integral(self) -> pd.DataFrame:
         index_l = []
         index_h = []
-        con_value = []
+        con_value_1 = []
+        # con_value_2 = []
         for key, value in self.grouped_widen_data.items():
             key: str
             value: pd.DataFrame
+            value.sort_values(by=['wavelength'], inplace=True)
             x = value['wavelength'].values
             y = value['gauss'].values
             # 使用梯形公式进行积分
-            integral_value = np.trapz(y, x)
+            integral_value_1 = np.trapz(y, x)
+            # upper = y[:-1]
+            # lower = y[1:]
+            # height = x[1:] - x[:-1]
+            # integral_value_2 = np.sum((upper + lower) * height / 2)
+
             # 记录
             index_l.append(key.split('_')[0])
             index_h.append(key.split('_')[1])
-            con_value.append(integral_value)
+            con_value_1.append(integral_value_1)
+            # con_value_2.append(integral_value_2)
 
-        return pd.DataFrame({'下态序号': index_l, '上态序号': index_h, '高斯积分': con_value})
+        return pd.DataFrame(
+            {'下态序号': index_l, '上态序号': index_h, '高斯积分': con_value_1})
 
     def load_class(self, class_info):
         self.name = class_info.name
