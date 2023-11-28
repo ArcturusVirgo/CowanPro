@@ -24,7 +24,7 @@ class Ui_DataShow(object):
     def setupUi(self, DataShow):
         if not DataShow.objectName():
             DataShow.setObjectName(u"DataShow")
-        DataShow.resize(851, 598)
+        DataShow.resize(851, 670)
         self.horizontalLayout = QHBoxLayout(DataShow)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.widget = QWidget(DataShow)
@@ -188,6 +188,19 @@ class Ui_DataShow(object):
 
         self.verticalLayout_3.addWidget(self.cross_p_con)
 
+        self.line_3 = QFrame(self.groupBox_3)
+        self.line_3.setObjectName(u"line_3")
+        self.line_3.setFrameShape(QFrame.HLine)
+        self.line_3.setFrameShadow(QFrame.Sunken)
+
+        self.verticalLayout_3.addWidget(self.line_3)
+
+        self.gauss_integral = QCheckBox(self.groupBox_3)
+        self.gauss_integral.setObjectName(u"gauss_integral")
+        self.gauss_integral.setChecked(True)
+
+        self.verticalLayout_3.addWidget(self.gauss_integral)
+
         self.verticalSpacer_3 = QSpacerItem(20, 166, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.verticalLayout_3.addItem(self.verticalSpacer_3)
@@ -283,6 +296,13 @@ class Ui_DataShow(object):
         self.sim_data.setChecked(True)
 
         self.verticalLayout_6.addWidget(self.sim_data)
+
+        self.line_4 = QFrame(self.groupBox_4)
+        self.line_4.setObjectName(u"line_4")
+        self.line_4.setFrameShape(QFrame.HLine)
+        self.line_4.setFrameShadow(QFrame.Sunken)
+
+        self.verticalLayout_6.addWidget(self.line_4)
 
         self.ion_abu = QCheckBox(self.groupBox_4)
         self.ion_abu.setObjectName(u"ion_abu")
@@ -401,6 +421,7 @@ class Ui_DataShow(object):
         self.gauss_con.setText(QCoreApplication.translate("DataShow", u"gauss", None))
         self.cross_np_con.setText(QCoreApplication.translate("DataShow", u"cross_np", None))
         self.cross_p_con.setText(QCoreApplication.translate("DataShow", u"cross_p", None))
+        self.gauss_integral.setText(QCoreApplication.translate("DataShow", u"gauss_integral", None))
         self.export_1_con.setText(QCoreApplication.translate("DataShow", u"\u5bfc\u51fa\u6570\u636e", None))
         ___qtablewidgetitem = self.all_cowan_info_table.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("DataShow", u"\u79bb\u5316\u5ea6", None));

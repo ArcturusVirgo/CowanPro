@@ -167,12 +167,6 @@ class LoginWindow(QWidget):
     def slot_project_name_changed(self):
         self.ui.project_path.setText(self.temp_path + self.ui.project_name.text())
 
-    # def slot_project_path_changed(self):
-    #     name = self.ui.project_path.text().split('/')[-1]
-    #     if name == '':
-    #         name = self.ui.project_path.text().split('/')[-2]
-    #     self.ui.project_name.setText(name)
-
     def slot_project_path_item_double_clicked(self, index):
         """
         双击项目列表中的项目，打开项目

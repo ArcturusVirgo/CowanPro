@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
 from plotly.offline import plot
+from scipy import integrate
 
 from ..Tools.Other import print_to_console
 
@@ -487,6 +488,24 @@ class WidenPart:
 
     def get_grouped_data(self) -> Dict[str, pd.DataFrame]:
         return copy.deepcopy(self.grouped_data)
+
+    def get_gauss_integral(self) -> pd.DataFrame:
+        index_l = []
+        index_h = []
+        con_value = []
+        for key, value in self.grouped_widen_data.items():
+            key: str
+            value: pd.DataFrame
+            x = value['wavelength'].values
+            y = value['gauss'].values
+            # 使用梯形公式进行积分
+            integral_value = np.trapz(y, x)
+            # 记录
+            index_l.append(key.split('_')[0])
+            index_h.append(key.split('_')[1])
+            con_value.append(integral_value)
+
+        return pd.DataFrame({'下态序号': index_l, '上态序号': index_h, '高斯积分': con_value})
 
     def load_class(self, class_info):
         self.name = class_info.name

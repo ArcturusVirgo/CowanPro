@@ -116,33 +116,42 @@ class DataShowWidget(QWidget):
             print_to_console('done', outline_level=1)
 
         # 模拟数据导出
-        print_to_console('exporting widen data | start >>>', color=('green', 'yellow'), outline_level=1)
-        export_data = pd.DataFrame()
-        cowan_init_res = cowan.cal_data.get_init_data()
-        widen_all_data = cowan.cal_data.widen_all.get_widen_data()
-        if self.ui.line_over_all.isChecked():
-            print_to_console('exporting line data ...', outline_level=2, end='')
-            export_data = dataframe_append_series(export_data, 1239.85 / cowan_init_res['wavelength_ev'], 'wavelength_line_nm')
-            export_data = dataframe_append_series(export_data, 1239.85 / cowan_init_res['intensity'], 'intensity_line')
-            print_to_console('done', outline_level=1)
-        if self.ui.gauss_overall.isChecked():
-            print_to_console('exporting gauss data ...', outline_level=2, end='')
-            export_data = dataframe_append_series(export_data, widen_all_data['wavelength'], 'wavelength_gauss_nm')
-            export_data = dataframe_append_series(export_data, widen_all_data['gauss'], 'intensity_gauss')
-            print_to_console('done', outline_level=1)
-        if self.ui.cross_np_overall.isChecked():
-            print_to_console('exporting cross_np data ...', outline_level=2, end='')
-            export_data = dataframe_append_series(export_data, widen_all_data['wavelength'], 'wavelength_cross_np_nm')
-            export_data = dataframe_append_series(export_data, widen_all_data['cross_NP'], 'intensity_cross_np')
-            print_to_console('done', outline_level=1)
-        if self.ui.cross_p_overall.isChecked():
-            print_to_console('exporting cross_p data ...', outline_level=2, end='')
-            export_data = dataframe_append_series(export_data, widen_all_data['wavelength'], 'wavelength_cross_p_nm')
-            export_data = dataframe_append_series(export_data, widen_all_data['cross_P'], 'intensity_cross_p')
-            print_to_console('done', outline_level=1)
-        # 【单个离子】【Al_3】【整体】展宽数据
-        export_data.to_csv(f'{path}/【单个离子】【{ion_name}】【整体】展宽数据.csv', index=False)
-        print_to_console('exporting widen data | end', color=('green', 'yellow'), outline_level=1)
+        if (
+                self.ui.line_over_all.isChecked() or
+                self.ui.gauss_overall.isChecked() or
+                self.ui.cross_np_overall.isChecked() or
+                self.ui.cross_p_overall.isChecked()
+        ):
+            print_to_console('exporting widen data | start >>>', color=('green', 'yellow'), outline_level=1)
+            export_data = pd.DataFrame()
+            cowan_init_res = cowan.cal_data.get_init_data()
+            widen_all_data = cowan.cal_data.widen_all.get_widen_data()
+            if self.ui.line_over_all.isChecked():
+                print_to_console('exporting line data ...', outline_level=2, end='')
+                export_data = dataframe_append_series(export_data, 1239.85 / cowan_init_res['wavelength_ev'],
+                                                      'wavelength_line_nm')
+                export_data = dataframe_append_series(export_data, cowan_init_res['intensity'], 'intensity_line')
+                print_to_console('done', outline_level=1)
+            if self.ui.gauss_overall.isChecked():
+                print_to_console('exporting gauss data ...', outline_level=2, end='')
+                export_data = dataframe_append_series(export_data, widen_all_data['wavelength'], 'wavelength_gauss_nm')
+                export_data = dataframe_append_series(export_data, widen_all_data['gauss'], 'intensity_gauss')
+                print_to_console('done', outline_level=1)
+            if self.ui.cross_np_overall.isChecked():
+                print_to_console('exporting cross_np data ...', outline_level=2, end='')
+                export_data = dataframe_append_series(export_data, widen_all_data['wavelength'],
+                                                      'wavelength_cross_np_nm')
+                export_data = dataframe_append_series(export_data, widen_all_data['cross_NP'], 'intensity_cross_np')
+                print_to_console('done', outline_level=1)
+            if self.ui.cross_p_overall.isChecked():
+                print_to_console('exporting cross_p data ...', outline_level=2, end='')
+                export_data = dataframe_append_series(export_data, widen_all_data['wavelength'],
+                                                      'wavelength_cross_p_nm')
+                export_data = dataframe_append_series(export_data, widen_all_data['cross_P'], 'intensity_cross_p')
+                print_to_console('done', outline_level=1)
+            # 【单个离子】【Al_3】【整体】展宽数据
+            export_data.to_csv(f'{path}/【单个离子】【{ion_name}】【整体】展宽数据.csv', index=False)
+            print_to_console('exporting widen data | end', color=('green', 'yellow'), outline_level=1)
 
         print_to_console(
             text='single ionization data export | end',
@@ -173,36 +182,55 @@ class DataShowWidget(QWidget):
 
         path = QFileDialog.getExistingDirectory(self, '选择存储路径', PROJECT_PATH().as_posix())
         # 原始数据导出
-        print_to_console('exporting init data | start >>>', color=('green', 'yellow'), outline_level=1)
-        for key, value in grouped_data.items():
-            if self.ui.line_con.isChecked():
+        if self.ui.init_res_con.isChecked():
+            print_to_console('exporting init data | start >>>', color=('green', 'yellow'), outline_level=1)
+            for key, value in grouped_data.items():
                 print_to_console(f'exporting line data ({key}) ...', outline_level=2, end='')
                 # 【单个离子】【Al_3】【按组态分组】【1_1】原始数据
                 value.to_csv(f'{path}/【单个离子】【{ion_name}】【按组态分组】【{key}】原始数据.csv', index=False)
                 print_to_console('done', outline_level=1)
-        print_to_console('exporting init data | end', color=('green', 'yellow'), outline_level=1)
+            print_to_console('exporting init data | end', color=('green', 'yellow'), outline_level=1)
+
+        # 高斯积分
+        if self.ui.gauss_integral.isChecked():
+            print_to_console('exporting gauss integral data | start >>>', color=('green', 'yellow'), outline_level=1)
+            export_data = cowan.cal_data.widen_part.get_gauss_integral()
+            export_data.to_csv(f'{path}/【单个离子】【{ion_name}】【按组态分组】高斯积分.csv', index=False)
+            print_to_console('exporting widen by group data | end', color=('green', 'yellow'), outline_level=1)
 
         # 按组态
-        print_to_console('exporting widen by group data | start >>>', color=('green', 'yellow'), outline_level=1)
-        for key, value in grouped_widen_data.items():
-            export_data = pd.DataFrame()
-            if self.ui.gauss_con.isChecked():
-                print_to_console(f'exporting gauss data ({key}) ...', outline_level=2, end='')
-                export_data = dataframe_append_series(export_data, value['wavelength'], 'wavelength_gauss_nm')
-                export_data = dataframe_append_series(export_data, value['gauss'], 'intensity_gauss')
-                print_to_console('done', outline_level=1)
-            if self.ui.cross_np_con.isChecked():
-                print_to_console(f'exporting cross_np data ({key}) ...', outline_level=2, end='')
-                export_data = dataframe_append_series(export_data, value['wavelength'], 'wavelength_cross_np_nm')
-                export_data = dataframe_append_series(export_data, value['cross_NP'], 'intensity_cross_np')
-                print_to_console('done', outline_level=1)
-            if self.ui.cross_p_con.isChecked():
-                print_to_console(f'exporting cross_p data ({key}) ...', outline_level=2, end='')
-                export_data = dataframe_append_series(export_data, value['wavelength'], 'wavelength_cross_p_nm')
-                export_data = dataframe_append_series(export_data, value['cross_P'], 'intensity_cross_p')
-                print_to_console('done', outline_level=1)
-            export_data.to_csv(f'{path}/【单个离子】【{ion_name}】【按组态分组】【{key}】展宽数据.csv', index=False)
-        print_to_console('exporting widen by group data | end', color=('green', 'yellow'), outline_level=1)
+        if (
+                self.ui.line_con.isChecked() or
+                self.ui.gauss_con.isChecked() or
+                self.ui.cross_np_con.isChecked() or
+                self.ui.cross_p_con.isChecked()
+        ):
+            print_to_console('exporting widen by group data | start >>>', color=('green', 'yellow'), outline_level=1)
+            for key, value in grouped_widen_data.items():
+                export_data = pd.DataFrame()
+                if self.ui.line_con.isChecked():
+                    print_to_console(f'exporting line data ({key}) ...', outline_level=2, end='')
+                    export_data = dataframe_append_series(export_data, 1239.85 / grouped_data[key]['wavelength_ev'],
+                                                          'wavelength_line_nm')
+                    export_data = dataframe_append_series(export_data, grouped_data[key]['intensity'], 'intensity_line')
+                    print_to_console('done', outline_level=1)
+                if self.ui.gauss_con.isChecked():
+                    print_to_console(f'exporting gauss data ({key}) ...', outline_level=2, end='')
+                    export_data = dataframe_append_series(export_data, value['wavelength'], 'wavelength_gauss_nm')
+                    export_data = dataframe_append_series(export_data, value['gauss'], 'intensity_gauss')
+                    print_to_console('done', outline_level=1)
+                if self.ui.cross_np_con.isChecked():
+                    print_to_console(f'exporting cross_np data ({key}) ...', outline_level=2, end='')
+                    export_data = dataframe_append_series(export_data, value['wavelength'], 'wavelength_cross_np_nm')
+                    export_data = dataframe_append_series(export_data, value['cross_NP'], 'intensity_cross_np')
+                    print_to_console('done', outline_level=1)
+                if self.ui.cross_p_con.isChecked():
+                    print_to_console(f'exporting cross_p data ({key}) ...', outline_level=2, end='')
+                    export_data = dataframe_append_series(export_data, value['wavelength'], 'wavelength_cross_p_nm')
+                    export_data = dataframe_append_series(export_data, value['cross_P'], 'intensity_cross_p')
+                    print_to_console('done', outline_level=1)
+                export_data.to_csv(f'{path}/【单个离子】【{ion_name}】【按组态分组】【{key}】展宽数据.csv', index=False)
+            print_to_console('exporting widen by group data | end', color=('green', 'yellow'), outline_level=1)
 
         print_to_console(
             text='single ionization data export (group by configuration) | end',
@@ -264,33 +292,42 @@ class DataShowWidget(QWidget):
             thickness=1
         )
         path = QFileDialog.getExistingDirectory(self, '选择存储路径', PROJECT_PATH().as_posix())
-        export_data = pd.DataFrame()
 
-        print_to_console('exporting exp data ...', outline_level=1, end='')
-        exp_data = simulate.get_exp_data()
-        export_data = dataframe_append_series(export_data, exp_data['wavelength'], 'exp_wavelength_nm')
-        export_data = dataframe_append_series(export_data, exp_data['intensity'], 'exp_intensity')
-        export_data = dataframe_append_series(export_data, exp_data['intensity_normalization'], 'exp_intensity_norm')
-        print_to_console('done', outline_level=1)
+        if (
+                self.ui.exp_data.isChecked() or
+                self.ui.sim_data.isChecked()
+        ):
+            export_data = pd.DataFrame()
 
-        print_to_console('exporting sim data ...', outline_level=1, end='')
-        sim_data = simulate.get_sim_data()
-        export_data = dataframe_append_series(export_data, sim_data['wavelength'], 'sim_wavelength_nm')
-        export_data = dataframe_append_series(export_data, sim_data['intensity'], 'sim_intensity')
-        export_data = dataframe_append_series(export_data, sim_data['intensity_normalization'], 'sim_intensity_norm')
-        print_to_console('done', outline_level=1)
-        export_data.to_csv(f'{path}/【单个时空分辨光谱】【{key[0]}-{key[1][0]}】实验光谱与模拟光谱.csv', index=False)
+            if self.ui.exp_data.isChecked():
+                print_to_console('exporting exp data ...', outline_level=1, end='')
+                exp_data = simulate.get_exp_data()
+                export_data = dataframe_append_series(export_data, exp_data['wavelength'], 'exp_wavelength_nm')
+                export_data = dataframe_append_series(export_data, exp_data['intensity'], 'exp_intensity')
+                export_data = dataframe_append_series(export_data, exp_data['intensity_normalization'],
+                                                      'exp_intensity_norm')
+                print_to_console('done', outline_level=1)
+            if self.ui.sim_data.isChecked():
+                print_to_console('exporting sim data ...', outline_level=1, end='')
+                sim_data = simulate.get_sim_data()
+                export_data = dataframe_append_series(export_data, sim_data['wavelength'], 'sim_wavelength_nm')
+                export_data = dataframe_append_series(export_data, sim_data['intensity'], 'sim_intensity')
+                export_data = dataframe_append_series(export_data, sim_data['intensity_normalization'],
+                                                      'sim_intensity_norm')
+                print_to_console('done', outline_level=1)
+            export_data.to_csv(f'{path}/【单个时空分辨光谱】【{key[0]}-{key[1][0]}】实验光谱与模拟光谱.csv', index=False)
 
-        print_to_console('exporting abu ...', outline_level=1, end='')
-        abu_data = simulate.get_abundance()
+        if self.ui.ion_abu.isChecked():
+            print_to_console('exporting abu ...', outline_level=1, end='')
+            abu_data = simulate.get_abundance()
 
-        name_list = [i for i in range(len(abu_data))]
-        export_data = pd.DataFrame({
-            '离化度': name_list,
-            '丰度': abu_data
-        })
-        export_data.to_csv(f'{path}/【单个时空分辨光谱】【{key[0]}-{key[1][0]}】各离子丰度.csv', index=False)
-        print_to_console('done', outline_level=1)
+            name_list = [i for i in range(len(abu_data))]
+            export_data = pd.DataFrame({
+                '离化度': name_list,
+                '丰度': abu_data
+            })
+            export_data.to_csv(f'{path}/【单个时空分辨光谱】【{key[0]}-{key[1][0]}】各离子丰度.csv', index=False)
+            print_to_console('done', outline_level=1)
 
         print_to_console(
             text='space time resolution data export | end',
@@ -307,8 +344,6 @@ class DataShowWidget(QWidget):
             return
         st_key, simulate = self.main_window.space_time_resolution.get_simulate_spectral_diagnosed_by_index(st_index)
         simulate: SimulateSpectral
-        simulate.init_cowan_list(self.main_window.cowan_lists)
-        simulate.cal_ion_contribution()
         ion_contribution: dict = simulate.get_ion_contribution()
         print_to_console(
             text='space time resolution grouped data export | start >>>',
@@ -318,12 +353,23 @@ class DataShowWidget(QWidget):
         )
 
         path = QFileDialog.getExistingDirectory(self, '选择存储路径', PROJECT_PATH().as_posix())
-        for key, value in ion_contribution.items():
-            key: str
-            value: pd.DataFrame
-            print_to_console(f'exporting {key} ...', outline_level=1, end='')
-            value.to_csv(f'{path}/【单个时空分辨光谱】【{st_key[0]}-{st_key[1][0]}】【离子贡献】【{key}】展宽数据.csv', index=False)
-            print_to_console('done', outline_level=1)
+        if self.ui.ion_widen.isChecked() or self.ui.ion_widen_abu.isChecked():
+            for key, value in ion_contribution.items():
+                key: str
+                value: pd.DataFrame  # wavelength intensity intensity_with_population
+                print_to_console(f'exporting {key} ...', outline_level=1, end='')
+                if self.ui.ion_widen.isChecked() and self.ui.ion_widen_abu.isChecked():
+                    export_data = value
+                elif self.ui.ion_widen.isChecked():
+                    export_data = value[['wavelength', 'intensity']]
+                elif self.ui.ion_widen_abu.isChecked():
+                    export_data = value[['wavelength', 'intensity_with_population']]
+                else:
+                    raise ValueError('未知错误！')
+                export_data.to_csv(
+                    f'{path}/【单个时空分辨光谱】【{st_key[0]}-{st_key[1][0]}】【离子贡献】【{key}】展宽数据.csv', index=False
+                )
+                print_to_console('done', outline_level=1)
 
         print_to_console(
             text='space time resolution grouped data export | end',
