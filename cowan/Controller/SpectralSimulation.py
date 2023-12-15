@@ -17,7 +17,6 @@ from ..Model import (
 )
 from ..Tools import ProgressThread, rainbow_color
 from ..View import CustomProgressDialog
-
 from .EvolutionaryProcess import UpdateEvolutionaryProcess
 from .ConfigurationContribution import UpdateConfigurationContribution
 
@@ -47,11 +46,12 @@ class SpectralSimulation(MainWindow):
         path, types = QFileDialog.getOpenFileName(self, '请选择实验数据', PROJECT_PATH().as_posix(),
                                                   '数据文件(*.txt *.csv)')
         self.expdata_2 = ExpData(Path(path))
+        # 如果设置了波长范围，就使用新的波长范围
         if self.info['x_range'] is not None:
             self.expdata_2.set_xrange(self.info['x_range'])
 
         # -------------------------- 更新页面 --------------------------
-        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
+        functools.partial(UpdateSpectralSimulation.update_page2_exp_data_path, self)()
 
     def plot_exp(self):
         """
@@ -67,23 +67,24 @@ class SpectralSimulation(MainWindow):
 
     def plot_spectrum(self, *args):
         """
-        绘制叠加光谱
+        模拟光谱，绘制实验数据和模拟数据
 
         Args:
             *args:
 
         """
-        if self.expdata_2 is None:
+        if self.expdata_2 is None:  # 如果没有导入实验数据
             QMessageBox.warning(self, '警告', '请先导入实验数据！')
             return
-        if not self.cowan_lists.chose_cowan:
+        if not self.cowan_lists.chose_cowan:  # 如果没有添加Cowan计算结果
             QMessageBox.warning(self, '警告', '请先添加计算结果！')
             return
         self.simulate: SimulateSpectral
+
         temperature = self.ui.page2_temperature.value()
         density = (self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value())
-        self.simulate.exp_data = copy.deepcopy(self.expdata_2)
-        self.simulate.init_cowan_list(self.cowan_lists)
+        self.simulate.set_exp_obj(self.expdata_2)  # 设置实验数据
+        self.simulate.init_cowan_list(self.cowan_lists)  # 初始化 cowan 对象
         self.simulate.set_threading(False)
         self.simulate.set_temperature_and_density(temperature, density)
         self.simulate.simulate_spectral()
@@ -178,7 +179,7 @@ class SpectralSimulation(MainWindow):
         if (temperature, density) not in self.simulated_grid.grid_data:
             warnings.warn('计算出现错误，没有该温度密度下的结果！')
             return
-        self.simulate = copy.deepcopy(self.simulated_grid.grid_data[(temperature, density)])
+        self.simulate: SimulateSpectral = copy.deepcopy(self.simulated_grid.grid_data[(temperature, density)])
 
         # -------------------------- 更新页面 --------------------------
         temp = density.split('e+')
@@ -192,22 +193,17 @@ class SpectralSimulation(MainWindow):
         记录时空分辨光谱
 
         """
+        if self.simulate.get_con_contribution() is None:
+            QMessageBox.warning(self, '警告', '请再次进行模拟后再进行添加')
+            return
         self.simulate: SimulateSpectral
+
         st_time = self.ui.st_time.text()
         st_space = (
             self.ui.st_space_x.text(),
             self.ui.st_space_y.text(),
             self.ui.st_space_z.text(),
         )
-        if self.expdata_2 is None:
-            QMessageBox.warning(self, '警告', '请先确定温度和密度！')
-            return
-        else:
-            self.simulate.exp_data = copy.deepcopy(self.expdata_2)
-        if self.simulate.get_con_contribution() is None:
-            QMessageBox.warning(self, '警告', '请再次进行模拟后再进行添加')
-            return
-        self.simulate.del_cowan_list()
         self.space_time_resolution.add_st((st_time, st_space), self.simulate)
 
         # -------------------------- 更新页面 --------------------------
@@ -241,7 +237,7 @@ class SpectralSimulation(MainWindow):
             if self.info['x_range'] is not None:
                 self.expdata_2.set_xrange(self.info['x_range'])
             simulate = SimulateSpectral()
-            simulate.set_exp_obj(Path(file_name))
+            simulate.set_exp_obj(ExpData(Path(file_name)))
             self.space_time_resolution.add_st((tim, (loc, '0', '0')), simulate)
 
         # -------------------------- 更新页面 --------------------------
@@ -274,6 +270,7 @@ class SpectralSimulation(MainWindow):
         self.expdata_2 = copy.deepcopy(self.simulate.exp_data)
         if self.simulated_grid is not None and self.ui.update_similarity.isChecked():
             self.simulated_grid.change_task('update', self.expdata_2)
+            self.simulate.set_characteristic_peaks(self.simulate.characteristic_peaks)
             simulated_grid_run = SimulateGridThread(self.simulated_grid)
             progressDialog = CustomProgressDialog(dialog_title='正在更新网格...')
             progressDialog.set_label_text('正在更新网格，请稍后……')
@@ -282,9 +279,12 @@ class SpectralSimulation(MainWindow):
             progressDialog.show()
 
         # -------------------------- 更新页面 --------------------------
-        self.ui.st_time.setText(key[0])
-        self.ui.st_space_x.setText(key[1][0])
-        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
+        # 更新温度密度
+        functools.partial(UpdateSpectralSimulation.update_temperature_density, self)()
+        # 更新实验谱线路径
+        functools.partial(UpdateSpectralSimulation.update_page2_exp_data_path, self)()
+        # 更新谱峰个数
+        functools.partial(UpdateSpectralSimulation.update_characteristic_peaks, self)()
         if self.simulate.temperature and self.simulate.electron_density:
             functools.partial(UpdateSpectralSimulation.update_temperature_density, self)()
             functools.partial(UpdateSpectralSimulation.update_exp_sim_figure, self)()
@@ -356,35 +356,48 @@ class SpectralSimulation(MainWindow):
                 maxValue=maxValue,
                 minValue=minValue,
             )
-            if not okPressed:
+            if not okPressed:  # 如果没有输入值，就直接返回
                 return
-            for wave in self.simulate.characteristic_peaks:
+            for wave in temp_peaks_wavelength:
                 if abs(wave - input_value) < 0.0001:
                     QMessageBox.warning(self, '警告', '该特征波长已存在！')
                     return
-            self.simulate.characteristic_peaks.append(input_value)
-            self.simulate.characteristic_peaks.sort()
+
+            # 更新特征波长
+            temp_peaks_wavelength.append(input_value)
+            temp_peaks_wavelength.sort()
+            # 更新界面
             dialog.activateWindow()
             update_ui()
 
         def del_data():
-            self.simulate.characteristic_peaks.pop(peaks_browser.currentRow())
+            temp_peaks_wavelength.pop(peaks_browser.currentRow())
             update_ui()
 
         def close_window():
-            if len(self.simulate.characteristic_peaks) < 2:
+            if len(temp_peaks_wavelength) < 2:
                 QMessageBox.warning(self, '警告', '最少的峰个数是两个！')
                 dialog.activateWindow()
                 return
+            # 更新当前对象的特征波长
+            self.simulate.set_characteristic_peaks(temp_peaks_wavelength)
+            # 更新网格的特征波长以及相似度
+            if self.simulated_grid is not None:  # 如果网格已经计算过
+                for sim in self.simulated_grid.grid_data.values():
+                    sim: SimulateSpectral
+                    sim.set_characteristic_peaks(temp_peaks_wavelength)
+                    sim.cal_spectrum_similarity()  # 重新计算相似度
+            # 更新时空分辨光谱的特征波长
             if all_changed.isChecked():
                 for sim in self.space_time_resolution.simulate_spectral_dict.values():
-                    sim.characteristic_peaks = copy.deepcopy(self.simulate.characteristic_peaks)
+                    sim: SimulateSpectral
+                    sim.set_characteristic_peaks(temp_peaks_wavelength)
             functools.partial(UpdateSpectralSimulation.update_characteristic_peaks, self)()
             dialog.close()
 
         def update_ui():
             peaks_browser.clear()
-            peaks_browser.addItems(['{:.4f}'.format(i) for i in self.simulate.characteristic_peaks])
+            peaks_browser.addItems(['{:.4f}'.format(i) for i in temp_peaks_wavelength])
 
         def show_right_menu():
             right_menu.popup(QCursor.pos())  # 显示右键菜单
@@ -401,14 +414,17 @@ class SpectralSimulation(MainWindow):
                 step=0.002,
                 maxValue=maxValue,
                 minValue=minValue,
-                value=self.simulate.characteristic_peaks[index]
+                value=temp_peaks_wavelength[index]
             )
             if not okPressed:
                 return
-            self.simulate.characteristic_peaks[index] = input_value
-            self.simulate.characteristic_peaks.sort()
+            temp_peaks_wavelength[index] = input_value
+            temp_peaks_wavelength.sort()
             dialog.activateWindow()
             update_ui()
+
+        # -------------------------- 主逻辑开始 --------------------------
+        temp_peaks_wavelength = copy.deepcopy(self.simulate.characteristic_peaks)
 
         # 创建窗口元素
         dialog = QWidget()
@@ -526,7 +542,7 @@ class UpdateSpectralSimulation(MainWindow):
         if self.expdata_2 is None:
             warnings.warn('第二页实验数据未加载', UserWarning)
             return
-        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.as_posix())
+        self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
 
     def update_exp_sim_figure(self):
         if self.simulate is None:
@@ -536,7 +552,6 @@ class UpdateSpectralSimulation(MainWindow):
             warnings.warn('simulate.temperature or simulate.electron_density is None')
             return
 
-        # 更新路径
         if self.ui.show_peaks.isChecked():
             self.simulate.plot_html(show_point=True)
         else:
@@ -632,6 +647,7 @@ class UpdateSpectralSimulation(MainWindow):
         if self.simulate.characteristic_peaks is None:
             self.ui.peaks_label.setText('未指定')
         self.ui.peaks_label.setText(f'{len(self.simulate.characteristic_peaks)}个')
+        functools.partial(UpdateSpectralSimulation.update_grid, self)()
 
     def update_page(self):
         # ----- 实验数据的文件名 -----

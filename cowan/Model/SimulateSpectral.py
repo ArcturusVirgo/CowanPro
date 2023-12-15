@@ -31,13 +31,13 @@ class SimulateSpectral:
         self.electron_density = None  # 模拟的等离子体电子密度
 
         self.characteristic_peaks = []  # 特征峰波长
-        self.peaks_index = []  # 特征峰索引
+        self.peaks_index = []  # 特征峰索引，在类内部使用，自动更新，用于画图
 
         self.abundance = []  # 离子丰度
         self.sim_data = None  # 模拟光谱数据
 
-        self.ion_contribution = None
-        self.con_contribution: Dict[str:Dict[str:List[pd.DataFrame, str]]] = None
+        self.ion_contribution = None  # 离子贡献
+        self.con_contribution: Dict[str:Dict[str:List[pd.DataFrame, str]]] = None  # 组态贡献
 
         self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()
         self.example_path = (PROJECT_PATH().joinpath('figure/part/example.html').as_posix())
@@ -69,15 +69,15 @@ class SimulateSpectral:
             cowan: Cowan
             cowan.cal_data.widen_all.set_threading(threading)
 
-    def set_exp_obj(self, path: Path):
+    def set_exp_obj(self, exp_obj: ExpData):
         """
         读取实验光谱数据
 
         Args:
-            path: 实验光谱数据的路径
+            exp_obj: 实验光谱数据对象
 
         """
-        self.exp_data = ExpData(path)
+        self.exp_data = copy.deepcopy(exp_obj)
 
     def set_temperature_and_density(self, temperature, electron_density):
         """
@@ -90,6 +90,16 @@ class SimulateSpectral:
         """
         self.temperature = temperature
         self.electron_density = electron_density
+
+    def set_characteristic_peaks(self, characteristic_peaks: List[float]):
+        """
+        设置特征峰
+
+        Args:
+            characteristic_peaks: 特征峰波长
+
+        """
+        self.characteristic_peaks = copy.deepcopy(characteristic_peaks)
 
     def cal_abundance(self):
         """
@@ -188,6 +198,7 @@ class SimulateSpectral:
         # 结构如下
         # {
         #     'ion_name': {'con_key':[con_data, 'con_name']}
+        #     '离子名称': {'con_key':[con_data, 'con_name']}
         # }
         for i, cowan in enumerate(self.cowan_list):
             cowan: Cowan
@@ -366,12 +377,12 @@ class SimulateSpectral:
         获取光谱相似度，直接存储在 self.spectrum_similarity 中
 
         """
-        if not self.characteristic_peaks:
+        if len(self.characteristic_peaks) < 2:  # 如果特征峰个数小于2，就直调用自动相似度计算函数
             self.spectrum_similarity = self.spectrum_similarity1(
                 self.exp_data.data[['wavelength', 'intensity']],
                 self.sim_data[['wavelength', 'intensity']],
             )
-        else:
+        else:  # 否则调用指定峰值匹配法
             self.spectrum_similarity = self.spectrum_similarity2(
                 self.exp_data.data[['wavelength', 'intensity']],
                 self.sim_data[['wavelength', 'intensity']],

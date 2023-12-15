@@ -1,12 +1,10 @@
 import copy
-from pathlib import Path
 from typing import Optional, Dict
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
 from plotly.offline import plot
-from scipy import integrate
 
 from ..Tools.Other import print_to_console
 

@@ -133,9 +133,9 @@ class SimulateGridThread(QtCore.QThread):
             """
             nonlocal current_progress
             current_progress += 1
-            simulate: SimulateSpectral = f.result()
-            simulate.del_cowan_list()
-            self.grid_data[(t, ne)] = simulate
+            simulate_: SimulateSpectral = f.result()
+            simulate_.del_cowan_list()
+            self.grid_data[(t, ne)] = simulate_
             self.progress.emit(str(int(current_progress / self.t_num / self.ne_num * 100)))
 
         # 多线程
@@ -146,7 +146,7 @@ class SimulateGridThread(QtCore.QThread):
             for density in self.ne_list:
                 simulate = copy.deepcopy(self.simulate)
                 simulate.set_temperature_and_density(eval(temperature), eval(density))
-                simulate.con_contribution = None
+                simulate.con_contribution = None  # 清空组态贡献
                 future = pool.submit(simulate.simulate_spectral)
                 future.add_done_callback(functools.partial(callback, temperature, density))
         pool.shutdown()
