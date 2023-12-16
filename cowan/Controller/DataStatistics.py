@@ -20,8 +20,8 @@ class UpdateDataStatistics(MainWindow):
         if self.cowan_page5 is None:
             warnings.warn('cowan_page5 is None')
             return
-        name_list = ['index_l', 'index_h', 'name', 'min(nm)', 'max(nm)', 'n', 'sum_gf', 'sum_Ar', 'sum_Aa', 'ave_Aa', 'ave_Ga',
-                     'ConAverGa', 'ConEWidth']
+        name_list = ['index_l', 'index_h', 'name', 'min(nm)', 'max(nm)', 'n', 'sum_gf',
+                     'sum_Ar', 'sum_Aa', 'ave_Aa', 'ave_Ga', 'ConAverGa', 'ConEWidth']
         self.ui.statistical_table.clear()
         self.ui.statistical_table.setRowCount(len(self.cowan_page5.cal_data.info_dict.keys()))
         self.ui.statistical_table.setColumnCount(len(name_list))

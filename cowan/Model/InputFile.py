@@ -67,6 +67,16 @@ class In36:
         """
         self.atom = copy.deepcopy(atom)
 
+    def set_control_card(self, control_card: List[str]):
+        """
+        设置控制卡
+
+        Args:
+            control_card: 控制卡列表
+
+        """
+        self.control_card = copy.deepcopy(control_card)
+
     def add_configuration(self, configuration: str):
         """
         向 in36 文件的组态卡添加组态（会自动剔除重复的组态）

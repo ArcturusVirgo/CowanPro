@@ -1,6 +1,5 @@
 import copy
 import warnings
-from pathlib import Path
 from typing import List, Optional, Dict
 
 import numpy as np
@@ -100,6 +99,8 @@ class SimulateSpectral:
 
         """
         self.characteristic_peaks = copy.deepcopy(characteristic_peaks)
+        if self.temperature is not None and self.electron_density is not None:
+            self.cal_spectrum_similarity()
 
     def cal_abundance(self):
         """
@@ -123,10 +124,10 @@ class SimulateSpectral:
                 a[i] = a[i - 1] * a_ratios[i - 1]
 
             # 计算S
-            S = np.sum(a)
+            S_ = np.sum(a)
 
             # 计算a1/S, a2/S, ..., a_n/S
-            a_over_S = a / S
+            a_over_S = a / S_
 
             return a_over_S
 

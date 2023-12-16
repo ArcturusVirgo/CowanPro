@@ -4,7 +4,7 @@ import warnings
 import pandas as pd
 from PySide6.QtCore import QUrl, Qt
 from PySide6.QtGui import QColor, QBrush
-from PySide6.QtWidgets import QTreeWidgetItem, QMessageBox
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from main import MainWindow
 from ..Model import SimulateSpectral

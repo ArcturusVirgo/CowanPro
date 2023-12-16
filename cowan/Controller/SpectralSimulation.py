@@ -283,6 +283,8 @@ class SpectralSimulation(MainWindow):
         functools.partial(UpdateSpectralSimulation.update_temperature_density, self)()
         # 更新实验谱线路径
         functools.partial(UpdateSpectralSimulation.update_page2_exp_data_path, self)()
+        # 更新时空位置
+        functools.partial(UpdateSpectralSimulation.update_space_time_loc, self)(key[0], key[1][0])
         # 更新谱峰个数
         functools.partial(UpdateSpectralSimulation.update_characteristic_peaks, self)()
         if self.simulate.temperature and self.simulate.electron_density:
@@ -357,10 +359,14 @@ class SpectralSimulation(MainWindow):
                 minValue=minValue,
             )
             if not okPressed:  # 如果没有输入值，就直接返回
+                dialog.activateWindow()
+                update_ui()
                 return
             for wave in temp_peaks_wavelength:
                 if abs(wave - input_value) < 0.0001:
                     QMessageBox.warning(self, '警告', '该特征波长已存在！')
+                    dialog.activateWindow()
+                    update_ui()
                     return
 
             # 更新特征波长
@@ -544,6 +550,17 @@ class UpdateSpectralSimulation(MainWindow):
             return
         self.ui.page2_exp_data_path_name.setText(self.expdata_2.filepath.name)
 
+    def update_space_time_loc(self, time, x_loc):
+        if self.simulate is None:
+            warnings.warn('simulate obj is None')
+            return
+        if self.simulate.temperature is None or self.simulate.electron_density is None:
+            warnings.warn('simulate.temperature or simulate.electron_density is None')
+            return
+
+        self.ui.st_time.setText(str(time))
+        self.ui.st_space_x.setText(str(x_loc))
+
     def update_exp_sim_figure(self):
         if self.simulate is None:
             warnings.warn('simulate obj is None')
@@ -650,8 +667,12 @@ class UpdateSpectralSimulation(MainWindow):
         functools.partial(UpdateSpectralSimulation.update_grid, self)()
 
     def update_page(self):
+        # ----- 选择列表 -----
+        functools.partial(UpdateSpectralSimulation.update_selection_list, self)()
         # ----- 实验数据的文件名 -----
         functools.partial(UpdateSpectralSimulation.update_page2_exp_data_path, self)()
+        # ----- 时空分辨光谱的时间和空间位置 -----
+        functools.partial(UpdateSpectralSimulation.update_space_time_loc, self)(1, 1)
         # ----- 实验数据 -----
         functools.partial(UpdateSpectralSimulation.update_exp_figure, self)()
         # ----- 第二页的密度温度 -----
