@@ -521,7 +521,6 @@ class SpectralSimulation(MainWindow):
                 self.task_thread.progress.emit(int(progressing / sum_num * 100), str(key))
                 if sim.temperature is None or sim.electron_density is None:
                     continue
-                te, ne = sim.temperature, sim.electron_density
                 sim.init_cowan_list(self.cowan_lists)
                 sim.simulate_spectral()
                 sim.del_cowan_list()

@@ -79,7 +79,6 @@ class LoginWindow(QWidget):
         self.ui.back.clicked.connect(self.slot_back)
         self.ui.new_project.clicked.connect(self.slot_new_project)
         self.ui.select_path.clicked.connect(self.slot_select_path)
-        # self.ui.project_path.textChanged.connect(self.slot_project_path_changed)
         self.ui.project_name.textChanged.connect(self.slot_project_name_changed)
         self.ui.project_list.itemDoubleClicked.connect(self.slot_project_path_item_double_clicked)
 
@@ -446,7 +445,7 @@ class MainWindow(QMainWindow):
         self.ui.comboBox.activated.connect(functools.partial(ConfigurationContribution.comboBox_changed, self))  # 选择列表
         # tree view
         self.ui.treeWidget.itemClicked.connect(
-            functools.partial(ConfigurationContribution.tree_item_changed, self))  # 选择列表
+            functools.partial(ConfigurationContribution.tree_item_changed))  # 选择列表
 
         # ------------------------------- 第五页 -------------------------------
         # 下拉框
@@ -629,8 +628,8 @@ class MainWindow(QMainWindow):
             # 1. 添加版本号
             project_info['version'] = '1.0.3'
             print('版本号更新完成')
-            # 2. 给widenpart添加了grouped_data属性
-            print('给widenpart添加了grouped_data属性')
+            # 2. 给widen_part添加了grouped_data属性
+            print('给widen_part添加了grouped_data属性')
             # 更新 >>>>>>>>>>>>>>>>>>
             obj_info.update({'info': project_info})
             print('版本升级完成！')

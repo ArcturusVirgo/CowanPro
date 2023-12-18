@@ -13,6 +13,7 @@ from .InputFile import In36, In2
 from .CalData import CalData
 from .ExpData import ExpData
 from .Widen import WidenAll, WidenPart
+from .. import console_logger
 
 
 class Cowan:
@@ -118,12 +119,21 @@ class CowanThread(QtCore.QThread):
         # 运行文件
         os.chdir(self.run_path)
         self.sub_complete.emit('0')
-        rcn = subprocess.run('./RCN.exe')
+
+        rcn = subprocess.run('./RCN.exe', capture_output=True)
+        console_logger.info('RCN run completed')
         self.sub_complete.emit('25')
-        rcn2 = subprocess.run('./RCN2.exe')
+
+        rcn2 = subprocess.run('./RCN2.exe', capture_output=True)
+        console_logger.info('RCN2 run completed')
         self.sub_complete.emit('50')
+
         self.__edit_ing11()
-        rcg = subprocess.run('./RCG.exe')
+        console_logger.info('ing11 edit completed')
+
+        rcg = subprocess.run('./RCG.exe', capture_output=True)
+        console_logger.info('RCG run completed')
+
         self.sub_complete.emit('100')
         os.chdir(original_path)
 

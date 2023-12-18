@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.graph_objs as go
 from plotly.offline import plot
 
-from ..Tools.Other import print_to_console
+from ..Tools import console_logger
 
 from .GlobalVar import PROJECT_PATH
 from .ExpData import ExpData
@@ -63,12 +63,11 @@ class WidenAll:
             列标题为：wavelength, gaussian, cross-NP, cross-P
             如果only_p为True，则没有cross-NP列和gaussian列
         """
-        # 输出命令行信息
-        print_to_console('WidenOverall | start >>>', outline_level=0, color=('green', 'blue'), thickness=1)
+        # 日志
         temp_text = '{} >> T:{:.3f}eV d_lambda:{:.3f}nm fwhm:{:.3f}eV range:[{:.3f},{:.3f}]'.format(
             self.name, self.temperature, self.delta_lambda, self.fwhm_value,
             self.exp_data.x_range[0], self.exp_data.x_range[1])
-        print_to_console(text=temp_text, outline_level=1, color=('blue', ''))
+        console_logger.info(f'WidenOverall started {temp_text}')
 
         # 获取数据
         data = self.init_data.copy()
@@ -90,10 +89,10 @@ class WidenAll:
             ]
         if self.n is None:
             wave = 1239.85 / np.array(self.exp_data.data['wavelength'].values)
-            print_to_console('use exp wavelength', outline_level=2, )
+            console_logger.debug('use exp wavelength')
         else:
             wave = 1239.85 / np.linspace(min_wavelength_nm, max_wavelength_nm, self.n)
-            print_to_console('use new wavelength', outline_level=2, )
+            console_logger.debug('use new wavelength')
         result = pd.DataFrame()
         result['wavelength'] = 1239.85 / wave
 
@@ -102,8 +101,7 @@ class WidenAll:
             result['cross_NP'] = 0
             result['cross_P'] = 0
             self.widen_data = result
-            print_to_console('return None', color=('red', ''), outline_level=1, thickness=1)
-            print_to_console('WidenOverall end', outline_level=0, color=('green', 'blue'), thickness=1)
+            console_logger.info('WidenOverall completed! return None')
             return result
         new_data = new_data.reindex()
         # 获取展宽所需要的数据
@@ -125,18 +123,15 @@ class WidenAll:
         # 计算布居
         population = ((2 * new_J + 1) * np.exp(-abs(new_energy - min_energy) * 0.124 / self.temperature) / (
                 2 * min_J + 1))
-        print_to_console('population completed', outline_level=2)
-
         res = [self.__complex_cal(val, new_intensity, fwhmgauss(val), new_wavelength, population, new_J) for val in
                wave]
-        print_to_console('res cal completed', outline_level=2)
         res = list(zip(*res))
         if not self.threading:
             result['gauss'] = res[0]
             result['cross_NP'] = res[1]
         result['cross_P'] = res[2]
         self.widen_data = result
-        print_to_console('WidenOverall | end', outline_level=0, color=('green', 'blue'), thickness=1)
+        console_logger.info('WidenOverall completed')
 
     def __complex_cal(
             self,
@@ -305,20 +300,19 @@ class WidenPart:
             {'1-2': pd.DataFrame, '1-3': pd.DataFrame, ...}
             pd.DataFrame的列标题为：wavelength, gaussian, cross-NP, cross-P
         """
-        # 输出命令行信息
-        print_to_console('WidenByConfiguration | start >>>', outline_level=0, color=('green', 'yellow'), thickness=1)
+        # 日志
         temp_text = '{} >> T:{:.3f}eV d_lambda:{:.3f}nm fwhm:{:.3f}eV range:[{:.3f},{:.3f}]'.format(
             self.name, self.temperature, self.delta_lambda, self.fwhm_value,
             self.exp_data.x_range[0], self.exp_data.x_range[1])
-        print_to_console(text=temp_text, outline_level=1, color=('yellow', ''))
+        console_logger.info(f'WidenByConfiguration started {temp_text}')
 
         # 展宽
         temp_data = {}
         for key, value in self.grouped_data.items():
-            print_to_console(f'widen {key} ...', outline_level=2, end='')
+            console_logger.info(f'widen {key} ...')
             temp_group = value.__deepcopy__()
             temp_result = self.__widen(self.temperature, temp_group)
-            print_to_console(f'competed', outline_level=1)
+            console_logger.info(f'competed!')
             # 如果这个波段没有跃迁正例
             temp_data[key] = temp_result
         # 画图
@@ -328,7 +322,7 @@ class WidenPart:
                     PROJECT_PATH() / f'figure/part/{self.name}_{key}.html'
             ).as_posix()
         self.grouped_widen_data = temp_data
-        print_to_console('WidenByConfiguration | end', outline_level=0, color=('green', 'yellow'), thickness=1)
+        console_logger.info('WidenByConfiguration completed!')
 
     def __widen(self, temperature: float, temp_data: pd.DataFrame):
         """

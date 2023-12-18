@@ -1,4 +1,3 @@
-import copy
 from pathlib import Path
 
 import pandas as pd
@@ -7,7 +6,7 @@ from PySide6.QtWidgets import QFileDialog, QDialog, QPushButton, \
 
 from main import VerticalLine, MainWindow
 from ..Model import PROJECT_PATH, Cowan
-from ..Tools import ProgressThread
+from ..Tools import ProgressThread, console_logger
 
 
 class Menu(MainWindow):
@@ -118,7 +117,6 @@ class Menu(MainWindow):
         def task():
             self.task_thread.progress.emit(0, 'ready to reset range ...')
             self.info['x_range'] = None
-            widen_temperature = self.ui.widen_temp.value()
 
             # 设置第一页的实验谱线
             self.task_thread.progress.emit(10, 'self.expdata_1 reset range ...')
@@ -152,6 +150,7 @@ class Menu(MainWindow):
         self.task_thread.start()
 
     def export_con_ave_wave(self):
+        console_logger.info('export started')
         path = QFileDialog.getExistingDirectory(self, '选择存储路径', PROJECT_PATH().as_posix())
         if path == '':
             return
@@ -197,3 +196,4 @@ class Menu(MainWindow):
                     value.to_excel(writer, sheet_name=key, index=False)
 
         self.ui.statusbar.showMessage('导出成功！')
+        console_logger.info('export completed')

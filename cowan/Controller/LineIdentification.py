@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QFileDialog, QDialog, QTextBrowser, QVBoxLayout, Q
     QListWidgetItem
 
 from main import MainWindow
-from ..Tools import print_to_console
+from ..Tools import console_logger
 from ..Model import (
     PROJECT_PATH,
     ANGULAR_QUANTUM_NUM_NAME, SUBSHELL_SEQUENCE,
@@ -334,12 +334,7 @@ class LineIdentification(MainWindow):
             # 更新原Cowan对象
             cowan_run.update_origin()
             # 控制台输出信息
-            print_to_console(
-                'Cowan running | end',
-                color=('blue', 'green'),
-                outline_level=0,
-                thickness=1
-            )
+            console_logger.info('Cowan run completed!')
             # 设置状态栏
             self.ui.statusbar.showMessage('计算完成！正在展宽，请稍后...')
 
@@ -411,13 +406,7 @@ class LineIdentification(MainWindow):
 
         # -------------------------- 运行 --------------------------
         # 运行Cowan
-        print_to_console(
-            'Cowan running | start >>>',
-            color=('blue', 'green'),
-            outline_level=0,
-            thickness=1
-        )
-        print_to_console(text=f'atom info:{name}', color=('blue', ''), outline_level=0)
+        console_logger.info(f'Cowan-f{name} running ...')
         self.cowan = Cowan(self.in36, self.in2, name, self.expdata_1, coupling_mode)
         cowan_run = CowanThread(self.cowan)
         # ----界面代码

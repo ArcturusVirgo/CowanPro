@@ -47,14 +47,13 @@ class ConfigurationContribution(MainWindow):
         self.ui.webEngineView_2.load(QUrl.fromLocalFile(self.simulate_page4.example_path))
 
     @staticmethod
-    def tree_item_changed(self, item, column):
+    def tree_item_changed(item, column):
         """
         树状列表项改变时
 
         Args:
-            self:
-            item:
             column:
+            item:
 
         """
         if item.parent() is None:

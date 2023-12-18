@@ -159,7 +159,15 @@ class SpaceTimeResolution:
         fig = go.Figure(data=data, layout=layout)
         plot(fig, filename=self.change_by_space_time_path, auto_open=False)
 
-    def get_simulate_spectral_diagnosed_by_index(self, index) -> List[Tuple[str, SimulateSpectral]]:
+    def get_simulate_spectral_diagnosed_by_index(self, index):
+        """
+        获取已诊断的所有对象的索引获取数据
+        Args:
+            index:
+
+        Returns:
+
+        """
         temp_list = []
         for key, value in self.simulate_spectral_dict.items():
             key: tuple
