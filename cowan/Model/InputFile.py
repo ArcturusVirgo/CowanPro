@@ -45,7 +45,10 @@ class In36:
             if value == ['-1']:
                 break
             v0 = '{:>5}'.format(value[0])
-            v1 = '{:>10}'.format(value[1])
+            ion = line[5:10]
+            name = line[10:15]
+            v1 = ion + name
+            # v1 = '{:>10}'.format(value[1])
             v2 = '{:>7}'.format(value[2])
             v3 = '           '
             v4 = ' '.join(value[3:])
@@ -90,7 +93,9 @@ class In36:
             temp_list = []
         if configuration not in temp_list:
             v0 = '{:>5}'.format(self.atom.num)
-            v1 = '{:>10}'.format(f'{self.atom.ion + 1}{ATOM[self.atom.num][0]}+{self.atom.ion}')
+            v1 = '{:>5}'.format(self.atom.ion + 1)
+            v1 += '{:<5}'.format(f'{ATOM[self.atom.num][0]}+{self.atom.ion}')
+            # v1 = '{:>10}'.format(f'{self.atom.ion + 1}{ATOM[self.atom.num][0]}+{self.atom.ion}')
             v2 = '{:>7}'.format('11111')
             v3 = '           '
             v4 = configuration

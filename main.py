@@ -638,7 +638,6 @@ class MainWindow(QMainWindow):
         # dialog = self.save_project()
         # dialog.exec()
         sys.exit()
-        # pass
 
 
 if __name__ == '__main__':
