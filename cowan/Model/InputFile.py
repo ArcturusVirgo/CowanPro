@@ -1,6 +1,7 @@
 import copy
 from typing import Optional, List
 from pathlib import Path
+from itertools import groupby
 
 from .Atom import Atom
 from .AtomInfo import ATOM, ANGULAR_QUANTUM_NUM_NAME
@@ -44,20 +45,16 @@ class In36:
             value = line.split()
             if value == ['-1']:
                 break
-            v0 = '{:>5}'.format(value[0])
-            ion = line[5:10]
-            name = line[10:15]
-            v1 = ion + name
-            # v1 = '{:>10}'.format(value[1])
-            v2 = '{:>7}'.format(value[2])
-            v3 = '           '
-            v4 = ' '.join(value[3:])
-            input_card_list.append([[v0, v1, v2, v3, v4], self.__judge_parity(v4)])
+            atom_num = line[1:5]
+            ion = line[8:10]
+            label = line[10:28]
+            con = line[32:].strip(' ')
+            input_card_list.append([[atom_num, ion, label, con], self.__judge_parity(con)])
         self.control_card, self.configuration_card = control_card_list, input_card_list
 
         # 更新原子信息
-        num = int(self.configuration_card[0][0][0].split(' ')[-1])
-        ion = int(self.configuration_card[0][0][1].split('+')[-1])
+        num = int(self.configuration_card[0][0][0])
+        ion = int(self.configuration_card[0][0][1]) - 1
         self.atom = Atom(num=num, ion=ion)
 
     def set_atom(self, atom: Atom):
@@ -92,14 +89,11 @@ class In36:
         else:  # 如果组态卡为空
             temp_list = []
         if configuration not in temp_list:
-            v0 = '{:>5}'.format(self.atom.num)
-            v1 = '{:>5}'.format(self.atom.ion + 1)
-            v1 += '{:<5}'.format(f'{ATOM[self.atom.num][0]}+{self.atom.ion}')
-            # v1 = '{:>10}'.format(f'{self.atom.ion + 1}{ATOM[self.atom.num][0]}+{self.atom.ion}')
-            v2 = '{:>7}'.format('11111')
-            v3 = '           '
-            v4 = configuration
-            self.configuration_card.append([[v0, v1, v2, v3, v4], self.__judge_parity(v4)])
+            v0 = f'{self.atom.num}'
+            v1 = f'{self.atom.ion + 1}'
+            v2 = f'{ATOM[self.atom.num][0]}+{self.atom.ion}'
+            v3 = configuration
+            self.configuration_card.append([[v0, v1, v2, v3], self.__judge_parity(v3)])
 
     def configuration_move(self, index, opt: str):
         """
@@ -186,11 +180,19 @@ class In36:
         Returns:
             in36 文件的字符串
         """
+        # 控制卡
         in36 = ''
         in36 += ''.join(self.control_card)
         in36 += '\n'
+        # 组态卡
         for v in self.configuration_card:
-            in36 += ''.join(v[0])
+            in36 += ' '
+            in36 += '{:>4}'.format(v[0][0])
+            in36 += ' ' * 3
+            in36 += '{:>2}'.format(v[0][1])
+            in36 += '{:<18}'.format(v[0][2])
+            in36 += ' ' * 4
+            in36 += v[0][3]
             in36 += '\n'
         in36 += '   -1\n'
         return in36
@@ -241,7 +243,20 @@ class In36:
         # atom 对象
         self.atom.load_class(class_info.atom)
         self.control_card = class_info.control_card
-        self.configuration_card = class_info.configuration_card
+        # self.configuration_card = class_info.configuration_card
+        # # 更新in36输入文件
+        temp_configuration_card = []
+        # # 新的组态卡
+        # # [原子序数，离化度+1，标记，组态]
+        for configuration_card, parity in class_info.configuration_card:
+            atom_num = configuration_card[0].strip(' ')
+            ion_with_symbol = configuration_card[1].strip(' ')
+            configuration = configuration_card[4].strip(' ')
+            info_list = [''.join(list(g)) for k, g in groupby(ion_with_symbol, key=lambda x: x.isdigit())]
+            ion_add_1 = info_list[0]
+            label = ''.join(info_list[1:])
+            temp_configuration_card.append([[atom_num, ion_add_1, label, configuration], parity])
+        self.configuration_card = temp_configuration_card
 
 
 class In2:
@@ -255,6 +270,34 @@ class In2:
         self.input_card: List[str] = [
             'g5inp', '  ', '0', ' 0', '0', '00', '  0.000', ' ', '00000000', ' 0000000', '   00000', ' 000', '0', '90',
             '99', '90', '90', '90', '.0000', '     ', '0', '7', '2', '2', '9', '     ', ]
+        self.index_rule = [
+            [1 - 1, 5],
+            [6 - 1, 7],
+            [8 - 1, 8],
+            [9 - 1, 10],
+            [11 - 1, 11],
+            [12 - 1, 13],
+            [14 - 1, 20],
+            [21 - 1, 21],
+            [22 - 1, 29],  # 22-49
+            [30 - 1, 37],  # 22-49
+            [38 - 1, 45],  # 22-49
+            [46 - 1, 49],  # 22-49
+            [50 - 1, 50],
+            [51 - 1, 52],  # 51-60
+            [53 - 1, 54],  # 51-60
+            [55 - 1, 56],  # 51-60
+            [57 - 1, 58],  # 51-60
+            [59 - 1, 60],  # 51-60
+            [61 - 1, 65],
+            [66 - 1, 70],
+            [71 - 1, 71],
+            [72 - 1, 72],
+            [73 - 1, 73],
+            [74 - 1, 74],
+            [75 - 1, 75],
+            [76 - 1, 80],
+        ]
         self.rule = [5, 2, 1, 2, 1, 2, 7, 1, 8, 8, 8, 4, 1, 2, 2, 2, 2, 2, 5, 5, 1, 1, 1, 1, 1, 5, ]
 
     def read_from_file(self, path: Path):
@@ -304,7 +347,6 @@ class In2:
                 ''.join(self.input_card[13:18]) +  # salter 因子
                 in2[60:]
         )
-        # in2 += ''.join(self.input_card)
         new_in2 += '\n'
         new_in2 += '        -1\n'
         return new_in2
@@ -327,4 +369,35 @@ class In2:
             self.rule = class_info.rule
         else:
             self.rule = [5, 2, 1, 2, 1, 2, 7, 1, 8, 8, 8, 4, 1, 2, 2, 2, 2, 2, 5, 5, 1, 1, 1, 1, 1, 5, ]
+        if hasattr(class_info, 'index_rule'):
+            self.index_rule = class_info.index_rule
+        else:
+            self.index_rule = [
+                [1 - 1, 5],
+                [6 - 1, 7],
+                [8 - 1, 8],
+                [9 - 1, 10],
+                [11 - 1, 11],
+                [12 - 1, 13],
+                [14 - 1, 20],
+                [21 - 1, 21],
+                [22 - 1, 29],  # 22-49
+                [30 - 1, 37],  # 22-49
+                [38 - 1, 45],  # 22-49
+                [46 - 1, 49],  # 22-49
+                [50 - 1, 50],
+                [51 - 1, 52],  # 51-60
+                [53 - 1, 54],  # 51-60
+                [55 - 1, 56],  # 51-60
+                [57 - 1, 58],  # 51-60
+                [59 - 1, 60],  # 51-60
+                [61 - 1, 65],
+                [66 - 1, 70],
+                [71 - 1, 71],
+                [72 - 1, 72],
+                [73 - 1, 73],
+                [74 - 1, 74],
+                [75 - 1, 75],
+                [76 - 1, 80],
+            ]
         # end [1.0.2 > 1.0.3]

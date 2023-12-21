@@ -260,12 +260,6 @@ class MainWindow(QMainWindow):
 
         if load:
             self.load_project()
-        # else:
-        #     self.load_Ge()
-
-        # self.test()
-        # self.load_Ge()
-        # self.cal_ave_wave()
 
     def init(self):
         # 设置窗口标题

@@ -686,12 +686,13 @@ class UpdateLineIdentification(MainWindow):
         # 更新表格
         df = pd.DataFrame(
             list(zip(*self.in36.configuration_card))[0],
-            columns=['原子序数', '原子状态', '标识符', '空格', '组态'],
+            columns=['原子序数', '离化度add1', '标识符', '组态'],
             index=list(range(1, len(self.in36.configuration_card) + 1)),
         )
         parity_list = list(zip(*self.in36.configuration_card))[1]
         df['宇称'] = parity_list
-        df = df[['宇称', '原子状态', '组态']]
+        df['离化度'] = df['离化度add1'].apply(int) - 1
+        df = df[['宇称', '离化度', '标识符', '组态']]
         col_name = []
         con_index = 1
         for i, value in enumerate(parity_list):
