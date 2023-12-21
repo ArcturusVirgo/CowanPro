@@ -406,7 +406,7 @@ class LineIdentification(MainWindow):
 
         # -------------------------- 运行 --------------------------
         # 运行Cowan
-        console_logger.info(f'Cowan-f{name} running ...')
+        console_logger.info(f'Cowan {name} running ...')
         self.cowan = Cowan(self.in36, self.in2, name, self.expdata_1, coupling_mode)
         cowan_run = CowanThread(self.cowan)
         # ----界面代码

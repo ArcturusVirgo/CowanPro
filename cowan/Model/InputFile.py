@@ -48,7 +48,7 @@ class In36:
             atom_num = line[1:5]
             ion = line[8:10]
             label = line[10:28]
-            con = line[32:].strip(' ')
+            con = line[32:].strip('\n').strip(' ')
             input_card_list.append([[atom_num, ion, label, con], self.__judge_parity(con)])
         self.control_card, self.configuration_card = control_card_list, input_card_list
 
@@ -92,7 +92,7 @@ class In36:
             v0 = f'{self.atom.num}'
             v1 = f'{self.atom.ion + 1}'
             v2 = f'{ATOM[self.atom.num][0]}+{self.atom.ion}'
-            v3 = configuration
+            v3 = configuration.strip(' ')
             self.configuration_card.append([[v0, v1, v2, v3], self.__judge_parity(v3)])
 
     def configuration_move(self, index, opt: str):
@@ -229,6 +229,7 @@ class In36:
             0: 偶宇称
             1: 奇宇称
         """
+
         configuration = list(configuration.split(' '))
         sum_ = 0
         for v in configuration:

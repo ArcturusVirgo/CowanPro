@@ -120,18 +120,18 @@ class CowanThread(QtCore.QThread):
         os.chdir(self.run_path)
         self.sub_complete.emit('0')
 
-        rcn = subprocess.run('./RCN.exe', capture_output=True)
+        rcn = subprocess.run('./RCN.exe')
         console_logger.info('RCN run completed')
         self.sub_complete.emit('25')
 
-        rcn2 = subprocess.run('./RCN2.exe', capture_output=True)
+        rcn2 = subprocess.run('./RCN2.exe')
         console_logger.info('RCN2 run completed')
         self.sub_complete.emit('50')
 
         self.__edit_ing11()
         console_logger.info('ing11 edit completed')
 
-        rcg = subprocess.run('./RCG.exe', capture_output=True)
+        rcg = subprocess.run('./RCG.exe')
         console_logger.info('RCG run completed')
 
         self.sub_complete.emit('100')
