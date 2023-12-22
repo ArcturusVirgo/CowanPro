@@ -245,18 +245,22 @@ class In36:
         self.atom.load_class(class_info.atom)
         self.control_card = class_info.control_card
         # self.configuration_card = class_info.configuration_card
-        # # 更新in36输入文件
+        # 更新in36输入文件
         temp_configuration_card = []
-        # # 新的组态卡
-        # # [原子序数，离化度+1，标记，组态]
+        # 新的组态卡
+        # [原子序数，离化度+1，标记，组态]
+
         for configuration_card, parity in class_info.configuration_card:
-            atom_num = configuration_card[0].strip(' ')
-            ion_with_symbol = configuration_card[1].strip(' ')
-            configuration = configuration_card[4].strip(' ')
-            info_list = [''.join(list(g)) for k, g in groupby(ion_with_symbol, key=lambda x: x.isdigit())]
-            ion_add_1 = info_list[0]
-            label = ''.join(info_list[1:])
-            temp_configuration_card.append([[atom_num, ion_add_1, label, configuration], parity])
+            if len(configuration_card) == 5:
+                atom_num = configuration_card[0].strip(' ')
+                ion_with_symbol = configuration_card[1].strip(' ')
+                configuration = configuration_card[4].strip(' ')
+                info_list = [''.join(list(g)) for k, g in groupby(ion_with_symbol, key=lambda x: x.isdigit())]
+                ion_add_1 = info_list[0]
+                label = ''.join(info_list[1:])
+                temp_configuration_card.append([[atom_num, ion_add_1, label, configuration], parity])
+            else:
+                temp_configuration_card.append([configuration_card, parity])
         self.configuration_card = temp_configuration_card
 
 
