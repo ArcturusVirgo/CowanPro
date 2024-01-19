@@ -1248,12 +1248,13 @@ class Ui_main_window(object):
 
         self.auto_write_in36 = QRadioButton(self.widget)
         self.auto_write_in36.setObjectName(u"auto_write_in36")
-        self.auto_write_in36.setChecked(True)
+        self.auto_write_in36.setChecked(False)
 
         self.horizontalLayout_5.addWidget(self.auto_write_in36)
 
         self.manual_write_in36 = QRadioButton(self.widget)
         self.manual_write_in36.setObjectName(u"manual_write_in36")
+        self.manual_write_in36.setChecked(True)
 
         self.horizontalLayout_5.addWidget(self.manual_write_in36)
 
@@ -1485,6 +1486,8 @@ class Ui_main_window(object):
         self.crossP.setSizePolicy(sizePolicy8)
         self.crossP.setAutoFillBackground(False)
         self.crossP.setChecked(True)
+        self.crossP.setAutoRepeat(False)
+        self.crossP.setAutoExclusive(True)
 
         self.horizontalLayout_3.addWidget(self.crossP)
 
@@ -1506,12 +1509,28 @@ class Ui_main_window(object):
 
         self.verticalLayout_2.addWidget(self.web_cal_widen)
 
+        self.horizontalLayout_32 = QHBoxLayout()
+        self.horizontalLayout_32.setObjectName(u"horizontalLayout_32")
         self.label_2 = QLabel(self.widget_2)
         self.label_2.setObjectName(u"label_2")
         sizePolicy2.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
         self.label_2.setSizePolicy(sizePolicy2)
 
-        self.verticalLayout_2.addWidget(self.label_2)
+        self.horizontalLayout_32.addWidget(self.label_2)
+
+        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_32.addItem(self.horizontalSpacer_17)
+
+        self.cal_res_offset = QCheckBox(self.widget_2)
+        self.cal_res_offset.setObjectName(u"cal_res_offset")
+        self.cal_res_offset.setChecked(True)
+        self.cal_res_offset.setAutoExclusive(False)
+
+        self.horizontalLayout_32.addWidget(self.cal_res_offset)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_32)
 
         self.web_cal_line = QWebEngineView(self.widget_2)
         self.web_cal_line.setObjectName(u"web_cal_line")
@@ -2136,7 +2155,7 @@ class Ui_main_window(object):
         main_window.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(main_window)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1374, 22))
+        self.menubar.setGeometry(QRect(0, 0, 1374, 23))
         self.menubar.setNativeMenuBar(True)
         self.menu = QMenu(self.menubar)
         self.menu.setObjectName(u"menu")
@@ -2166,7 +2185,7 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(4)
+        self.stackedWidget.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -2406,6 +2425,7 @@ class Ui_main_window(object):
         self.crossP.setText(QCoreApplication.translate("main_window", u"cross-P", None))
         self.crossNP.setText(QCoreApplication.translate("main_window", u"cross-NP", None))
         self.label_2.setText(QCoreApplication.translate("main_window", u"\u8ba1\u7b97\u8c31", None))
+        self.cal_res_offset.setText(QCoreApplication.translate("main_window", u"\u504f\u79fb", None))
         self.groupBox_3.setTitle(QCoreApplication.translate("main_window", u"\u6a21\u62df\u8c31\u7ebf", None))
         self.show_peaks.setText("")
         self.choose_peaks.setText(QCoreApplication.translate("main_window", u"\u7279\u5f81\u5cf0\u6311\u9009", None))

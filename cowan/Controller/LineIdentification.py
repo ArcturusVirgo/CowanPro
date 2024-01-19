@@ -554,6 +554,8 @@ class LineIdentification(MainWindow):
         # ------------------------- 更新界面 -------------------------
         # 更新展宽后图
         functools.partial(UpdateLineIdentification.update_widen_figure, self)()
+        # 更新线状谱线
+        functools.partial(UpdateLineIdentification.update_line_figure, self)()
         # 更新选择列表
         functools.partial(UpdateLineIdentification.update_selection_list, self)()
         # 更新历史记录列表
@@ -792,7 +794,10 @@ class UpdateLineIdentification(MainWindow):
             return
 
         # 加载线状谱
-        self.cowan.cal_data.plot_line()
+        if self.ui.cal_res_offset.isChecked():
+            self.cowan.cal_data.plot_line(True)
+        else:
+            self.cowan.cal_data.plot_line(False)
         self.ui.web_cal_line.load(QUrl.fromLocalFile(self.cowan.cal_data.plot_path))
 
     def update_widen_figure(self):

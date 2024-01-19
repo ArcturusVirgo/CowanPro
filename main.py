@@ -364,6 +364,9 @@ class MainWindow(QMainWindow):
         # 线状谱展宽成crossNP
         self.ui.crossNP.clicked.connect(
             lambda: self.ui.web_cal_widen.load(QUrl.fromLocalFile(self.cowan.cal_data.widen_all.plot_path_cross_NP)))
+        # 偏移
+        self.ui.cal_res_offset.clicked.connect(
+            functools.partial(UpdateLineIdentification.update_line_figure, self))
         # =====>> 输入框
         # in2 的斯莱特系数改变
         self.ui.in2_11_e.valueChanged.connect(

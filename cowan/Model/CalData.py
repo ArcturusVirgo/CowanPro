@@ -46,7 +46,7 @@ class CalData:
         self.widen_all = WidenAll(self.name, self.init_data, self.exp_data)
         self.widen_part = WidenPart(self.name, self.init_data, self.exp_data)
 
-    def plot_line(self):
+    def plot_line(self, with_offset=False):
         """
         绘制线状谱
         """
@@ -62,7 +62,10 @@ class CalData:
                 转化后的数据
             """
             temp_data_ = origin_data.copy()
-            temp_data_['wavelength'] = 1239.85 / temp_data_['wavelength_ev']
+            if with_offset:
+                temp_data_['wavelength'] = 1239.85 / temp_data_['wavelength_ev'] + self.get_delta_lambda()
+            else:
+                temp_data_['wavelength'] = 1239.85 / temp_data_['wavelength_ev']
             temp_data_ = temp_data_[
                 (temp_data_['wavelength'] < self.exp_data.x_range[1])
                 & (temp_data_['wavelength'] > self.exp_data.x_range[0])
