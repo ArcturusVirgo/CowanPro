@@ -8,7 +8,8 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QColor, QAction, QCursor, QBrush
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QMenu, QInputDialog, QCheckBox, QVBoxLayout, QWidget, \
-    QListWidget, QPushButton, QHBoxLayout, QListWidgetItem, QTableWidgetItem
+    QListWidget, QPushButton, QHBoxLayout, QListWidgetItem, QTableWidgetItem, QTableWidget, QDialog, QSpinBox, \
+    QHeaderView, QComboBox, QSpacerItem, QSizePolicy
 
 from main import MainWindow
 from ..Model import (
@@ -84,7 +85,10 @@ class SpectralSimulation(MainWindow):
         temperature = self.ui.page2_temperature.value()
         density = (self.ui.page2_density_base.value() * 10 ** self.ui.page2_density_index.value())
         self.simulate.set_exp_obj(self.expdata_2)  # 设置实验数据
-        self.simulate.init_cowan_list(self.cowan_lists)  # 初始化 cowan 对象
+        flag = self.simulate.init_cowan_list(self.cowan_lists)  # 初始化 cowan 对象
+        if not flag:
+            QMessageBox.warning(self, '警告', '请先设置元素比例！')
+            return
         self.simulate.set_threading(False)
         self.simulate.set_temperature_and_density(temperature, density)
         self.simulate.simulate_spectral()
@@ -152,7 +156,10 @@ class SpectralSimulation(MainWindow):
             self.ui.density_num.value()
         ]
         self.simulate.exp_data = copy.deepcopy(self.expdata_2)
-        self.simulate.init_cowan_list(self.cowan_lists)
+        flag = self.simulate.init_cowan_list(self.cowan_lists)
+        if not flag:
+            QMessageBox.warning(self, '警告', '请先设置元素比例！')
+            return
         self.simulate.set_threading(True)
         self.simulated_grid = SimulateGrid(t_range, ne_range, self.simulate)
         self.simulated_grid.change_task('cal')
@@ -477,7 +484,7 @@ class SpectralSimulation(MainWindow):
 
             """
             ax.clear()
-            y_list = self.simulate.abundance
+            y_list = self.simulate.abundance[combo_box.currentText()]
             x_list = [str(i) for i in range(len(y_list))]
             ax.bar(x_list, y_list)
 
@@ -486,26 +493,103 @@ class SpectralSimulation(MainWindow):
                 ax.text(x_, y_, '{:.4f}'.format(y_), ha='center', va='bottom', fontsize=10, rotation=45)
             ax.set_ylim(0, max_y * 1.2)
             ax.set_title('${:2}$\n${:.4f}\\enspace eV \\quad and \\quad {:.4e}\\enspace cm^{{-3}}$'.format(
-                self.atom.get_atom_info()[2],
+                combo_box.currentText(),
                 *self.simulate.get_temperature_and_density()))
 
             canvas.draw()
 
+        # -------------------------- 主逻辑开始 --------------------------
         if self.simulate is None:
             QMessageBox.warning(self, '警告', '请先模拟光谱！')
             return
 
+        # 创建窗口元素
         fig = plt.figure()
         ax = fig.add_subplot(111)
-
         widget = QWidget()
         canvas = FigureCanvas(fig)
+        combo_box = QComboBox(widget)
+        combo_box.addItems(list(self.simulate.abundance.keys()))
+        combo_box.currentIndexChanged.connect(update_ui)
+        # 设置布局
+        combo_box_layout = QHBoxLayout()
+        spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        combo_box_layout.addItem(spacer)
+        combo_box_layout.addWidget(combo_box)
         layout = QVBoxLayout(widget)
         layout.addWidget(canvas)
+        layout.addLayout(combo_box_layout)
 
         update_ui()
         widget.show()
         widget.closeEvent = lambda x: widget.close()
+
+    def adjust_element_ratio(self):
+        def update_element_ratio(*args):
+            values = {}
+            for key_, spin in spin_box_dict.items():
+                values[key_] = spin.value()
+            if sum(values.values()) != 100:
+                QMessageBox.warning(self, '警告', '元素比例之和不是100！')
+                return
+            self.simulate.element_ratio = values
+            dialog.close()
+            self.ui.statusbar.showMessage('元素比例设置成功！')
+
+        def update_ui():
+            ratio_table.setRowCount(len(element_ratio))
+            ratio_table.setColumnCount(2)
+            ratio_table.setHorizontalHeaderLabels(['元素', '比例'])
+            ratio_table.setVerticalHeaderLabels(element_ratio.keys())
+            for i_, (key_, value_) in enumerate(element_ratio.items()):
+                item1 = QTableWidgetItem(key_)
+                item2 = spin_box_dict[key_]
+                ratio_table.setItem(i_, 0, item1)
+                ratio_table.setCellWidget(i_, 1, item2)
+
+        # -------------------------- 主逻辑开始 --------------------------
+        # 获取元素比例
+        element_ratio = copy.deepcopy(self.simulate.element_ratio)
+        for cowan, add_or_not in self.cowan_lists:
+            if cowan.in36.atom.symbol not in element_ratio:
+                element_ratio[cowan.in36.atom.symbol] = 1
+        if len(element_ratio) != len(self.simulate.element_ratio):
+            now_count = len(element_ratio)
+            single_element_percent = int(100 / now_count)
+            percent = [single_element_percent for _ in range(now_count)]
+            percent[-1] = 100 - single_element_percent * (now_count - 1)
+            for i, (key, value) in enumerate(zip(element_ratio.keys(), percent)):
+                element_ratio[key] = percent[i]
+            self.simulate.element_ratio = element_ratio
+
+        # 创建窗口元素
+        dialog = QDialog()
+        dialog.resize(200, 300)
+
+        ratio_table = QTableWidget(dialog)
+        ratio_table.verticalHeader().setVisible(False)  # 隐藏左侧的垂直表头
+        ratio_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)  # 根据窗口大小调整列宽
+        spin_box_dict = {}
+        for key in element_ratio.keys():
+            spin_box = QSpinBox()
+            spin_box.setValue(element_ratio[key])
+            spin_box_dict[key] = spin_box
+        cancel_button = QPushButton('取消', dialog)
+        cancel_button.clicked.connect(dialog.close)
+        ok_button = QPushButton('确认', dialog)
+        ok_button.clicked.connect(update_element_ratio)
+
+        # 设置布局
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(ok_button)
+        button_layout.addWidget(cancel_button)
+        dialog_layout = QVBoxLayout(dialog)
+        dialog_layout.addWidget(ratio_table)
+        dialog_layout.addLayout(button_layout)
+        dialog.setLayout(dialog_layout)
+
+        update_ui()
+        dialog.exec()
 
     def cowan_obj_update(self):
         """

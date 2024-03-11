@@ -1248,13 +1248,13 @@ class Ui_main_window(object):
 
         self.auto_write_in36 = QRadioButton(self.widget)
         self.auto_write_in36.setObjectName(u"auto_write_in36")
-        self.auto_write_in36.setChecked(False)
+        self.auto_write_in36.setChecked(True)
 
         self.horizontalLayout_5.addWidget(self.auto_write_in36)
 
         self.manual_write_in36 = QRadioButton(self.widget)
         self.manual_write_in36.setObjectName(u"manual_write_in36")
-        self.manual_write_in36.setChecked(True)
+        self.manual_write_in36.setChecked(False)
 
         self.horizontalLayout_5.addWidget(self.manual_write_in36)
 
@@ -1653,7 +1653,9 @@ class Ui_main_window(object):
 
         self.groupBox_2 = QGroupBox(self.page_2)
         self.groupBox_2.setObjectName(u"groupBox_2")
+        self.groupBox_2.setMinimumSize(QSize(200, 0))
         self.groupBox_2.setMaximumSize(QSize(200, 16777215))
+        self.groupBox_2.setBaseSize(QSize(0, 0))
         self.verticalLayout_9 = QVBoxLayout(self.groupBox_2)
         self.verticalLayout_9.setObjectName(u"verticalLayout_9")
         self.page2_selection_list = QListWidget(self.groupBox_2)
@@ -1665,6 +1667,24 @@ class Ui_main_window(object):
         self.page2_selection_list.setSortingEnabled(False)
 
         self.verticalLayout_9.addWidget(self.page2_selection_list)
+
+        self.hidden_1 = QWidget(self.groupBox_2)
+        self.hidden_1.setObjectName(u"hidden_1")
+        self.horizontalLayout_33 = QHBoxLayout(self.hidden_1)
+        self.horizontalLayout_33.setSpacing(0)
+        self.horizontalLayout_33.setObjectName(u"horizontalLayout_33")
+        self.horizontalLayout_33.setContentsMargins(-1, 0, -1, 0)
+        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_33.addItem(self.horizontalSpacer_18)
+
+        self.Adjust_element_ratio = QPushButton(self.hidden_1)
+        self.Adjust_element_ratio.setObjectName(u"Adjust_element_ratio")
+
+        self.horizontalLayout_33.addWidget(self.Adjust_element_ratio)
+
+
+        self.verticalLayout_9.addWidget(self.hidden_1)
 
         self.line_9 = QFrame(self.groupBox_2)
         self.line_9.setObjectName(u"line_9")
@@ -2185,7 +2205,7 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(1)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -2438,6 +2458,7 @@ class Ui_main_window(object):
         self.page2_plot_spectrum.setText(QCoreApplication.translate("main_window", u"\u6a21\u62df", None))
         self.groupBox_4.setTitle(QCoreApplication.translate("main_window", u"\u7f51\u683c\u8ba1\u7b97", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("main_window", u"\u53c2\u6570\u8f93\u5165\u533a", None))
+        self.Adjust_element_ratio.setText(QCoreApplication.translate("main_window", u"\u8c03\u6574\u5143\u7d20\u6bd4\u4f8b", None))
         self.label_16.setText(QCoreApplication.translate("main_window", u"\u6e29\u5ea6\u8303\u56f4", None))
         self.temperature_num.setSuffix(QCoreApplication.translate("main_window", u"\u4e2a", None))
         self.label_17.setText(QCoreApplication.translate("main_window", u"\u5bc6\u5ea6\u8303\u56f4", None))

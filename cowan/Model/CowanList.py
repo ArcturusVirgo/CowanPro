@@ -16,7 +16,7 @@ class CowanList:
         self.cowan_run_history: Dict[str:Cowan] = {}  # 用于存储 cowan 对象
 
     def sort_chose_cowan(self):
-        self.chose_cowan = sorted(self.chose_cowan, key=lambda x: int(x.split('_')[-1]))
+        self.chose_cowan = sorted(self.chose_cowan, key=lambda x: (x.split('_')[0], int(x.split('_')[1])))
 
     def add_cowan(self, key):
         """
@@ -95,6 +95,16 @@ class CowanList:
 
     def get_cowan_from_index(self, index):
         return self.cowan_run_history[self.chose_cowan[index]]
+
+    def is_multi_elemental(self):
+        element_set = set()
+        for name in self.chose_cowan:
+            element = name.split('_')[0]
+            element_set.add(element)
+        if len(element_set) > 1:
+            return True
+        else:
+            return False
 
     def load_class(self, class_info):
         self.chose_cowan = class_info.chose_cowan

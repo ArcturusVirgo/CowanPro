@@ -304,14 +304,28 @@ class LineIdentification(MainWindow):
                     ['原子序数', '原子状态', '标识符', '空格', '组态']
                 )
 
+        def clear_configuration():
+            self.in36.configuration_card = []
+
+            # ----------------------------- 更新页面 -----------------------------
+            self.ui.in36_configuration_view.clear()
+            self.ui.in36_configuration_view.setRowCount(0)
+            self.ui.in36_configuration_view.setColumnCount(3)
+            self.ui.in36_configuration_view.setHorizontalHeaderLabels(
+                ['原子序数', '原子状态', '标识符', '空格', '组态']
+            )
+
         right_menu = QMenu(self.ui.in36_configuration_view)
 
         # 设置动作
         item_1 = QAction('删除', self.ui.in36_configuration_view)
         item_1.triggered.connect(del_configuration)
+        item_2 = QAction('清空', self.ui.in36_configuration_view)
+        item_2.triggered.connect(clear_configuration)
 
         # 添加
         right_menu.addAction(item_1)
+        right_menu.addAction(item_2)
 
         # 显示右键菜单
         right_menu.popup(QCursor.pos())
@@ -775,6 +789,10 @@ class UpdateLineIdentification(MainWindow):
         self.ui.selection_list.clear()
         for cowan, flag in self.cowan_lists:
             self.ui.selection_list.addItem(QListWidgetItem(cowan.name))
+        if self.cowan_lists.is_multi_elemental():
+            self.ui.hidden_1.setVisible(True)  # 如果是多元素，就显示比例调整
+        else:
+            self.ui.hidden_1.setVisible(False)  # 如果是单元素，就隐藏比例调整
         functools.partial(UpdateSpectralSimulation.update_selection_list, self)()
         functools.partial(UpdateDataStatistics.update_ion_select_combox, self)()
 

@@ -9,6 +9,7 @@ from plotly.offline import plot
 from scipy.interpolate import interp1d
 from scipy.signal import find_peaks
 
+from ..Tools import console_logger
 from .AtomInfo import OLD_IONIZATION_ENERGY, OUTER_ELECTRON_NUM
 from .CowanList import CowanList
 from .Cowan_ import Cowan
@@ -32,7 +33,8 @@ class SimulateSpectral:
         self.characteristic_peaks = []  # 特征峰波长
         self.peaks_index = []  # 特征峰索引，在类内部使用，自动更新，用于画图
 
-        self.abundance = []  # 离子丰度
+        self.element_ratio = {}  # 元素比例
+        self.abundance = {}  # 离子丰度
         self.sim_data = None  # 模拟光谱数据
 
         self.ion_contribution = None  # 离子贡献
@@ -54,6 +56,13 @@ class SimulateSpectral:
             temp_list.append(cowan_lists.cowan_run_history[key])
         self.cowan_list = copy.deepcopy(temp_list)
         self.add_or_not = cowan_lists.add_or_not
+        if not cowan_lists.is_multi_elemental():
+            self.element_ratio = {self.cowan_list[0].in36.atom.symbol: 1.0}
+        for key in cowan_lists.chose_cowan:
+            element_symbol = cowan_lists.cowan_run_history[key].in36.atom.symbol
+            if element_symbol not in self.element_ratio.keys():
+                return False
+        return True
 
     def del_cowan_list(self):
         """
@@ -131,27 +140,40 @@ class SimulateSpectral:
 
             return a_over_S
 
-        temperature = self.temperature
-        electron_density = self.electron_density
+        cowan_element = {}
+        # 按元素分类
+        for cowan in self.cowan_list:
+            cowan_element[cowan.in36.atom.symbol] = cowan_element.get(cowan.in36.atom.symbol, []) + [cowan]
 
-        atom_nums = self.cowan_list[0].in36.atom.num
-        ion_num = np.array([k for k in range(atom_nums)])
-        ion_energy = np.array([OLD_IONIZATION_ENERGY[atom_nums][k] for k in range(atom_nums)])
-        electron_num = np.array([OUTER_ELECTRON_NUM[atom_nums][k] for k in range(atom_nums)])
+        abundance_element = {}
+        # 计算每个元素的丰度
+        for element, cowan_list in cowan_element.items():
+            temperature = self.temperature
+            electron_density = self.electron_density
 
-        S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
-                ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
-        Ar = (5.2 * 1e-14 * np.sqrt(ion_energy / temperature) * ion_num * (
-                0.429 + 0.5 * np.log(ion_energy / temperature) + 0.469 * np.sqrt(temperature / ion_energy)))
-        A3r = (2.97 * 1e-27 * electron_num / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy)))
-        ratio = S / (Ar + electron_density * A3r)
-        abundance = calculate_a_over_S(ratio)
+            atom_nums = cowan_list[0].in36.atom.num
+            ion_num = np.array([k for k in range(atom_nums)])
+            ion_energy = np.array([OLD_IONIZATION_ENERGY[atom_nums][k] for k in range(atom_nums)])
+            electron_num = np.array([OUTER_ELECTRON_NUM[atom_nums][k] for k in range(atom_nums)])
 
-        self.abundance = abundance
+            S = (9 * 1e-6 * electron_num * np.sqrt(temperature / ion_energy) * np.exp(-ion_energy / temperature)) / (
+                    ion_energy ** 1.5 * (4.88 + temperature / ion_energy))
+            Ar = (5.2 * 1e-14 * np.sqrt(ion_energy / temperature) * ion_num * (
+                    0.429 + 0.5 * np.log(ion_energy / temperature) + 0.469 * np.sqrt(temperature / ion_energy)))
+            A3r = (2.97 * 1e-27 * electron_num / (temperature * ion_energy ** 2 * (4.88 + temperature / ion_energy)))
+            ratio = S / (Ar + electron_density * A3r)
+            abundance = calculate_a_over_S(ratio)
+
+            abundance_element[element] = abundance
+
+        self.abundance = abundance_element
 
     def set_xrange(self, x_range, num, cowan_lists: CowanList):
         self.exp_data.set_xrange(x_range)
-        self.init_cowan_list(cowan_lists)
+        flag = self.init_cowan_list(cowan_lists)
+        if not flag:
+            console_logger.error(f'{self.temperature} {self.electron_density} do not set element ratio')
+            return
         for cowan in self.cowan_list:
             cowan.set_xrange(x_range, num)
         if self.temperature is not None and self.electron_density is not None:
@@ -159,7 +181,10 @@ class SimulateSpectral:
 
     def reset_xrange(self, cowan_lists: CowanList):
         self.exp_data.reset_xrange()
-        self.init_cowan_list(cowan_lists)
+        flag = self.init_cowan_list(cowan_lists)
+        if not flag:
+            console_logger.error(f'{self.temperature} {self.electron_density} do not set element ratio')
+            return
         for cowan in self.cowan_list:
             cowan.reset_xrange()
         if self.temperature is not None and self.electron_density is not None:
@@ -173,8 +198,10 @@ class SimulateSpectral:
             all_abundance = self.abundance
             temp_abundance = []
             for c in self.cowan_list:
+                element = c.in36.atom.symbol
+                element_abundance = all_abundance[element]
                 ion = int(c.name.split('_')[1])
-                temp_abundance.append(all_abundance[ion])
+                temp_abundance.append(element_abundance[ion])
             return temp_abundance
 
         temp_contribution = {}
@@ -189,7 +216,8 @@ class SimulateSpectral:
             temp_data = pd.DataFrame({
                 'wavelength': widen_data['wavelength'].values,
                 'intensity': widen_data['cross_P'].values,
-                'intensity_with_population': widen_data['cross_P'].values * current_abundance[i]
+                'intensity_with_population': widen_data['cross_P'].values * current_abundance[i] * self.element_ratio[
+                    cowan.in36.atom.symbol]
             })
             temp_contribution[cowan.name] = temp_data
         self.ion_contribution = temp_contribution
@@ -522,7 +550,7 @@ class SimulateSpectral:
     def get_con_contribution(self) -> {str: {str: [pd.DataFrame, str]}}:
         return copy.deepcopy(self.con_contribution)
 
-    def get_abundance(self) -> list:
+    def get_abundance(self) -> dict:
         return copy.deepcopy(self.abundance)
 
     def load_class(self, class_info):
@@ -556,6 +584,14 @@ class SimulateSpectral:
         else:
             self.con_contribution = None
         # [1.0.2 > 1.0.3] end
+
+        # [1.0.3 > 1.0.4]
+        # 添加合金
+        if hasattr(class_info, 'element_ratio'):
+            self.element_ratio = class_info.element_ratio
+        else:
+            self.element_ratio = {}
+        # [1.0.3 > 1.0.4] end
 
         self.plot_path = PROJECT_PATH().joinpath('figure/add.html').as_posix()
         self.example_path = (PROJECT_PATH().joinpath('figure/part/example.html').as_posix())

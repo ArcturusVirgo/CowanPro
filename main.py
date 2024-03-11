@@ -249,7 +249,7 @@ class MainWindow(QMainWindow):
 
         self.info = {
             'x_range': None,  # example: [2, 8, 0.01] [<最小波长>, <最大波长>, <最小步长>]
-            'version': '1.0.3',  # example: '1.0.0'
+            'version': '1.0.4',  # example: '1.0.0'
         }
 
         print('当前软件版本：{}'.format(self.info['version']))
@@ -425,6 +425,8 @@ class MainWindow(QMainWindow):
         # =====>> 右键菜单
         self.ui.st_resolution_table.customContextMenuRequested.connect(
             functools.partial(SpectralSimulation.st_resolution_right_menu, self))  # 时空分辨表格的右键菜单
+        # =====>> 调整合金比例
+        self.ui.Adjust_element_ratio.clicked.connect(functools.partial(SpectralSimulation.adjust_element_ratio, self))
 
         # ------------------------------- 第三页 -------------------------------
         # 按钮
@@ -627,6 +629,18 @@ class MainWindow(QMainWindow):
             print('版本号更新完成')
             # 2. 给widen_part添加了grouped_data属性
             print('给widen_part添加了grouped_data属性')
+            # 更新 >>>>>>>>>>>>>>>>>>
+            obj_info.update({'info': project_info})
+            print('版本升级完成！')
+        # 1.0.3 > 1.0.4 ---------------------------------------------------
+        if Version(obj_info['info']['version']) < Version('1.0.3'):
+            print('正在进行版本升级 [1.0.3 > 1.0.4]')
+            project_info = obj_info['info']
+            # 1. 添加版本号
+            project_info['version'] = '1.0.4'
+            print('版本号更新完成')
+            # 2. 给 simulate 对象添加 element_ratio 属性
+            print('给 simulate 对象添加 element_ratio 属性')
             # 更新 >>>>>>>>>>>>>>>>>>
             obj_info.update({'info': project_info})
             print('版本升级完成！')
