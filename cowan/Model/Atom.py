@@ -106,9 +106,9 @@ class Atom:
             low_name: 下态的支壳层名称
             high_name: 上态的支壳层名称
         """
-        if low_name not in SUBSHELL_SEQUENCE:
+        if low_name not in SUBSHELL_NAME:
             raise Exception(f'没有名为{low_name}的支壳层！')
-        elif high_name not in SUBSHELL_SEQUENCE:
+        elif high_name not in SUBSHELL_NAME:
             raise Exception(f'没有名为{high_name}的支壳层!')
         elif low_name not in self.electron_arrangement.keys():
             raise Exception(f'没有处于{low_name}的电子！')

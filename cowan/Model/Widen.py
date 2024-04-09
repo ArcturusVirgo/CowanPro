@@ -29,7 +29,7 @@ class WidenAll:
         self.n = n
         self.threading = False
         self.delta_lambda: float = 0.0
-        self.fwhm_value: float = 0.5
+        self.fwhm_value: float = 0.27
         self.temperature: float = 25.6
 
         self.plot_path_gauss = (PROJECT_PATH() / f'figure/gauss/{self.name}.html').as_posix()

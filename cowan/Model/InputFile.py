@@ -18,6 +18,7 @@ class In36:
         self.control_card = ['2', ' ', ' ', '-9', ' ', '  ', ' 2', '   ', '10', '  1.0', '    5.e-08', '    1.e-11',
                              '-2', '  ', ' ', '1', '90', '  ', '  1.0', ' 0.65', '  0.0', '  0.0', '     ', ]
         self.configuration_card = []
+        self.hide_configuration_card = []  # [1.0.3 > 1.0.4]
 
     def read_from_file(self, path: Path):
         """
@@ -49,7 +50,7 @@ class In36:
             ion = line[8:10]
             label = line[10:28]
             con = line[32:].strip('\n').strip(' ')
-            input_card_list.append([[atom_num, ion, label, con], self.__judge_parity(con)])
+            input_card_list.append([[atom_num, ion, label, con], self.judge_parity(con)])
         self.control_card, self.configuration_card = control_card_list, input_card_list
 
         # 更新原子信息
@@ -88,12 +89,37 @@ class In36:
             temp_list = list(zip(*list(zip(*self.configuration_card))[0]))[-1]
         else:  # 如果组态卡为空
             temp_list = []
-        if configuration not in temp_list:
+        if self.hide_configuration_card:
+            temp_list_hide = list(zip(*list(zip(*self.hide_configuration_card))[0]))[-1]
+        else:
+            temp_list_hide = []
+
+        if configuration not in temp_list and configuration not in temp_list_hide:
             v0 = f'{self.atom.num}'
             v1 = f'{self.atom.ion + 1}'
             v2 = f'{ATOM[self.atom.num][0]}+{self.atom.ion}'
             v3 = configuration.strip(' ')
-            self.configuration_card.append([[v0, v1, v2, v3], self.__judge_parity(v3)])
+            self.configuration_card.append([[v0, v1, v2, v3], self.judge_parity(v3)])
+
+    def hide_configuration(self, index: int):
+        """
+        隐藏组态卡中的组态
+
+        Args:
+            index: 要隐藏的组态的索引（在显示的组态中的索引）
+        """
+        self.hide_configuration_card.append(self.configuration_card[index])
+        self.configuration_card.pop(index)
+
+    def show_configuration(self, index: int):
+        """
+        显示组态卡中的组态
+
+        Args:
+            index: 要显示的组态的索引（在隐藏的组态中的索引）
+        """
+        self.configuration_card.append(self.hide_configuration_card[index])
+        self.hide_configuration_card.pop(index)
 
     def configuration_move(self, index, opt: str):
         """
@@ -125,6 +151,16 @@ class In36:
         """
         self.configuration_card.pop(index)
 
+    def del_hide_configuration(self, index: int):
+        """
+        删除隐藏的组态卡中的组态
+
+        Args:
+            index (int): 要删除的组态的索引
+
+        """
+        self.hide_configuration_card.pop(index)
+
     def get_configuration_name(self, low_index, high_index):
         """
         根据组态索引获取电子跃迁的支壳层名称
@@ -136,9 +172,9 @@ class In36:
         Returns:
             返回一个字符串，如 '2p --> 3s'
         """
-        first_parity = self.configuration_card[0][1]
-        first_configuration = []
-        second_configuration = []
+        first_parity = self.configuration_card[0][1]  # 基组态的宇称
+        first_configuration = []  # 基组态宇称的组态
+        second_configuration = []  # 非基组态宇称的组态
         for configuration, parity in self.configuration_card:
             if parity == first_parity:
                 first_configuration.append(configuration[-1])
@@ -216,8 +252,38 @@ class In36:
         with open(path, 'w', encoding='utf-8') as f:
             f.write(self.get_text())
 
+    def sort_configuration(self):
+        """
+        对组态卡进行排序
+        """
+        base_parity = self.judge_parity(self.atom.base_configuration)
+        temp_configuration_card = copy.deepcopy(self.configuration_card)
+        if base_parity == 0:
+            temp_configuration_card.sort(key=lambda x: x[1])
+        else:
+            temp_configuration_card.sort(key=lambda x: x[1], reverse=True)
+        self.configuration_card = temp_configuration_card
+
+    def get_index(self, config_name):
+        """
+        根据组态名称获取组态的索引
+
+        Args:
+            config_name: 组态名称
+
+        Returns:
+            返回一个整数，表示组态的索引
+        """
+        parity = self.judge_parity(config_name)
+        temp_configuration_card = []
+        for configuration_card, parity_ in self.configuration_card:
+            if parity == parity_:
+                temp_configuration_card.append(configuration_card[3])
+        index = temp_configuration_card.index(config_name)
+        return parity, index + 1
+
     @staticmethod
-    def __judge_parity(configuration: str) -> int:
+    def judge_parity(configuration: str) -> int:
         """
         判断指定组态的宇称
 
@@ -262,6 +328,12 @@ class In36:
             else:
                 temp_configuration_card.append([configuration_card, parity])
         self.configuration_card = temp_configuration_card
+        # start [1.0.3 > 1.0.4]
+        if hasattr(class_info, 'hide_configuration_card'):
+            self.hide_configuration_card = class_info.hide_configuration_card
+        else:
+            self.hide_configuration_card = []
+        # end [1.0.3 > 1.0.4]
 
 
 class In2:

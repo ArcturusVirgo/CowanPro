@@ -11,10 +11,11 @@ from PySide6.QtWidgets import QFileDialog, QDialog, QTextBrowser, QVBoxLayout, Q
     QListWidgetItem
 
 from main import MainWindow
+from .. import SUBSHELL_NAME
 from ..Tools import console_logger
 from ..Model import (
     PROJECT_PATH,
-    ANGULAR_QUANTUM_NUM_NAME, SUBSHELL_SEQUENCE,
+    ANGULAR_QUANTUM_NUM_NAME,
     Atom, In36, In2, ExpData, Cowan, CowanThread,
 )
 from ..View import CustomProgressDialog
@@ -288,24 +289,19 @@ class LineIdentification(MainWindow):
             删除组态
 
             """
-            index = self.ui.in36_configuration_view.currentIndex().row()
-            if index < len(self.in36.configuration_card):
-                self.in36.del_configuration(index)
+            index, state_ = get_selected()
+            if state_:  # 如果是显示的组态
+                if index < len(self.in36.configuration_card):
+                    self.in36.del_configuration(index)
+            else:  # 如果是隐藏的组态
+                self.in36.del_hide_configuration(index - len(self.in36.configuration_card))
 
             # ----------------------------- 更新页面 -----------------------------
-            # 更新 in36 组态输入区
-            if self.in36.configuration_card:  # 如果组态卡不为空
-                functools.partial(UpdateLineIdentification.update_in36_configuration, self)()
-            else:  # 如果组态卡为空
-                self.ui.in36_configuration_view.clear()
-                self.ui.in36_configuration_view.setRowCount(0)
-                self.ui.in36_configuration_view.setColumnCount(3)
-                self.ui.in36_configuration_view.setHorizontalHeaderLabels(
-                    ['原子序数', '原子状态', '标识符', '空格', '组态']
-                )
+            functools.partial(UpdateLineIdentification.update_in36_configuration, self)()
 
         def clear_configuration():
             self.in36.configuration_card = []
+            self.in36.hide_configuration_card = []
 
             # ----------------------------- 更新页面 -----------------------------
             self.ui.in36_configuration_view.clear()
@@ -315,16 +311,64 @@ class LineIdentification(MainWindow):
                 ['原子序数', '原子状态', '标识符', '空格', '组态']
             )
 
+        def hide_config():
+            index = self.ui.in36_configuration_view.currentIndex().row()
+            self.in36.hide_configuration(index)
+
+            functools.partial(UpdateLineIdentification.update_in36_configuration, self)()
+
+        def show_config():
+            index = self.ui.in36_configuration_view.currentIndex().row()
+            self.in36.show_configuration(index - len(self.in36.configuration_card))
+
+            functools.partial(UpdateLineIdentification.update_in36_configuration, self)()
+
+        def hide_or_show():
+            index, state_ = get_selected()
+            if state_:
+                hide_config()
+            else:
+                show_config()
+
+        def get_selected():
+            """
+
+            Returns:
+                index: 选中的行
+                state_: 选中的状态
+                    -1: 未选中
+                    0: 现在处于隐藏状态
+                    1: 现在处于显示状态
+            """
+            index = self.ui.in36_configuration_view.currentIndex().row()
+            if index == -1:
+                return -1, -1
+            if self.ui.in36_configuration_view.item(self.ui.in36_configuration_view.currentIndex().row(),
+                                                    0).background().color() == QColor(255, 255, 255):
+                state_ = 0
+            else:
+                state_ = 1
+            return index, state_
+
         right_menu = QMenu(self.ui.in36_configuration_view)
 
         # 设置动作
         item_1 = QAction('删除', self.ui.in36_configuration_view)
-        item_1.triggered.connect(del_configuration)
         item_2 = QAction('清空', self.ui.in36_configuration_view)
+
+        text_list = ['显示', '隐藏']
+
+        current_index, state = get_selected()
+        item_3 = QAction(text_list[state], self.ui.in36_configuration_view)
+
+        item_1.triggered.connect(del_configuration)
         item_2.triggered.connect(clear_configuration)
+        item_3.triggered.connect(hide_or_show)
 
         # 添加
-        right_menu.addAction(item_1)
+        if current_index != -1:
+            right_menu.addAction(item_3)
+            right_menu.addAction(item_1)
         right_menu.addAction(item_2)
 
         # 显示右键菜单
@@ -685,7 +729,7 @@ class UpdateLineIdentification(MainWindow):
         # 改变上态列表
         self.ui.high_configuration.clear()
         temp_list = []
-        for value in SUBSHELL_SEQUENCE:
+        for value in SUBSHELL_NAME:
             l_ = ANGULAR_QUANTUM_NUM_NAME.index(value[1])
             if value in self.atom.electron_arrangement.keys():
                 if self.atom.electron_arrangement[value] != 4 * l_ + 2:
@@ -696,16 +740,18 @@ class UpdateLineIdentification(MainWindow):
         self.ui.high_configuration.setCurrentIndex(1)
 
     def update_in36_configuration(self):
+        # 添加正常的组态
         if len(self.in36.configuration_card) == 0:
-            warnings.warn('in36.configuration_card is None')
-            return
-        # 更新表格
+            temp_list = []
+            parity_list = []
+        else:
+            temp_list = list(zip(*self.in36.configuration_card))[0]
+            parity_list = list(zip(*self.in36.configuration_card))[1]
         df = pd.DataFrame(
-            list(zip(*self.in36.configuration_card))[0],
+            temp_list,
             columns=['原子序数', '离化度add1', '标识符', '组态'],
             index=list(range(1, len(self.in36.configuration_card) + 1)),
         )
-        parity_list = list(zip(*self.in36.configuration_card))[1]
         df['宇称'] = parity_list
         df['离化度'] = df['离化度add1'].apply(int) - 1
         df = df[['宇称', '离化度', '标识符', '组态']]
@@ -721,9 +767,37 @@ class UpdateLineIdentification(MainWindow):
             col_name.append(con_index)
             con_index += 1
 
+        # 添加隐藏的组态
+        if len(self.in36.hide_configuration_card) == 0:
+            temp_list = []
+            parity_list = []
+        else:
+            temp_list = list(zip(*self.in36.hide_configuration_card))[0]
+            parity_list = list(zip(*self.in36.hide_configuration_card))[1]
+        df_hide = pd.DataFrame(
+            temp_list,
+            columns=['原子序数', '离化度add1', '标识符', '组态'],
+            index=list(range(1, len(self.in36.hide_configuration_card) + 1)),
+        )
+        df_hide['宇称'] = parity_list
+        df_hide['离化度'] = df_hide['离化度add1'].apply(int) - 1
+        df_hide = df_hide[['宇称', '离化度', '标识符', '组态']]
+        col_name_hide = []
+        con_index = 1
+        for i, value in enumerate(parity_list):
+            if i == 0:
+                col_name_hide.append(con_index)
+                con_index += 1
+                continue
+            if value != parity_list[i - 1]:
+                con_index = 1
+            col_name_hide.append(con_index)
+            con_index += 1
+
+        # 添加 in36 组态
         self.ui.in36_configuration_view.clear()
-        self.ui.in36_configuration_view.setRowCount(df.shape[0])
-        self.ui.in36_configuration_view.setVerticalHeaderLabels([str(i) for i in col_name])
+        self.ui.in36_configuration_view.setRowCount(df.shape[0] + df_hide.shape[0])
+        self.ui.in36_configuration_view.setVerticalHeaderLabels([str(i) for i in (col_name + col_name_hide)])
         self.ui.in36_configuration_view.setColumnCount(df.shape[1])
         self.ui.in36_configuration_view.setHorizontalHeaderLabels(df.columns)
         for i in range(df.shape[0]):
@@ -735,6 +809,15 @@ class UpdateLineIdentification(MainWindow):
                     item.setBackground(QBrush(QColor(197, 224, 179)))
 
                 self.ui.in36_configuration_view.setItem(i, j, item)
+
+        # 添加不参与计算的组态
+        for i in range(df_hide.shape[0]):
+            for j in range(df_hide.shape[1]):
+                item = QTableWidgetItem(str(df_hide.iloc[i, j]))
+                # 设置字体颜色
+                item.setForeground(QBrush(QColor(127, 127, 127)))
+                item.setBackground(QBrush(QColor(255, 255, 255)))
+                self.ui.in36_configuration_view.setItem(i + df.shape[0], j, item)
 
     def update_in36_control(self):
         for i in range(23):

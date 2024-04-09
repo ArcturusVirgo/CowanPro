@@ -1674,6 +1674,11 @@ class Ui_main_window(object):
         self.horizontalLayout_33.setSpacing(0)
         self.horizontalLayout_33.setObjectName(u"horizontalLayout_33")
         self.horizontalLayout_33.setContentsMargins(-1, 0, -1, 0)
+        self.ratio_text = QLabel(self.hidden_1)
+        self.ratio_text.setObjectName(u"ratio_text")
+
+        self.horizontalLayout_33.addWidget(self.ratio_text)
+
         self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_33.addItem(self.horizontalSpacer_18)
@@ -2458,7 +2463,8 @@ class Ui_main_window(object):
         self.page2_plot_spectrum.setText(QCoreApplication.translate("main_window", u"\u6a21\u62df", None))
         self.groupBox_4.setTitle(QCoreApplication.translate("main_window", u"\u7f51\u683c\u8ba1\u7b97", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("main_window", u"\u53c2\u6570\u8f93\u5165\u533a", None))
-        self.Adjust_element_ratio.setText(QCoreApplication.translate("main_window", u"\u8c03\u6574\u5143\u7d20\u6bd4\u4f8b", None))
+        self.ratio_text.setText(QCoreApplication.translate("main_window", u"A:B=90:10", None))
+        self.Adjust_element_ratio.setText(QCoreApplication.translate("main_window", u"\u8c03\u6574", None))
         self.label_16.setText(QCoreApplication.translate("main_window", u"\u6e29\u5ea6\u8303\u56f4", None))
         self.temperature_num.setSuffix(QCoreApplication.translate("main_window", u"\u4e2a", None))
         self.label_17.setText(QCoreApplication.translate("main_window", u"\u5bc6\u5ea6\u8303\u56f4", None))

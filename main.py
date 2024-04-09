@@ -641,6 +641,8 @@ class MainWindow(QMainWindow):
             print('版本号更新完成')
             # 2. 给 simulate 对象添加 element_ratio 属性
             print('给 simulate 对象添加 element_ratio 属性')
+            # 3. 给 In36 对象添加 hide_configuration 属性
+            print('给 In36 对象添加 hide_configuration 属性')
             # 更新 >>>>>>>>>>>>>>>>>>
             obj_info.update({'info': project_info})
             print('版本升级完成！')

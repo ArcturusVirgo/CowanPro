@@ -534,6 +534,8 @@ class SpectralSimulation(MainWindow):
                 return
             self.simulate.element_ratio = values
             dialog.close()
+            # -------------------------- 更新页面 --------------------------
+            functools.partial(UpdateSpectralSimulation.update_element_ratio, self)()
             self.ui.statusbar.showMessage('元素比例设置成功！')
 
         def update_ui():
@@ -572,6 +574,7 @@ class SpectralSimulation(MainWindow):
         spin_box_dict = {}
         for key in element_ratio.keys():
             spin_box = QSpinBox()
+            spin_box.setRange(0, 100)
             spin_box.setValue(element_ratio[key])
             spin_box_dict[key] = spin_box
         cancel_button = QPushButton('取消', dialog)
@@ -749,6 +752,11 @@ class UpdateSpectralSimulation(MainWindow):
         self.ui.peaks_label.setText(f'{len(self.simulate.characteristic_peaks)}个')
         functools.partial(UpdateSpectralSimulation.update_grid, self)()
 
+    def update_element_ratio(self):
+        text_1 = ':'.join(list(self.simulate.element_ratio.keys()))
+        text_2 = ':'.join([str(int(i)) for i in self.simulate.element_ratio.values()])
+        self.ui.ratio_text.setText(f'{text_1}={text_2}')
+
     def update_page(self):
         # ----- 选择列表 -----
         functools.partial(UpdateSpectralSimulation.update_selection_list, self)()
@@ -767,3 +775,5 @@ class UpdateSpectralSimulation(MainWindow):
         functools.partial(UpdateSpectralSimulation.update_characteristic_peaks, self)()
         # 更新网格
         functools.partial(UpdateSpectralSimulation.update_grid, self)()
+        # 更新元素比例
+        functools.partial(UpdateSpectralSimulation.update_element_ratio, self)()

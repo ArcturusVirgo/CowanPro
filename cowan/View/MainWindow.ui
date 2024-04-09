@@ -3917,6 +3917,13 @@
                  <number>0</number>
                 </property>
                 <item>
+                 <widget class="QLabel" name="ratio_text">
+                  <property name="text">
+                   <string>A:B=90:10</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <spacer name="horizontalSpacer_18">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
@@ -3932,7 +3939,7 @@
                 <item>
                  <widget class="QPushButton" name="Adjust_element_ratio">
                   <property name="text">
-                   <string>调整元素比例</string>
+                   <string>调整</string>
                   </property>
                  </widget>
                 </item>
