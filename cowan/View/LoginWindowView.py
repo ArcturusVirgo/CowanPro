@@ -24,12 +24,28 @@ class Ui_login_window(object):
     def setupUi(self, login_window):
         if not login_window.objectName():
             login_window.setObjectName(u"login_window")
-        login_window.resize(299, 400)
+        login_window.resize(286, 445)
+        login_window.setStyleSheet(u"* {\n"
+"	\n"
+"	font: 10pt \"Microsoft YaHei UI\";\n"
+"}\n"
+"\n"
+"#label {\n"
+"	font: 16pt \"Microsoft YaHei UI\";\n"
+"}\n"
+"\n"
+"#project_list::item {\n"
+" margin-bottom: 12px; \n"
+"}")
         self.verticalLayout = QVBoxLayout(login_window)
         self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.label = QLabel(login_window)
         self.label.setObjectName(u"label")
         self.label.setMinimumSize(QSize(0, 70))
+        self.label.setStyleSheet(u"")
+        self.label.setScaledContents(False)
+        self.label.setAlignment(Qt.AlignCenter)
 
         self.verticalLayout.addWidget(self.label)
 
@@ -55,6 +71,7 @@ class Ui_login_window(object):
 
         self.project_list = QListWidget(self.page)
         self.project_list.setObjectName(u"project_list")
+        self.project_list.setMinimumSize(QSize(250, 0))
 
         self.verticalLayout_2.addWidget(self.project_list)
 
@@ -62,11 +79,13 @@ class Ui_login_window(object):
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.new_project = QPushButton(self.page)
         self.new_project.setObjectName(u"new_project")
+        self.new_project.setMinimumSize(QSize(0, 37))
 
         self.horizontalLayout_2.addWidget(self.new_project)
 
         self.delete_project = QPushButton(self.page)
         self.delete_project.setObjectName(u"delete_project")
+        self.delete_project.setMinimumSize(QSize(0, 37))
 
         self.horizontalLayout_2.addWidget(self.delete_project)
 
@@ -118,11 +137,13 @@ class Ui_login_window(object):
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.back = QPushButton(self.page_2)
         self.back.setObjectName(u"back")
+        self.back.setMinimumSize(QSize(0, 37))
 
         self.horizontalLayout_4.addWidget(self.back)
 
         self.create_project = QPushButton(self.page_2)
         self.create_project.setObjectName(u"create_project")
+        self.create_project.setMinimumSize(QSize(0, 37))
 
         self.horizontalLayout_4.addWidget(self.create_project)
 

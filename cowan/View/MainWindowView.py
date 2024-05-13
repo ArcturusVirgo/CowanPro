@@ -19,12 +19,12 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDoubleSpinBox,
     QFrame, QGridLayout, QGroupBox, QHBoxLayout,
-    QHeaderView, QLabel, QLineEdit, QListWidget,
-    QListWidgetItem, QMainWindow, QMenu, QMenuBar,
-    QPushButton, QRadioButton, QSizePolicy, QSpacerItem,
-    QSpinBox, QStackedWidget, QStatusBar, QTabWidget,
-    QTableWidget, QTableWidgetItem, QToolButton, QTreeWidget,
-    QTreeWidgetItem, QVBoxLayout, QWidget)
+    QHeaderView, QLabel, QLineEdit, QListView,
+    QListWidget, QListWidgetItem, QMainWindow, QMenu,
+    QMenuBar, QPushButton, QRadioButton, QSizePolicy,
+    QSpacerItem, QSpinBox, QStackedWidget, QStatusBar,
+    QTabWidget, QTableWidget, QTableWidgetItem, QToolButton,
+    QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
 
 class Ui_main_window(object):
     def setupUi(self, main_window):
@@ -33,7 +33,80 @@ class Ui_main_window(object):
         main_window.resize(1374, 883)
         main_window.setMinimumSize(QSize(0, 0))
         main_window.setMaximumSize(QSize(16777215, 16777215))
-        main_window.setStyleSheet(u"")
+        main_window.setStyleSheet(u"* {\n"
+"    outline: none; /* \u79fb\u9664\u865a\u7ebf\u6846 */\n"
+"}\n"
+"\n"
+"/************************************ \u6240\u6709 QListWidget ************************************/\n"
+"QListWidget {\n"
+"	background-color: #f0f0f0;\n"
+"}\n"
+"\n"
+"QListWidget::item {\n"
+"    height: 25px; /* \u5217\u8868\u9879\u7684\u9ad8\u5ea6 */\n"
+"    padding: 0 5px; /* \u5217\u8868\u9879\u7684\u5185\u8fb9\u8ddd */\n"
+"    border: none; /* \u79fb\u9664\u5217\u8868\u9879\u8fb9\u6846 */\n"
+"    color: #333333; /* \u6587\u672c\u989c\u8272 */\n"
+"    font: 12pt \"Microsoft YaHei UI\"; /* \u5b57\u4f53\u6837\u5f0f */\n"
+"}\n"
+"\n"
+"QListWidget::item:selected {\n"
+"    background-color: #d0d0d0; /* \u9009\u4e2d\u65f6\u7684\u80cc\u666f\u989c\u8272 */\n"
+"    color: #000000; /* \u9009\u4e2d\u65f6\u7684\u6587\u672c\u989c\u8272 */\n"
+"    outline: none; /* \u79fb\u9664\u9009\u4e2d\u65f6\u7684\u865a\u7ebf\u6846 */\n"
+"}\n"
+"\n"
+"QListWidget::item:hover {\n"
+"    background-color: #e0e0e0; /* \u9f20\u6807\u60ac\u505c\u65f6\u7684\u80cc\u666f"
+                        "\u989c\u8272 */\n"
+"}\n"
+"\n"
+"/************************************ \u6240\u6709 QTableWidget ************************************/\n"
+"QTableWidget {\n"
+"	background-color: #f0f0f0;\n"
+"}\n"
+"\n"
+"/************************************ in36 in2 \u7f16\u8f91 ************************************/\n"
+"#tabWidge {\n"
+"     background-color: transparent; /* \u8bbe\u7f6e\u5b50\u6807\u7b7e\u9875\u7684\u80cc\u666f\u4e3a\u9ed1\u8272 */\n"
+"     border: none; /* \u79fb\u9664\u5b50\u6807\u7b7e\u9875\u7684\u8fb9\u6846 */\n"
+"}\n"
+"#tab  {\n"
+"     background-color: #f0f0f0; /* \u8bbe\u7f6e\u5b50\u6807\u7b7e\u9875\u7684\u80cc\u666f\u4e3a\u9ed1\u8272 */\n"
+"}\n"
+"#tab_2  {\n"
+"     background-color: #f0f0f0; /* \u8bbe\u7f6e\u5b50\u6807\u7b7e\u9875\u7684\u80cc\u666f\u4e3a\u9ed1\u8272 */\n"
+"}\n"
+"\n"
+"\n"
+"/************************************ \u5bfc\u822a\u680f ************************************/\n"
+"#navigation {\n"
+"    background-color: #f0f0f0; /* \u4eae\u8272\u80cc\u666f */\n"
+"    border: none; /* \u79fb\u9664\u8fb9"
+                        "\u6846 */\n"
+"    show-decoration-selected: 1; /* \u9009\u4e2d\u65f6\u663e\u793a\u88c5\u9970 */\n"
+"	font: 12pt \"Microsoft YaHei UI\";\n"
+"}\n"
+"\n"
+"#navigation::item {\n"
+"    height: 50px; /* \u5217\u8868\u9879\u7684\u9ad8\u5ea6 */\n"
+"    padding-left: 20px; /* \u5217\u8868\u9879\u5185\u5bb9\u7684\u5de6\u8fb9\u8ddd */\n"
+"    border: none; /* \u79fb\u9664\u5217\u8868\u9879\u8fb9\u6846 */\n"
+"    color: #333333; /* \u6587\u672c\u989c\u8272 */\n"
+"}\n"
+"\n"
+"#navigation::item:selected {\n"
+"    background-color: #e0e0e0; /* \u9009\u4e2d\u65f6\u7684\u80cc\u666f\u989c\u8272 */\n"
+"    color: #000000; /* \u9009\u4e2d\u65f6\u7684\u6587\u672c\u989c\u8272 */\n"
+"}\n"
+"\n"
+"#navigation::item:hover {\n"
+"    background-color: #d4d4d4; /* \u9f20\u6807\u60ac\u505c\u65f6\u7684\u80cc\u666f\u989c\u8272 */\n"
+"}\n"
+"\n"
+"#navigation::item:checked {\n"
+"    background-color: #c2c2c2; /* \u88ab\u52fe\u9009\u65f6\u7684\u80cc\u666f\u989c\u8272 */\n"
+"}")
         self.action = QAction(main_window)
         self.action.setObjectName(u"action")
         self.action.setPriority(QAction.NormalPriority)
@@ -76,7 +149,7 @@ class Ui_main_window(object):
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
         self.horizontalLayout.setSpacing(0)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalLayout.setContentsMargins(0, -1, -1, -1)
+        self.horizontalLayout.setContentsMargins(9, -1, -1, -1)
         self.navigation = QListWidget(self.centralwidget)
         QListWidgetItem(self.navigation)
         QListWidgetItem(self.navigation)
@@ -84,8 +157,9 @@ class Ui_main_window(object):
         QListWidgetItem(self.navigation)
         QListWidgetItem(self.navigation)
         self.navigation.setObjectName(u"navigation")
-        self.navigation.setMinimumSize(QSize(50, 0))
-        self.navigation.setMaximumSize(QSize(100, 16777215))
+        self.navigation.setMinimumSize(QSize(120, 0))
+        self.navigation.setMaximumSize(QSize(120, 16777215))
+        self.navigation.setFlow(QListView.TopToBottom)
 
         self.horizontalLayout.addWidget(self.navigation)
 
@@ -2180,7 +2254,7 @@ class Ui_main_window(object):
         main_window.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(main_window)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1374, 23))
+        self.menubar.setGeometry(QRect(0, 0, 1374, 21))
         self.menubar.setNativeMenuBar(True)
         self.menu = QMenu(self.menubar)
         self.menu.setObjectName(u"menu")
@@ -2210,8 +2284,8 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(1)
-        self.tabWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(main_window)
@@ -2242,7 +2316,7 @@ class Ui_main_window(object):
         ___qlistwidgetitem = self.navigation.item(0)
         ___qlistwidgetitem.setText(QCoreApplication.translate("main_window", u"\u5149\u8c31\u6307\u8ba4", None));
         ___qlistwidgetitem1 = self.navigation.item(1)
-        ___qlistwidgetitem1.setText(QCoreApplication.translate("main_window", u"\u5b9e\u9a8c\u8c31\u7ebf\u6a21\u62df", None));
+        ___qlistwidgetitem1.setText(QCoreApplication.translate("main_window", u"\u8c31\u7ebf\u6a21\u62df", None));
         ___qlistwidgetitem2 = self.navigation.item(2)
         ___qlistwidgetitem2.setText(QCoreApplication.translate("main_window", u"\u6f14\u5316\u8fc7\u7a0b", None));
         ___qlistwidgetitem3 = self.navigation.item(3)
@@ -2506,10 +2580,10 @@ class Ui_main_window(object):
         self.groupBox_10.setTitle(QCoreApplication.translate("main_window", u"\u968f\u4f4d\u7f6e\u7684\u53d8\u5316", None))
         self.label_22.setText(QCoreApplication.translate("main_window", u"\u65f6\u95f4\u9009\u62e9", None))
         self.td_by_s.setText(QCoreApplication.translate("main_window", u"\u7ed8\u5236", None))
-        self.groupBox_7.setTitle(QCoreApplication.translate("main_window", u"GroupBox", None))
+        self.groupBox_7.setTitle(QCoreApplication.translate("main_window", u"\u8bf7\u9009\u62e9", None))
         self.page4_con_contribution.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u7ec4\u6001\u7684\u8d21\u732e", None))
         self.page4_ion_contribution.setText(QCoreApplication.translate("main_window", u"\u67e5\u770b\u5404\u79bb\u5b50\u7684\u8d21\u732e", None))
-        self.groupBox_8.setTitle(QCoreApplication.translate("main_window", u"GroupBox", None))
+        self.groupBox_8.setTitle(QCoreApplication.translate("main_window", u"\u7ed8\u56fe\u533a", None))
         self.page4_consider_popular.setText(QCoreApplication.translate("main_window", u"\u8003\u8651\u4e30\u5ea6", None))
         self.label_9.setText(QCoreApplication.translate("main_window", u"\u8bf7\u9009\u62e9\u79bb\u5316\u5ea6", None))
         self.export_static_table.setText(QCoreApplication.translate("main_window", u"\u5bfc\u51fa\u6570\u636e", None))

@@ -127,6 +127,32 @@ class Atom:
         """
         self.electron_arrangement = self.get_base_electron_arrangement()
 
+    def get_electron_arrangement_from_configuration(self, configuration:str):
+        """
+        根据电子组态，获取电子排布情况
+
+        自动填充内壳层的电子
+        Args:
+            configuration:
+
+        Returns:
+
+        """
+        temp_dict: dict
+        temp_dict = self.get_base_electron_arrangement()
+        input_dict = {}
+        for key, value in map(lambda x: [str(x[:2]), int(x[2:])], configuration.split(' ')):
+            input_dict[key] = value
+        res_dict = {}
+        new_key = list(set(list(temp_dict.keys()) + list(input_dict.keys())))
+        for key in new_key:
+            if key in input_dict.keys():
+                res_dict[key] = input_dict[key]
+            elif key in temp_dict.keys():
+                res_dict[key] = temp_dict[key]
+
+        return res_dict
+
     def load_class(self, class_info):
         self.num = class_info.num
         self.symbol = class_info.symbol

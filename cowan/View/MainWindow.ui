@@ -26,7 +26,78 @@
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true"/>
+   <string notr="true">* {
+    outline: none; /* 移除虚线框 */
+}
+
+/************************************ 所有 QListWidget ************************************/
+QListWidget {
+	background-color: #f0f0f0;
+}
+
+QListWidget::item {
+    height: 25px; /* 列表项的高度 */
+    padding: 0 5px; /* 列表项的内边距 */
+    border: none; /* 移除列表项边框 */
+    color: #333333; /* 文本颜色 */
+    font: 12pt &quot;Microsoft YaHei UI&quot;; /* 字体样式 */
+}
+
+QListWidget::item:selected {
+    background-color: #d0d0d0; /* 选中时的背景颜色 */
+    color: #000000; /* 选中时的文本颜色 */
+    outline: none; /* 移除选中时的虚线框 */
+}
+
+QListWidget::item:hover {
+    background-color: #e0e0e0; /* 鼠标悬停时的背景颜色 */
+}
+
+/************************************ 所有 QTableWidget ************************************/
+QTableWidget {
+	background-color: #f0f0f0;
+}
+
+/************************************ in36 in2 编辑 ************************************/
+#tabWidge {
+     background-color: transparent; /* 设置子标签页的背景为黑色 */
+     border: none; /* 移除子标签页的边框 */
+}
+#tab  {
+     background-color: #f0f0f0; /* 设置子标签页的背景为黑色 */
+}
+#tab_2  {
+     background-color: #f0f0f0; /* 设置子标签页的背景为黑色 */
+}
+
+
+/************************************ 导航栏 ************************************/
+#navigation {
+    background-color: #f0f0f0; /* 亮色背景 */
+    border: none; /* 移除边框 */
+    show-decoration-selected: 1; /* 选中时显示装饰 */
+	font: 12pt &quot;Microsoft YaHei UI&quot;;
+}
+
+#navigation::item {
+    height: 50px; /* 列表项的高度 */
+    padding-left: 20px; /* 列表项内容的左边距 */
+    border: none; /* 移除列表项边框 */
+    color: #333333; /* 文本颜色 */
+}
+
+#navigation::item:selected {
+    background-color: #e0e0e0; /* 选中时的背景颜色 */
+    color: #000000; /* 选中时的文本颜色 */
+}
+
+#navigation::item:hover {
+    background-color: #d4d4d4; /* 鼠标悬停时的背景颜色 */
+}
+
+#navigation::item:checked {
+    background-color: #c2c2c2; /* 被勾选时的背景颜色 */
+}</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="enabled">
@@ -43,21 +114,24 @@
      <number>0</number>
     </property>
     <property name="leftMargin">
-     <number>0</number>
+     <number>9</number>
     </property>
     <item>
      <widget class="QListWidget" name="navigation">
       <property name="minimumSize">
        <size>
-        <width>50</width>
+        <width>120</width>
         <height>0</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
-        <width>100</width>
+        <width>120</width>
         <height>16777215</height>
        </size>
+      </property>
+      <property name="flow">
+       <enum>QListView::TopToBottom</enum>
       </property>
       <item>
        <property name="text">
@@ -66,7 +140,7 @@
       </item>
       <item>
        <property name="text">
-        <string>实验谱线模拟</string>
+        <string>谱线模拟</string>
        </property>
       </item>
       <item>
@@ -89,7 +163,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page">
        <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,4">
@@ -123,7 +197,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -4560,7 +4634,7 @@
            </size>
           </property>
           <property name="title">
-           <string>GroupBox</string>
+           <string>请选择</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_8">
            <item>
@@ -4605,7 +4679,7 @@
         <item>
          <widget class="QGroupBox" name="groupBox_8">
           <property name="title">
-           <string>GroupBox</string>
+           <string>绘图区</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
@@ -4695,7 +4769,7 @@
      <x>0</x>
      <y>0</y>
      <width>1374</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="nativeMenuBar">

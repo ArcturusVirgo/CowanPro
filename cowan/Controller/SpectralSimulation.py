@@ -640,9 +640,6 @@ class UpdateSpectralSimulation(MainWindow):
         if self.simulate is None:
             warnings.warn('simulate obj is None')
             return
-        if self.simulate.temperature is None or self.simulate.electron_density is None:
-            warnings.warn('simulate.temperature or simulate.electron_density is None')
-            return
 
         self.ui.st_time.setText(str(time))
         self.ui.st_space_x.setText(str(x_loc))

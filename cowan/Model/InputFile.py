@@ -184,16 +184,9 @@ class In36:
         low_configuration = first_configuration[low_index_]
         high_configuration = second_configuration[high_index_]
 
-        low_configuration = low_configuration.split(' ')
-        high_configuration = high_configuration.split(' ')
+        low_dict = self.atom.get_electron_arrangement_from_configuration(low_configuration)
+        high_dict = self.atom.get_electron_arrangement_from_configuration(high_configuration)
 
-        low_dict = {}
-        high_dict = {}
-
-        for low in low_configuration:
-            low_dict[low[:2]] = low[2:]
-        for high in high_configuration:
-            high_dict[high[:2]] = high[2:]
         configuration_name = list(set(list(low_dict.keys()) + list(high_dict.keys())))
         res = {}
         for name in configuration_name:
