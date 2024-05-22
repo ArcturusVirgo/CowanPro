@@ -441,6 +441,7 @@ class SpectralSimulation(MainWindow):
 
         # 创建窗口元素
         dialog = QWidget()
+        dialog.setWindowTitle('特征波长选择')
         dialog.resize(200, 300)
         peaks_browser = QListWidget(dialog)
         peaks_browser.setContextMenuPolicy(Qt.CustomContextMenu)  # 允许使用右键菜单

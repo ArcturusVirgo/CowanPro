@@ -143,6 +143,8 @@ class LineIdentification(MainWindow):
         functools.partial(UpdateLineIdentification.update_atom, self)()
         # 更新in36
         functools.partial(UpdateLineIdentification.update_in36, self)()
+        # 更新状态栏
+        self.ui.statusbar.showMessage('in36文件加载成功！')
 
     def load_in2(self):
         """
@@ -158,6 +160,7 @@ class LineIdentification(MainWindow):
         self.in2.read_from_file(Path(path))
         # ----------------------------- 更新页面 -----------------------------
         functools.partial(UpdateLineIdentification.update_in2, self)()
+        self.ui.statusbar.showMessage('in2文件加载成功！')
 
     def preview_in36(self):
         """
@@ -165,6 +168,7 @@ class LineIdentification(MainWindow):
 
         """
         dialog = QDialog()
+        dialog.setWindowTitle('in36文件预览')
         dialog.resize(1000, 500)
         text_browser = QTextBrowser(dialog)
         dialog_layout = QVBoxLayout(dialog)
@@ -189,6 +193,7 @@ class LineIdentification(MainWindow):
 
         """
         dialog = QDialog()
+        dialog.setWindowTitle('in2文件预览')
         dialog.resize(1000, 500)
         text_browser = QTextBrowser(dialog)
         dialog_layout = QVBoxLayout(dialog)
@@ -507,6 +512,7 @@ class LineIdentification(MainWindow):
 
         # 函数定义结束 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         right_menu = QMenu(self.ui.run_history_list)
+        current_index = self.ui.run_history_list.currentIndex().row()
 
         # 设置动作
         item_1 = QAction('添加至库中', self.ui.run_history_list)
@@ -515,7 +521,8 @@ class LineIdentification(MainWindow):
         item_2.triggered.connect(clear_history)
 
         # 添加
-        right_menu.addAction(item_1)
+        if current_index != -1:
+            right_menu.addAction(item_1)
         right_menu.addAction(item_2)
 
         # 显示右键菜单
@@ -547,6 +554,7 @@ class LineIdentification(MainWindow):
             functools.partial(UpdateLineIdentification.update_selection_list, self)()
 
         right_menu = QMenu(self.ui.selection_list)
+        current_index = self.ui.selection_list.currentIndex().row()
 
         # 设置动作
         item_1 = QAction('删除', self.ui.selection_list)
@@ -555,7 +563,8 @@ class LineIdentification(MainWindow):
         item_2.triggered.connect(sort_selection)
 
         # 添加
-        right_menu.addAction(item_1)
+        if current_index != -1:
+            right_menu.addAction(item_1)
         right_menu.addAction(item_2)
 
         # 显示右键菜单
