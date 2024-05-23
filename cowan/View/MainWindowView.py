@@ -1873,10 +1873,23 @@ class Ui_main_window(object):
 
         self.verticalLayout_9.addLayout(self.horizontalLayout_17)
 
+        self.horizontalLayout_34 = QHBoxLayout()
+        self.horizontalLayout_34.setObjectName(u"horizontalLayout_34")
+        self.use_multiprocess = QCheckBox(self.groupBox_2)
+        self.use_multiprocess.setObjectName(u"use_multiprocess")
+        self.use_multiprocess.setMaximumSize(QSize(16777215, 16777215))
+        self.use_multiprocess.setChecked(True)
+
+        self.horizontalLayout_34.addWidget(self.use_multiprocess)
+
         self.page2_cal_grid = QPushButton(self.groupBox_2)
         self.page2_cal_grid.setObjectName(u"page2_cal_grid")
 
-        self.verticalLayout_9.addWidget(self.page2_cal_grid)
+        self.horizontalLayout_34.addWidget(self.page2_cal_grid)
+
+        self.horizontalLayout_34.setStretch(1, 1)
+
+        self.verticalLayout_9.addLayout(self.horizontalLayout_34)
 
 
         self.horizontalLayout_23.addWidget(self.groupBox_2)
@@ -2284,8 +2297,8 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(0)
-        self.tabWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(main_window)
@@ -2543,6 +2556,7 @@ class Ui_main_window(object):
         self.temperature_num.setSuffix(QCoreApplication.translate("main_window", u"\u4e2a", None))
         self.label_17.setText(QCoreApplication.translate("main_window", u"\u5bc6\u5ea6\u8303\u56f4", None))
         self.density_num.setSuffix(QCoreApplication.translate("main_window", u"\u4e2a", None))
+        self.use_multiprocess.setText("")
         self.page2_cal_grid.setText(QCoreApplication.translate("main_window", u"\u5f00\u59cb\u8ba1\u7b97", None))
         self.groupBox.setTitle(QCoreApplication.translate("main_window", u"\u65f6\u7a7a\u5206\u8fa8", None))
         self.label_15.setText(QCoreApplication.translate("main_window", u"\u5b9e\u9a8c\u6570\u636e", None))

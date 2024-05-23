@@ -8,6 +8,7 @@ from PySide6 import QtCore
 from PySide6.QtCore import Signal
 
 from .SimulateSpectral import SimulateSpectral
+from .. import console_logger
 
 
 class SimulateGrid:
@@ -22,6 +23,7 @@ class SimulateGrid:
         """
         super().__init__()
         self.task = 'cal'
+        self.use_multiprocess = True
         self.update_exp = None
 
         self.simulate = copy.deepcopy(simulate)
@@ -91,6 +93,7 @@ class SimulateGridThread(QtCore.QThread):
         super().__init__()
         self.old_grid = old_grid
         self.task = old_grid.task
+        self.use_multiprocess = old_grid.use_multiprocess
         self.update_exp = old_grid.update_exp
 
         self.simulate = copy.deepcopy(old_grid.simulate)
@@ -138,26 +141,37 @@ class SimulateGridThread(QtCore.QThread):
             self.grid_data[(t, ne)] = simulate_
             self.progress.emit(str(int(current_progress / self.t_num / self.ne_num * 100)))
 
-        # 多线程
         self.grid_data = {}
         current_progress = 0
-        pool = ProcessPoolExecutor(os.cpu_count())
-        for temperature in self.t_list:
-            for density in self.ne_list:
-                simulate = copy.deepcopy(self.simulate)
-                simulate.set_temperature_and_density(eval(temperature), eval(density))
-                simulate.con_contribution = None  # 清空组态贡献
-                future = pool.submit(simulate.simulate_spectral)
-                future.add_done_callback(functools.partial(callback, temperature, density))
-        pool.shutdown()
-        self.end.emit(0)
+        if self.use_multiprocess:
+            # 多线程
+            console_logger.info('use multiprocess to simulate grid data.')
+            pool = ProcessPoolExecutor(os.cpu_count())
+            for temperature in self.t_list:
+                for density in self.ne_list:
+                    simulate = copy.deepcopy(self.simulate)
+                    simulate.set_temperature_and_density(eval(temperature), eval(density))
+                    simulate.con_contribution = None  # 清空组态贡献
+                    future = pool.submit(simulate.simulate_spectral)
+                    future.add_done_callback(functools.partial(callback, temperature, density))
+            pool.shutdown()
+        else:
+            # 单线程
+            console_logger.info('use single process to simulate grid data.')
+            for temperature in self.t_list:
+                for density in self.ne_list:
+                    simulate = copy.deepcopy(self.simulate)
+                    simulate.set_temperature_and_density(eval(temperature), eval(density))
+                    simulate.con_contribution = None  # 清空组态贡献
+                    simulate.simulate_spectral()
+                    simulate.del_cowan_list()
+                    self.grid_data[(temperature, density)] = simulate
 
-        # 单线程
-        # self.grid_data = {}
-        # for temperature in self.t_list:
-        #     for density in self.ne_list:
-        #         self.simulate.get_simulate_data(eval(temperature), eval(density))
-        #         self.grid_data[(temperature, density)] = copy.deepcopy(self.simulate)
+                    current_progress += 1
+                    self.progress.emit(str(int(current_progress / self.t_num / self.ne_num * 100)))
+
+        # 发送结束信号
+        self.end.emit(0)
 
     def update_similarity(self, exp_obj):
         """

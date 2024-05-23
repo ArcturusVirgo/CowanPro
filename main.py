@@ -249,7 +249,7 @@ class MainWindow(QMainWindow):
 
         self.info = {
             'x_range': None,  # example: [2, 8, 0.01] [<最小波长>, <最大波长>, <最小步长>]
-            'version': '1.0.4',  # example: '1.0.0'
+            'version': '1.0.5',  # example: '1.0.0'
         }
 
         print('当前软件版本：{}'.format(self.info['version']))
@@ -587,7 +587,6 @@ class MainWindow(QMainWindow):
             # 更新 >>>>>>>>>>>>>>>>>>
             obj_info.update({'info': project_info})
             print('版本升级完成！')
-
         # 1.0.0 > 1.0.1 ---------------------------------------------------
         if Version(obj_info['info']['version']) < Version('1.0.1'):
             print('正在进行版本升级 [1.0.0 > 1.0.1]')
@@ -633,7 +632,7 @@ class MainWindow(QMainWindow):
             obj_info.update({'info': project_info})
             print('版本升级完成！')
         # 1.0.3 > 1.0.4 ---------------------------------------------------
-        if Version(obj_info['info']['version']) < Version('1.0.3'):
+        if Version(obj_info['info']['version']) < Version('1.0.4'):
             print('正在进行版本升级 [1.0.3 > 1.0.4]')
             project_info = obj_info['info']
             # 1. 添加版本号
@@ -643,6 +642,18 @@ class MainWindow(QMainWindow):
             print('给 simulate 对象添加 element_ratio 属性')
             # 3. 给 In36 对象添加 hide_configuration 属性
             print('给 In36 对象添加 hide_configuration 属性')
+            # 更新 >>>>>>>>>>>>>>>>>>
+            obj_info.update({'info': project_info})
+            print('版本升级完成！')
+        # 1.0.4 > 1.0.5 ---------------------------------------------------
+        if Version(obj_info['info']['version']) < Version('1.0.5'):
+            print('正在进行版本升级 [1.0.4 > 1.0.5]')
+            project_info = obj_info['info']
+            # 1. 添加版本号
+            project_info['version'] = '1.0.5'
+            print('版本号更新完成')
+            # 2. 给 SimulateGrid 对象添加 use_multiprocess 属性
+            print('给 SimulateGrid 对象添加 use_multiprocess 属性')
             # 更新 >>>>>>>>>>>>>>>>>>
             obj_info.update({'info': project_info})
             print('版本升级完成！')

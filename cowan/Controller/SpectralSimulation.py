@@ -163,6 +163,8 @@ class SpectralSimulation(MainWindow):
         self.simulate.set_threading(True)
         self.simulated_grid = SimulateGrid(t_range, ne_range, self.simulate)
         self.simulated_grid.change_task('cal')
+        if not self.ui.use_multiprocess.isChecked():
+            self.simulated_grid.use_multiprocess = False
         simulated_grid_run = SimulateGridThread(self.simulated_grid)
         # ----界面代码
         progressDialog = CustomProgressDialog(dialog_title='正在计算...', range_=(0, 100))
