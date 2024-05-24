@@ -163,7 +163,7 @@ QTableWidget {
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page">
        <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,4">
@@ -4182,7 +4182,7 @@ QTableWidget {
                   </size>
                  </property>
                  <property name="value">
-                  <number>23</number>
+                  <number>21</number>
                  </property>
                  <property name="displayIntegerBase">
                   <number>10</number>

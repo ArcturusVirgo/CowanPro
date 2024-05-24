@@ -1865,7 +1865,7 @@ class Ui_main_window(object):
         self.density_max_index.setObjectName(u"density_max_index")
         self.density_max_index.setMinimumSize(QSize(50, 0))
         self.density_max_index.setMaximumSize(QSize(50, 16777215))
-        self.density_max_index.setValue(23)
+        self.density_max_index.setValue(21)
         self.density_max_index.setDisplayIntegerBase(10)
 
         self.horizontalLayout_17.addWidget(self.density_max_index)
@@ -2297,7 +2297,7 @@ class Ui_main_window(object):
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
 
 

@@ -65,7 +65,10 @@ class SimulateGrid:
             self.update_exp = class_info.update_exp
         else:
             self.update_exp.load_class(class_info.update_exp)
-
+        if hasattr(class_info, 'use_multiprocess'):
+            self.use_multiprocess = class_info.use_multiprocess
+        else:
+            self.use_multiprocess = True
         self.simulate.load_class(class_info.simulate)
         self.temperature_tuple = class_info.temperature_tuple
         self.density_tuple = class_info.density_tuple
