@@ -250,14 +250,15 @@ class DataShowWidget(QWidget):
             export_data.to_csv(f'{path}/【单个时空分辨光谱】【{key[0]}-{key[1][0]}】实验光谱与模拟光谱.csv', index=False)
 
         if self.ui.ion_abu.isChecked():
-            abu_data = simulate.get_abundance()
+            abu_data_dict = simulate.get_abundance()
+            for atom_name, abu_data in abu_data_dict.items():
 
-            name_list = [i for i in range(len(abu_data))]
-            export_data = pd.DataFrame({
-                '离化度': name_list,
-                '丰度': abu_data
-            })
-            export_data.to_csv(f'{path}/【单个时空分辨光谱】【{key[0]}-{key[1][0]}】各离子丰度.csv', index=False)
+                name_list = [i for i in range(len(abu_data))]
+                export_data = pd.DataFrame({
+                    '离化度': name_list,
+                    '丰度': abu_data
+                })
+                export_data.to_csv(f'{path}/【单个时空分辨光谱】【{atom_name}】【{key[0]}-{key[1][0]}】各离子丰度.csv', index=False)
 
         console_logger.info('space time resolution data export completed')
 

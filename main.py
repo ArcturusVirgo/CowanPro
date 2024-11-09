@@ -47,7 +47,7 @@ class LoginWindow(QWidget):
         super().__init__()
         self.ui = Ui_login_window()
         self.ui.setupUi(self)
-        self.setWindowTitle('激光等离子体光谱模拟程序-登录界面')
+        self.setWindowTitle('原子光谱计算与模拟诊断软件-登录界面')
         self.WORKING_PATH = Path.cwd()
 
         self.project_data: dict = {}
@@ -317,6 +317,8 @@ class MainWindow(QMainWindow):
         self.ui.reset_xrange.triggered.connect(functools.partial(Menu.reset_xrange, self))
         # 展示导出窗口
         self.ui.export_data_window.triggered.connect(functools.partial(ExportData.show_export_data_window, self))
+        # debug_1
+        self.ui.debug_1.triggered.connect(functools.partial(Menu.debug_1, self))
 
         # ------------------------------- 第一页 -------------------------------
         # =====>> 下拉框

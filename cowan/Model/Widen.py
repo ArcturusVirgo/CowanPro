@@ -28,9 +28,9 @@ class WidenAll:
         self.exp_data = exp_data
         self.n = n
         self.threading = False
-        self.delta_lambda: float = 0.0
-        self.fwhm_value: float = 0.27
-        self.temperature: float = 25.6
+        self.delta_lambda: float = 0.0  # 默认的 波长的偏移
+        self.fwhm_value: float = 0.27  # 默认的 展宽半高宽
+        self.temperature: float = 25.6  # 默认的 等离子体温度
 
         self.plot_path_gauss = (PROJECT_PATH() / f'figure/gauss/{self.name}.html').as_posix()
         self.plot_path_cross_NP = (PROJECT_PATH() / f'figure/cross_NP/{self.name}.html').as_posix()

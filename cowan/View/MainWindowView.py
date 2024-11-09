@@ -142,6 +142,8 @@ class Ui_main_window(object):
         self.export_plot_data.setObjectName(u"export_plot_data")
         self.export_data_window = QAction(main_window)
         self.export_data_window.setObjectName(u"export_data_window")
+        self.debug_1 = QAction(main_window)
+        self.debug_1.setObjectName(u"debug_1")
         self.centralwidget = QWidget(main_window)
         self.centralwidget.setObjectName(u"centralwidget")
         self.centralwidget.setEnabled(True)
@@ -1996,11 +1998,6 @@ class Ui_main_window(object):
 
         self.horizontalLayout_29.addWidget(self.page2_cowan_obj_update)
 
-        self.pushButton_2 = QPushButton(self.groupBox)
-        self.pushButton_2.setObjectName(u"pushButton_2")
-
-        self.horizontalLayout_29.addWidget(self.pushButton_2)
-
         self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_29.addItem(self.horizontalSpacer_14)
@@ -2277,6 +2274,8 @@ class Ui_main_window(object):
         self.menu_3.setObjectName(u"menu_3")
         self.menu_4 = QMenu(self.menubar)
         self.menu_4.setObjectName(u"menu_4")
+        self.menu_5 = QMenu(self.menubar)
+        self.menu_5.setObjectName(u"menu_5")
         main_window.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(main_window)
         self.statusbar.setObjectName(u"statusbar")
@@ -2286,6 +2285,7 @@ class Ui_main_window(object):
         self.menubar.addAction(self.menu_2.menuAction())
         self.menubar.addAction(self.menu_3.menuAction())
         self.menubar.addAction(self.menu_4.menuAction())
+        self.menubar.addAction(self.menu_5.menuAction())
         self.menu.addAction(self.save_project)
         self.menu.addAction(self.exit_project)
         self.menu_2.addAction(self.set_xrange)
@@ -2294,10 +2294,11 @@ class Ui_main_window(object):
         self.menu_3.addAction(self.reset_cal)
         self.menu_4.addAction(self.export_configuration_average_wavelength)
         self.menu_4.addAction(self.export_data_window)
+        self.menu_5.addAction(self.debug_1)
 
         self.retranslateUi(main_window)
 
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(1)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -2323,6 +2324,7 @@ class Ui_main_window(object):
         self.export_configuration_average_wavelength.setText(QCoreApplication.translate("main_window", u"\u5bfc\u51fa\u7ec4\u6001\u5e73\u5747\u6ce2\u957f", None))
         self.export_plot_data.setText(QCoreApplication.translate("main_window", u"\u5f00\u542f\u5bfc\u51fa", None))
         self.export_data_window.setText(QCoreApplication.translate("main_window", u"\u6570\u636e\u5bfc\u51fa\u7a97\u53e3", None))
+        self.debug_1.setText(QCoreApplication.translate("main_window", u"\u6d4b\u8bd5\u6309\u94ae - 1", None))
 
         __sortingEnabled = self.navigation.isSortingEnabled()
         self.navigation.setSortingEnabled(False)
@@ -2571,7 +2573,6 @@ class Ui_main_window(object):
         self.recoder.setText(QCoreApplication.translate("main_window", u"\u8bb0\u5f55", None))
         self.load_space_time.setText(QCoreApplication.translate("main_window", u"\u6279\u91cf\u52a0\u8f7d", None))
         self.page2_cowan_obj_update.setText(QCoreApplication.translate("main_window", u"\u66f4\u65b0cowan\u5bf9\u8c61", None))
-        self.pushButton_2.setText(QCoreApplication.translate("main_window", u"\u6d4b\u8bd5\u6309\u94ae", None))
         self.update_similarity.setText(QCoreApplication.translate("main_window", u"\u66f4\u65b0\u7f51\u683c\u76f8\u4f3c\u5ea6", None))
         ___qtablewidgetitem3 = self.st_resolution_table.horizontalHeaderItem(0)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("main_window", u"\u65f6\u95f4", None));
@@ -2586,7 +2587,7 @@ class Ui_main_window(object):
         self.groupBox_9.setTitle(QCoreApplication.translate("main_window", u"\u968f\u65f6\u95f4\u7684\u53d8\u5316", None))
         self.label_13.setText(QCoreApplication.translate("main_window", u"\u4f4d\u7f6e\u9009\u62e9", None))
         self.td_by_t.setText(QCoreApplication.translate("main_window", u"\u7ed8\u5236", None))
-        self.groupBox_11.setTitle(QCoreApplication.translate("main_window", u"\u4e8c\u4f4d\u70ed\u529b\u56fe", None))
+        self.groupBox_11.setTitle(QCoreApplication.translate("main_window", u"\u4e8c\u7ef4\u70ed\u529b\u56fe", None))
         self.variable_select.setItemText(0, QCoreApplication.translate("main_window", u"\u6e29\u5ea6", None))
         self.variable_select.setItemText(1, QCoreApplication.translate("main_window", u"\u5bc6\u5ea6", None))
 
@@ -2605,5 +2606,6 @@ class Ui_main_window(object):
         self.menu_2.setTitle(QCoreApplication.translate("main_window", u"\u8ba1\u7b97", None))
         self.menu_3.setTitle(QCoreApplication.translate("main_window", u"\u5de5\u5177", None))
         self.menu_4.setTitle(QCoreApplication.translate("main_window", u"\u5bfc\u51fa", None))
+        self.menu_5.setTitle(QCoreApplication.translate("main_window", u"\u8c03\u8bd5", None))
     # retranslateUi
 

@@ -197,3 +197,7 @@ class Menu(MainWindow):
 
         self.ui.statusbar.showMessage('导出成功！')
         console_logger.info('export completed')
+
+    def debug_1(self):
+        for i in range(10):
+            print(self.space_time_resolution.get_simulate_spectral_diagnosed_by_index(i))

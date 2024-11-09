@@ -3,6 +3,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from matplotlib import pyplot as plt
 from plotly.offline import plot
 
 from .GlobalVar import PROJECT_PATH
@@ -84,11 +85,19 @@ class CalData:
             temp = pd.DataFrame({'wavelength': lambda_, 'intensity': strength})
             return temp
 
-        temp_data = get_line_data(self.init_data[['wavelength_ev', 'intensity']])
-        trace1 = go.Scatter(
-            x=temp_data['wavelength'], y=temp_data['intensity'], mode='lines'
-        )
-        data = [trace1]
+        # 按照 index_l index_h 分组
+        grouped_data = self.init_data.groupby(by=['index_l', 'index_h'])
+
+        data = []
+
+        # 对每个循环
+        for index in grouped_data.groups.keys():
+            temp_group = pd.DataFrame(grouped_data.get_group(index))
+            temp_data = get_line_data(temp_group[['wavelength_ev', 'intensity']])
+            temp_trace = go.Scatter(
+                x=temp_data['wavelength'], y=temp_data['intensity'], mode='lines', name=f'{index[0]}_{index[1]}'
+            )
+            data.append(temp_trace)
         layout = go.Layout(
             margin=go.layout.Margin(autoexpand=False, b=15, l=30, r=0, t=0),
             xaxis=go.layout.XAxis(range=self.exp_data.x_range),
@@ -96,6 +105,44 @@ class CalData:
         # yaxis=go.layout.YAxis(range=[self.min_strength, self.max_strength]))
         fig = go.Figure(data=data, layout=layout)
         plot(fig, filename=self.plot_path, auto_open=False)
+
+        # 以下为测试代码
+        # figure = plt.figure(figsize=(18, 6), dpi=100)
+        # ax = figure.add_subplot(111)
+        # image = plt.imread(r"C:\Users\ArcturusVirgo\Desktop\5.png")
+        # image_x = np.linspace(self.exp_data.x_range[0], self.exp_data.x_range[1], image.shape[1])
+        # image_y = np.linspace(0, 1, image.shape[0])
+        # ax.imshow(image, extent=tuple([float(image_x[0]), float(image_x[-1]), float(image_y[0]), float(image_y[-1])]))
+        # # 5 6 7
+        # color_list = ['-1', 'black', 'darkorange', 'violet', 'blue', 'green']
+        # # 8 9 10
+        # # color_list = ['-1', 'black', 'darkorange', 'blue']
+        # for index in grouped_data.groups.keys():
+        #     temp_group = pd.DataFrame(grouped_data.get_group(index))
+        #     x = 1239.85 / temp_group['wavelength_ev'].values
+        #     y = temp_group['intensity'].values / self.init_data['intensity'].max()
+        #     # 5 6 7 ================
+        #     y = y + 1
+        #     # 8 9 10 ================
+        #     # 8
+        #     # flag = x > 16.5
+        #     # not_flag = np.bitwise_not(flag)
+        #     # y[flag] = y[flag] * 10 + 1
+        #     # y[not_flag] = y[not_flag] + 1
+        #     # 9
+        #     # flag = x > 15.8
+        #     # not_flag = np.bitwise_not(flag)
+        #     # y[flag] = y[flag] * 10 + 1
+        #     # y[not_flag] = y[not_flag] + 1
+        #     # 10
+        #     # flag = x > 14.8
+        #     # not_flag = np.bitwise_not(flag)
+        #     # y[flag] = y[flag] * 10 + 1
+        #     # y[not_flag] = y[not_flag] + 1
+        #
+        #     ax.vlines(x, 1, y, colors=color_list[index[1]])
+        # ax.set_xlim(self.exp_data.x_range)
+        # plt.show()
 
     def set_delta_lambda(self, delta_lambda: float):
         """

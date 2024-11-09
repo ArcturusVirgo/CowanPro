@@ -149,7 +149,7 @@ class SimulateGridThread(QtCore.QThread):
         if self.use_multiprocess:
             # 多线程
             console_logger.info('use multiprocess to simulate grid data.')
-            pool = ProcessPoolExecutor(os.cpu_count())
+            pool = ProcessPoolExecutor(os.cpu_count() - 1)
             for temperature in self.t_list:
                 for density in self.ne_list:
                     simulate = copy.deepcopy(self.simulate)

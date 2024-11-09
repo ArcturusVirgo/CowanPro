@@ -165,7 +165,7 @@ class Ui_login_window(object):
 
     def retranslateUi(self, login_window):
         login_window.setWindowTitle(QCoreApplication.translate("login_window", u"Form", None))
-        self.label.setText(QCoreApplication.translate("login_window", u"Cowan\u53ef\u89c6\u5316\u754c\u9762\u7a0b\u5e8f", None))
+        self.label.setText(QCoreApplication.translate("login_window", u"<html><head/><body><p><span style=\" font-size:14pt;\">\u539f\u5b50\u5149\u8c31\u8ba1\u7b97\u4e0e\u6a21\u62df\u8bca\u65ad\u8f6f\u4ef6</span></p></body></html>", None))
         self.label_2.setText(QCoreApplication.translate("login_window", u"\u9879\u76ee\u5217\u8868", None))
         self.new_project.setText(QCoreApplication.translate("login_window", u"\u65b0\u5efa\u9879\u76ee", None))
         self.delete_project.setText(QCoreApplication.translate("login_window", u"\u5220\u9664\u9879\u76ee", None))

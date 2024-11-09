@@ -1,6 +1,7 @@
 import copy
 from typing import List, Tuple
 
+import numpy as np
 import plotly.graph_objs as go
 from plotly.offline import plot
 
@@ -133,14 +134,18 @@ class SpaceTimeResolution:
             temp_t_res = []
             temp_d_res = []
             for space in spaces:
+                if (time, (space, '0', '0')) not in self.simulate_spectral_dict:
+                    temp_t_res.append(None)
+                    temp_d_res.append(None)
+                    continue
                 temp_t_res.append(
                     self.simulate_spectral_dict[(time, (space, '0', '0'))].temperature
                 )
-                temp_d_res.append(
+                temp_d_res.append(np.log10(  # 指数坐标
                     self.simulate_spectral_dict[
                         (time, (space, '0', '0'))
                     ].electron_density
-                )
+                ))
             t_res.append(temp_t_res)
             d_res.append(temp_d_res)
 
@@ -151,9 +156,8 @@ class SpaceTimeResolution:
         data = [trace1]
         layout = go.Layout(
             margin=go.layout.Margin(b=15, l=60, r=0, t=0),
-            # yaxis={
+            # coloraxis={
             #     'type': 'log',
-            #     'tickformat': '.2e'
             # }
         )
         fig = go.Figure(data=data, layout=layout)

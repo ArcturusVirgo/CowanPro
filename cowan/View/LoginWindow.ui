@@ -52,7 +52,7 @@
       <string notr="true"/>
      </property>
      <property name="text">
-      <string>Cowan可视化界面程序</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;原子光谱计算与模拟诊断软件&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="scaledContents">
       <bool>false</bool>
